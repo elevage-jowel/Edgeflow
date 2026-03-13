@@ -1,0 +1,210 @@
+import { useState } from 'react'
+import { motion } from 'framer-motion'
+import { Check, Settings as SettingsIcon } from 'lucide-react'
+import { useStore } from '../store/useStore'
+import { useI18n } from '../i18n'
+import { isSupabaseConfigured } from '../lib/supabase'
+import { Header } from '../components/Layout/Header'
+import { Button } from '../components/ui/Button'
+import { Input, Select } from '../components/ui/Input'
+import type { Currency, AppLanguage } from '../types'
+
+const CURRENCIES: Currency[] = ['USD', 'EUR', 'GBP', 'JPY', 'CHF', 'CAD', 'AUD']
+
+export function Settings() {
+  const { t, language, setLanguage } = useI18n()
+  const { settings, updateSettings, user, syncStatus } = useStore()
+
+  const [form, setForm] = useState({
+    currency: settings.currency ?? 'USD',
+    initial_balance: String(settings.initial_balance ?? 10000),
+    risk_per_trade: String(settings.risk_per_trade ?? 1),
+    default_risk_reward: String(settings.default_risk_reward ?? 2),
+  })
+
+  const [saved, setSaved] = useState(false)
+
+  const handleSave = async () => {
+    await updateSettings({
+      currency: form.currency as Currency,
+      initial_balance: parseFloat(form.initial_balance),
+      risk_per_trade: parseFloat(form.risk_per_trade),
+      default_risk_reward: parseFloat(form.default_risk_reward),
+      language,
+    })
+    setSaved(true)
+    setTimeout(() => setSaved(false), 3000)
+  }
+
+  const set = (k: keyof typeof form, v: string) => setForm(f => ({ ...f, [k]: v }))
+
+  return (
+    <div>
+      <Header
+        title={t('settings.title')}
+        actions={
+          <Button
+            onClick={handleSave}
+            icon={saved ? <Check size={16} /> : <SettingsIcon size={16} />}
+            variant={saved ? 'secondary' : 'primary'}
+          >
+            {saved ? t('settings.saved') : t('settings.save')}
+          </Button>
+        }
+      />
+
+      <div className="max-w-2xl space-y-6">
+        {/* Account Info */}
+        {user && (
+          <motion.div
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="bg-surface-850 border border-surface-700 rounded-xl p-5"
+          >
+            <h2 className="text-sm font-semibold text-white mb-4 uppercase tracking-wider">Account</h2>
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <p className="text-xs text-surface-500 uppercase tracking-wider mb-1">Username</p>
+                <p className="font-mono text-white">{user.username}</p>
+              </div>
+              <div>
+                <p className="text-xs text-surface-500 uppercase tracking-wider mb-1">Email</p>
+                <p className="font-mono text-white">{user.email}</p>
+              </div>
+              <div>
+                <p className="text-xs text-surface-500 uppercase tracking-wider mb-1">Role</p>
+                <p className="font-mono text-white capitalize">{user.role}</p>
+              </div>
+              <div>
+                <p className="text-xs text-surface-500 uppercase tracking-wider mb-1">Sync Status</p>
+                <p className={`font-mono ${
+                  syncStatus === 'synced' ? 'text-brand-400' :
+                  syncStatus === 'error' ? 'text-red-400' :
+                  'text-amber-400'
+                }`}>{t(`sync.${syncStatus}`)}</p>
+              </div>
+            </div>
+          </motion.div>
+        )}
+
+        {/* Trading Preferences */}
+        <motion.div
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.05 }}
+          className="bg-surface-850 border border-surface-700 rounded-xl p-5"
+        >
+          <h2 className="text-sm font-semibold text-white mb-4 uppercase tracking-wider">Trading Preferences</h2>
+          <div className="grid grid-cols-2 gap-4">
+            <Select
+              label={t('settings.currency')}
+              value={form.currency}
+              onChange={e => set('currency', e.target.value)}
+              options={CURRENCIES.map(c => ({ value: c, label: c }))}
+            />
+            <Input
+              label={t('settings.initial_balance')}
+              type="number"
+              value={form.initial_balance}
+              onChange={e => set('initial_balance', e.target.value)}
+              hint="Your starting account balance"
+            />
+            <Input
+              label={t('settings.risk_per_trade')}
+              type="number"
+              step="0.1"
+              min="0.1"
+              max="100"
+              value={form.risk_per_trade}
+              onChange={e => set('risk_per_trade', e.target.value)}
+              hint="% of account risked per trade"
+            />
+            <Input
+              label={t('settings.default_rr')}
+              type="number"
+              step="0.1"
+              min="0.1"
+              value={form.default_risk_reward}
+              onChange={e => set('default_risk_reward', e.target.value)}
+              hint="Default risk/reward ratio"
+            />
+          </div>
+        </motion.div>
+
+        {/* App Preferences */}
+        <motion.div
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.1 }}
+          className="bg-surface-850 border border-surface-700 rounded-xl p-5"
+        >
+          <h2 className="text-sm font-semibold text-white mb-4 uppercase tracking-wider">App Preferences</h2>
+          <div className="grid grid-cols-2 gap-4">
+            <Select
+              label={t('settings.language')}
+              value={language}
+              onChange={e => setLanguage(e.target.value as AppLanguage)}
+              options={[
+                { value: 'en', label: 'English' },
+                { value: 'fr', label: 'Français' },
+              ]}
+            />
+            <Select
+              label={t('settings.theme')}
+              value="dark"
+              onChange={() => {}}
+              options={[
+                { value: 'dark', label: 'Dark (Default)' },
+              ]}
+            />
+          </div>
+        </motion.div>
+
+        {/* Data Management */}
+        <motion.div
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.15 }}
+          className="bg-surface-850 border border-surface-700 rounded-xl p-5"
+        >
+          <h2 className="text-sm font-semibold text-white mb-4 uppercase tracking-wider">Data Management</h2>
+          <div className="space-y-3">
+            <div className="flex items-center justify-between py-2">
+              <div>
+                <p className="text-sm text-white">Export Data</p>
+                <p className="text-xs text-surface-500">Download all your trades as JSON</p>
+              </div>
+              <Button variant="secondary" size="sm" onClick={() => {
+                const { trades, journalEntries, backtestSessions } = useStore.getState()
+                const data = { trades, journalEntries, backtestSessions, exportedAt: new Date().toISOString() }
+                const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' })
+                const url = URL.createObjectURL(blob)
+                const a = document.createElement('a')
+                a.href = url
+                a.download = `edgeflow-export-${new Date().toISOString().slice(0, 10)}.json`
+                a.click()
+                URL.revokeObjectURL(url)
+              }}>
+                Export JSON
+              </Button>
+            </div>
+
+            <div className="flex items-center justify-between py-2 border-t border-surface-700">
+              <div>
+                <p className="text-sm text-white">Supabase Configuration</p>
+                <p className="text-xs text-surface-500">
+                  {isSupabaseConfigured
+                    ? 'Connected to cloud'
+                    : 'Set VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY in .env'}
+                </p>
+              </div>
+              <div className={`w-2.5 h-2.5 rounded-full ${
+                isSupabaseConfigured ? 'bg-brand-400' : 'bg-amber-400'
+              }`} />
+            </div>
+          </div>
+        </motion.div>
+      </div>
+    </div>
+  )
+}
