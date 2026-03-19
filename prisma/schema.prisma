@@ -1,0 +1,49 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "sqlite"
+}
+
+model Trade {
+  id           String    @id @default(cuid())
+  symbol       String
+  direction    String
+  entryPrice   Float
+  exitPrice    Float
+  quantity     Float
+  entryDate    DateTime
+  exitDate     DateTime
+  pnl          Float
+  fees         Float     @default(0)
+  commission   Float     @default(0)
+  swap         Float     @default(0)
+  setupType    String?
+  notes        String?
+  importSource String?
+  externalId   String?
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+
+  tags         TradeTag[]
+
+  @@unique([externalId, importSource])
+}
+
+model Tag {
+  id     String     @id @default(cuid())
+  name   String     @unique
+  color  String     @default("#6366f1")
+  trades TradeTag[]
+}
+
+model TradeTag {
+  tradeId String
+  tagId   String
+  trade   Trade  @relation(fields: [tradeId], references: [id], onDelete: Cascade)
+  tag     Tag    @relation(fields: [tagId], references: [id], onDelete: Cascade)
+
+  @@id([tradeId, tagId])
+}

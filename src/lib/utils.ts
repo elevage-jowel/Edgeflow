@@ -1,0 +1,25 @@
+import { type ClassValue, clsx } from 'clsx'
+import { twMerge } from 'tailwind-merge'
+
+export function cn(...inputs: ClassValue[]) {
+  return twMerge(clsx(inputs))
+}
+
+export function formatCurrency(value: number): string {
+  return new Intl.NumberFormat('en-US', {
+    style: 'currency',
+    currency: 'USD',
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  }).format(value)
+}
+
+export function formatNumber(value: number, decimals = 2): string {
+  return value.toFixed(decimals)
+}
+
+export function pnlClass(value: number): string {
+  if (value > 0) return 'text-emerald-400'
+  if (value < 0) return 'text-rose-400'
+  return 'text-slate-400'
+}
