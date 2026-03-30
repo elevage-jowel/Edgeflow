@@ -1,0 +1,103 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --bg-page: #0d0e14;
+  --bg-card: #12141c;
+  --bg-input: #1e2231;
+  --border: #252a3a;
+  --text-primary: #f1f5f9;
+  --text-muted: #64748b;
+  --accent-green: #22c55e;
+  --accent-red: #ef4444;
+  --accent-brand: #7c6ffa;
+}
+
+* {
+  box-sizing: border-box;
+  padding: 0;
+  margin: 0;
+}
+
+html,
+body {
+  max-width: 100vw;
+  overflow-x: hidden;
+  background-color: var(--bg-page);
+  color: var(--text-primary);
+}
+
+body {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Scrollbar */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: #252a3a;
+  border-radius: 3px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #2e3347;
+}
+
+/* Custom selections */
+::selection {
+  background: rgba(124, 111, 250, 0.3);
+}
+
+/* Recharts tooltip */
+.recharts-tooltip-wrapper {
+  outline: none !important;
+}
+
+/* Custom chart colors */
+.recharts-default-tooltip {
+  background: #12141c !important;
+  border: 1px solid #252a3a !important;
+  border-radius: 8px !important;
+}
+
+/* Smooth transitions */
+a, button {
+  transition: all 0.15s ease;
+}
+
+/* Focus rings */
+*:focus-visible {
+  outline: 2px solid rgba(124, 111, 250, 0.6);
+  outline-offset: 2px;
+}
+
+@layer utilities {
+  .gradient-brand {
+    background: linear-gradient(135deg, #7c6ffa 0%, #4f46e5 50%, #06b6d4 100%);
+  }
+  .text-gradient {
+    background: linear-gradient(135deg, #7c6ffa, #06b6d4);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+  .card-glass {
+    background: rgba(18, 20, 28, 0.8);
+    backdrop-filter: blur(12px);
+    border: 1px solid rgba(37, 42, 58, 0.8);
+  }
+  .no-scrollbar::-webkit-scrollbar {
+    display: none;
+  }
+  .no-scrollbar {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+}
