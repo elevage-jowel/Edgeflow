@@ -5,7 +5,7 @@ import Link from 'next/link'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
-import { signUp, signInWithGoogle } from '@/lib/firebase/auth'
+import { signIn } from 'next-auth/react'
 import toast from 'react-hot-toast'
 import { Eye, EyeOff, TrendingUp, CheckCircle } from 'lucide-react'
 
@@ -35,23 +35,30 @@ export default function SignupClient() {
 
   const onSubmit = async (data: FormData) => {
     try {
-      await signUp(data.email, data.password, data.name)
+      const res = await fetch('/api/auth/register', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: data.email, password: data.password, name: data.name }),
+      })
+      if (!res.ok) {
+        const err = await res.json()
+        throw new Error(err.error || 'Sign up failed')
+      }
+      const login = await signIn('credentials', { email: data.email, password: data.password, redirect: false })
+      if (login?.error) throw new Error('Sign in after registration failed')
       toast.success('Account created! Demo data loading...')
       router.push('/dashboard')
     } catch (e: any) {
-      const msg = e.code === 'auth/email-already-in-use' ? 'Email already in use' : 'Sign up failed'
-      toast.error(msg)
+      toast.error(e.message === 'Email already in use' ? 'Email already in use' : 'Sign up failed')
     }
   }
 
   const handleGoogle = async () => {
     setIsGoogleLoading(true)
     try {
-      await signInWithGoogle()
-      router.push('/dashboard')
+      await signIn('google', { callbackUrl: '/dashboard' })
     } catch {
       toast.error('Google sign in failed')
-    } finally {
       setIsGoogleLoading(false)
     }
   }

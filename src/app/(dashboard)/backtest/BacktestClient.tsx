@@ -1,21 +1,17 @@
 'use client'
 import { useState, useEffect } from 'react'
 import { useAuthStore } from '@/lib/stores/authStore'
-import { collection, getDocs, doc, setDoc, orderBy, query } from 'firebase/firestore'
-import { db } from '@/lib/firebase/config'
-import { col } from '@/lib/firebase/collections'
 import { Backtest } from '@/lib/types'
 import { Button } from '@/components/ui/Button'
 import { Modal } from '@/components/ui/Modal'
 import { EmptyState } from '@/components/ui/EmptyState'
-import { EquityCurveChart } from '@/components/charts/EquityCurveChart'
 import { formatCurrency, formatPnl, formatDate } from '@/lib/utils/formatters'
 import { cn } from '@/lib/utils/cn'
 import { useForm } from 'react-hook-form'
 import { z } from 'zod'
 import { zodResolver } from '@hookform/resolvers/zod'
 import toast from 'react-hot-toast'
-import { Plus, FlaskConical, TrendingUp } from 'lucide-react'
+import { Plus, FlaskConical } from 'lucide-react'
 
 const schema = z.object({
   name: z.string().min(1),
@@ -37,26 +33,23 @@ export default function BacktestClient() {
 
   useEffect(() => {
     if (!user) return
-    const load = async () => {
-      const q = query(collection(db, col.backtests(user.uid)), orderBy('createdAt', 'desc'))
-      const snap = await getDocs(q)
-      setBacktests(snap.docs.map(d => ({ id: d.id, ...d.data() } as Backtest)))
-      setIsLoading(false)
-    }
-    load()
+    fetch('/api/backtests')
+      .then(r => r.json())
+      .then((data: Backtest[]) => { setBacktests(data); setIsLoading(false) })
+      .catch(() => setIsLoading(false))
   }, [user])
 
   const { register, handleSubmit, formState: { isSubmitting }, reset } = useForm<FormData>({ resolver: zodResolver(schema) })
 
   const onSubmit = async (data: FormData) => {
-    if (!user) return
     try {
-      const id = `backtest_${Date.now()}`
-      const bt: Backtest = {
-        ...data, id, userId: user.uid, trades: [],
-        createdAt: new Date().toISOString(), updatedAt: new Date().toISOString(),
-      }
-      await setDoc(doc(db, col.backtest(user.uid, id)), bt)
+      const res = await fetch('/api/backtests', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ ...data, trades: [] }),
+      })
+      if (!res.ok) throw new Error()
+      const bt: Backtest = await res.json()
       setBacktests(prev => [bt, ...prev])
       toast.success('Backtest created')
       setIsOpen(false)

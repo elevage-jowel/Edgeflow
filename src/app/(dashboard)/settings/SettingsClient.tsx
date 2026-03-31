@@ -1,14 +1,9 @@
 'use client'
 import { useState } from 'react'
 import { useAuthStore } from '@/lib/stores/authStore'
-import { doc, updateDoc } from 'firebase/firestore'
-import { db } from '@/lib/firebase/config'
-import { col } from '@/lib/firebase/collections'
-import { updatePassword, updateEmail, EmailAuthProvider, reauthenticateWithCredential } from 'firebase/auth'
-import { auth } from '@/lib/firebase/config'
 import { Button } from '@/components/ui/Button'
 import toast from 'react-hot-toast'
-import { User, Lock, Bell, Download, Trash2, Globe, DollarSign } from 'lucide-react'
+import { User, Lock, Globe, Download, Trash2 } from 'lucide-react'
 import { cn } from '@/lib/utils/cn'
 
 const tabs = [
@@ -28,49 +23,53 @@ export default function SettingsClient() {
   const [currency, setCurrency] = useState(userProfile?.currency ?? 'USD')
   const [riskUnit, setRiskUnit] = useState(userProfile?.riskUnit ?? 'dollar')
   const [isSaving, setIsSaving] = useState(false)
-  const [newPassword, setNewPassword] = useState('')
   const [currentPassword, setCurrentPassword] = useState('')
+  const [newPassword, setNewPassword] = useState('')
 
   const saveProfile = async () => {
-    if (!user) return
     setIsSaving(true)
     try {
-      await updateDoc(doc(db, col.user(user.uid)), { displayName, updatedAt: new Date().toISOString() })
-      setProfile({ ...userProfile!, displayName })
+      const res = await fetch('/api/user', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name: displayName }),
+      })
+      if (!res.ok) throw new Error()
+      const data = await res.json()
+      setProfile({ ...userProfile!, displayName: data.name ?? displayName })
       toast.success('Profile updated')
     } catch { toast.error('Failed to save') } finally { setIsSaving(false) }
   }
 
   const savePreferences = async () => {
-    if (!user) return
     setIsSaving(true)
     try {
-      await updateDoc(doc(db, col.user(user.uid)), { currency, riskUnit, updatedAt: new Date().toISOString() })
+      const res = await fetch('/api/user', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ currency, riskUnit }),
+      })
+      if (!res.ok) throw new Error()
       setProfile({ ...userProfile!, currency, riskUnit })
       toast.success('Preferences saved')
     } catch { toast.error('Failed') } finally { setIsSaving(false) }
   }
 
   const changePassword = async () => {
-    if (!user || !currentPassword || !newPassword) return
+    if (!currentPassword || !newPassword) return
     setIsSaving(true)
     try {
-      const cred = EmailAuthProvider.credential(user.email!, currentPassword)
-      await reauthenticateWithCredential(user, cred)
-      await updatePassword(user, newPassword)
-      toast.success('Password updated')
-      setCurrentPassword('')
-      setNewPassword('')
-    } catch (e: any) {
-      toast.error(e.code === 'auth/wrong-password' ? 'Incorrect current password' : 'Failed to update password')
-    } finally { setIsSaving(false) }
+      // Verify current password by attempting re-auth, then update
+      // This requires a dedicated API endpoint for security; stub for now
+      toast.success('Password change requires a dedicated auth flow — coming soon')
+    } catch { toast.error('Failed to update password') } finally { setIsSaving(false) }
   }
 
   const exportData = () => {
-    toast('Export functionality — connect to your Firebase instance to download your data.', { icon: '📦' })
+    toast('Export functionality coming soon.', { icon: '📦' })
   }
 
-  const initials = (userProfile?.displayName ?? user?.email ?? 'U').split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2)
+  const initials = (userProfile?.displayName ?? user?.name ?? user?.email ?? 'U').split(' ').map((n: string) => n[0]).join('').toUpperCase().slice(0, 2)
 
   return (
     <div className="max-w-3xl space-y-5">
@@ -92,7 +91,7 @@ export default function SettingsClient() {
           <div className="flex items-center gap-4">
             <div className="w-16 h-16 rounded-full gradient-brand flex items-center justify-center text-xl font-bold text-white">{initials}</div>
             <div>
-              <div className="text-base font-bold text-white">{userProfile?.displayName ?? 'Trader'}</div>
+              <div className="text-base font-bold text-white">{userProfile?.displayName ?? user?.name ?? 'Trader'}</div>
               <div className="text-sm text-slate-500">{user?.email}</div>
             </div>
           </div>
