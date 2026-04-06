@@ -11,7 +11,7 @@ import { useForm } from 'react-hook-form'
 import { z } from 'zod'
 import { zodResolver } from '@hookform/resolvers/zod'
 import toast from 'react-hot-toast'
-import { Plus, BookMarked, Trash2, ChevronDown, ChevronUp, Target, TrendingUp } from 'lucide-react'
+import { Plus, BookMarked, Trash2, ChevronDown, ChevronUp } from 'lucide-react'
 
 const schema = z.object({
   name: z.string().min(1),
