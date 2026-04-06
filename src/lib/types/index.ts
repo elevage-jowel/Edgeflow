@@ -1,7 +1,9 @@
-export type AssetClass = 'stocks' | 'options' | 'futures' | 'forex' | 'crypto'
+export type AssetClass = 'stocks' | 'options' | 'futures' | 'forex' | 'crypto' | 'indices' | 'commodities'
 export type TradeDirection = 'long' | 'short'
 export type TradeStatus = 'open' | 'closed' | 'partial'
 export type TradeOutcome = 'win' | 'loss' | 'breakeven'
+export type AccountType = 'challenge' | 'funded' | 'personal'
+export type TradeSource = 'manual' | 'signal' | 'copied' | 'imported'
 
 export interface Trade {
   id: string
@@ -23,20 +25,48 @@ export interface Trade {
   netPnl?: number
   rMultiple?: number
   returnPct?: number
+  riskAmount?: number
+  riskPercent?: number
+  tradeDuration?: number  // minutes
 
   stopLoss?: number
   takeProfit?: number
   initialRisk?: number
+  riskRewardRatio?: number   // expected R:R from SL/TP
+
+  // Account & Prop Firm
+  propFirm?: string
+  accountType?: AccountType
+  accountName?: string
+  tradeSource?: TradeSource
+
+  // Market Context
+  session?: string
+  marketCondition?: string
+  preTradeNote?: string
+
+  // Trade Management
+  breakEvenMoved?: boolean
+  partialsTaken?: boolean
+  spread?: number
+  slippage?: number
+  lots?: number              // forex lot size
+
+  // Psychology
+  emotionBefore?: string
+  emotionAfter?: string
+  confidenceScore?: number   // 1-10
+  ruleViolated?: boolean
+  mistakeTags?: string[]
 
   playbookId?: string
   strategy?: string
-  session?: string
   tags: string[]
   notes: string
   screenshotUrls: string[]
   setupRating?: number
   executionRating?: number
-  emotionRating?: number
+  emotionRating?: number     // kept for backward compat
 
   createdAt: string
   updatedAt: string
