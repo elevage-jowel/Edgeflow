@@ -1,6 +1,9 @@
 'use client'
 import { useState, useEffect } from 'react'
 import { useAuthStore } from '@/lib/stores/authStore'
+import { collection, getDocs, doc, setDoc, orderBy, query } from 'firebase/firestore'
+import { db } from '@/lib/firebase/config'
+import { col } from '@/lib/firebase/collections'
 import { Backtest } from '@/lib/types'
 import { Button } from '@/components/ui/Button'
 import { Modal } from '@/components/ui/Modal'
@@ -33,23 +36,26 @@ export default function BacktestClient() {
 
   useEffect(() => {
     if (!user) return
-    fetch('/api/backtests')
-      .then(r => r.json())
-      .then((data: Backtest[]) => { setBacktests(data); setIsLoading(false) })
-      .catch(() => setIsLoading(false))
+    const load = async () => {
+      const q = query(collection(db, col.backtests(user.uid)), orderBy('createdAt', 'desc'))
+      const snap = await getDocs(q)
+      setBacktests(snap.docs.map(d => ({ id: d.id, ...d.data() } as Backtest)))
+      setIsLoading(false)
+    }
+    load()
   }, [user])
 
   const { register, handleSubmit, formState: { isSubmitting }, reset } = useForm<FormData>({ resolver: zodResolver(schema) })
 
   const onSubmit = async (data: FormData) => {
+    if (!user) return
     try {
-      const res = await fetch('/api/backtests', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ ...data, trades: [] }),
-      })
-      if (!res.ok) throw new Error()
-      const bt: Backtest = await res.json()
+      const id = `backtest_${Date.now()}`
+      const bt: Backtest = {
+        ...data, id, userId: user.uid, trades: [],
+        createdAt: new Date().toISOString(), updatedAt: new Date().toISOString(),
+      }
+      await setDoc(doc(db, col.backtest(user.uid, id)), bt)
       setBacktests(prev => [bt, ...prev])
       toast.success('Backtest created')
       setIsOpen(false)
@@ -98,7 +104,6 @@ export default function BacktestClient() {
         </div>
       )}
 
-      {/* New session modal */}
       <Modal isOpen={isOpen} onClose={() => setIsOpen(false)} title="New Backtest Session" size="md">
         <form onSubmit={handleSubmit(onSubmit)} className="p-6 space-y-4">
           <div className="grid grid-cols-2 gap-4">
@@ -140,7 +145,6 @@ export default function BacktestClient() {
         </form>
       </Modal>
 
-      {/* Detail modal */}
       <Modal isOpen={!!selected} onClose={() => setSelected(null)} title={selected?.name ?? 'Session'} size="lg">
         {selected && (
           <div className="p-6 space-y-4">

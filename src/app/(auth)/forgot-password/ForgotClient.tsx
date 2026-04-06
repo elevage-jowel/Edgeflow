@@ -4,6 +4,7 @@ import Link from 'next/link'
 import { useForm } from 'react-hook-form'
 import { z } from 'zod'
 import { zodResolver } from '@hookform/resolvers/zod'
+import { resetPassword } from '@/lib/firebase/auth'
 import toast from 'react-hot-toast'
 import { TrendingUp, ArrowLeft, Mail } from 'lucide-react'
 
@@ -14,10 +15,13 @@ export default function ForgotClient() {
   const [sent, setSent] = useState(false)
   const { register, handleSubmit, formState: { errors, isSubmitting } } = useForm<FormData>({ resolver: zodResolver(schema) })
 
-  const onSubmit = async (_data: FormData) => {
-    // Password reset via email requires an email service (e.g. SendGrid/SMTP).
-    // For now we simulate the success state; wire up a real email provider when ready.
-    setSent(true)
+  const onSubmit = async (data: FormData) => {
+    try {
+      await resetPassword(data.email)
+      setSent(true)
+    } catch {
+      toast.error('Failed to send reset email')
+    }
   }
 
   return (

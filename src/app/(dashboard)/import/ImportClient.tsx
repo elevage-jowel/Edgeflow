@@ -127,7 +127,7 @@ export default function ImportClient() {
 
   const handlePreview = () => {
     if (!user) return
-    const p = rows.map(r => parseRow(r, mapping, user.id))
+    const p = rows.map(r => parseRow(r, mapping, user.uid))
     setParsed(p)
     setStep('preview')
   }

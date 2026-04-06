@@ -1,38 +1,40 @@
 'use client'
 import { useEffect } from 'react'
-import { useSession } from 'next-auth/react'
+import { onAuthStateChanged } from 'firebase/auth'
+import { auth } from '@/lib/firebase/config'
+import { getUserProfile } from '@/lib/firebase/auth'
 import { useAuthStore } from '@/lib/stores/authStore'
-import { UserProfile } from '@/lib/types'
+import { seedDemoData } from '@/data/seed'
+import { doc, updateDoc } from 'firebase/firestore'
+import { db } from '@/lib/firebase/config'
+import { col } from '@/lib/firebase/collections'
 
 export function useAuthListener() {
-  const { data: session, status } = useSession()
   const { setUser, setProfile, setLoading } = useAuthStore()
 
   useEffect(() => {
-    if (status === 'loading') return
-    setLoading(false)
-
-    if (status === 'authenticated' && session?.user) {
-      const user = session.user as { id: string; email?: string | null; name?: string | null; image?: string | null }
-      setUser({ id: user.id, email: user.email, name: user.name, image: user.image })
-
-      // Fetch full user profile and seed if needed
-      fetch('/api/user')
-        .then(r => r.json())
-        .then(async (data: UserProfile & { seeded?: boolean }) => {
-          setProfile(data)
-          if (!data.seeded) {
-            await fetch('/api/seed', { method: 'POST' })
-            const updated = await fetch('/api/user').then(r => r.json())
+    const unsub = onAuthStateChanged(auth, async (user) => {
+      setUser(user)
+      if (user) {
+        const profile = await getUserProfile(user.uid)
+        setProfile(profile)
+        if (profile && !profile.seeded) {
+          try {
+            await seedDemoData(user.uid)
+            await updateDoc(doc(db, col.user(user.uid)), { seeded: true })
+            const updated = await getUserProfile(user.uid)
             setProfile(updated)
+          } catch (e) {
+            console.error('Seed failed:', e)
           }
-        })
-        .catch(console.error)
-    } else {
-      setUser(null)
-      setProfile(null)
-    }
-  }, [session, status, setUser, setProfile, setLoading])
+        }
+      } else {
+        setProfile(null)
+      }
+      setLoading(false)
+    })
+    return unsub
+  }, [setUser, setProfile, setLoading])
 }
 
 export function useAuth() {

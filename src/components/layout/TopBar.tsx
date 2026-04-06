@@ -3,7 +3,7 @@ import { useState, useRef, useEffect } from 'react'
 import { usePathname, useRouter } from 'next/navigation'
 import { Menu, Bell, LogOut, User, Settings, ChevronDown, TrendingUp } from 'lucide-react'
 import { useAuthStore } from '@/lib/stores/authStore'
-import { signOut } from 'next-auth/react'
+import { signOut } from '@/lib/firebase/auth'
 import { useUIStore } from '@/lib/stores/uiStore'
 import toast from 'react-hot-toast'
 import Link from 'next/link'
@@ -53,7 +53,7 @@ export function TopBar() {
     }
   }
 
-  const initials = (userProfile?.displayName ?? user?.email ?? user?.name ?? 'U')
+  const initials = (userProfile?.displayName ?? user?.email ?? 'U')
     .split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2)
 
   return (
@@ -87,7 +87,7 @@ export function TopBar() {
               {initials}
             </div>
             <span className="text-sm text-slate-300 group-hover:text-white hidden sm:block max-w-24 truncate">
-              {userProfile?.displayName ?? user?.name ?? user?.email?.split('@')[0] ?? 'Trader'}
+              {userProfile?.displayName ?? user?.email?.split('@')[0] ?? 'Trader'}
             </span>
             <ChevronDown className="w-3.5 h-3.5 text-slate-500" />
           </button>

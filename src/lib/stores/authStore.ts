@@ -1,19 +1,13 @@
 import { create } from 'zustand'
+import { User } from 'firebase/auth'
 import { UserProfile } from '@/lib/types'
 
-interface SessionUser {
-  id: string
-  email?: string | null
-  name?: string | null
-  image?: string | null
-}
-
 interface AuthState {
-  user: SessionUser | null
+  user: User | null
   userProfile: UserProfile | null
   isLoading: boolean
   isAuthenticated: boolean
-  setUser: (user: SessionUser | null) => void
+  setUser: (user: User | null) => void
   setProfile: (profile: UserProfile | null) => void
   setLoading: (loading: boolean) => void
 }

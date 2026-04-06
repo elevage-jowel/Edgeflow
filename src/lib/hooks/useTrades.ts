@@ -1,5 +1,8 @@
 'use client'
 import { useEffect, useCallback } from 'react'
+import { collection, onSnapshot, orderBy, query, doc, setDoc, updateDoc, deleteDoc } from 'firebase/firestore'
+import { db } from '@/lib/firebase/config'
+import { col } from '@/lib/firebase/collections'
 import { useTradeStore } from '@/lib/stores/tradeStore'
 import { useAuthStore } from '@/lib/stores/authStore'
 import { Trade } from '@/lib/types'
@@ -11,13 +14,13 @@ export function useTradesSubscription() {
   useEffect(() => {
     if (!user) return
     setLoading(true)
-    fetch('/api/trades')
-      .then(r => r.json())
-      .then((trades: Trade[]) => {
-        setTrades(trades)
-        setLoading(false)
-      })
-      .catch(() => setLoading(false))
+    const q = query(collection(db, col.trades(user.uid)), orderBy('entryDate', 'desc'))
+    const unsub = onSnapshot(q, snap => {
+      const trades = snap.docs.map(d => ({ id: d.id, ...d.data() } as Trade))
+      setTrades(trades)
+      setLoading(false)
+    }, () => setLoading(false))
+    return unsub
   }, [user, setTrades, setLoading])
 }
 
@@ -44,38 +47,37 @@ export function useTrades() {
 }
 
 export function useTradeActions() {
+  const { user } = useAuthStore()
   const { upsertTrade, deleteTrade: removeFromStore } = useTradeStore()
 
   const createTrade = useCallback(async (data: Omit<Trade, 'id' | 'userId' | 'createdAt' | 'updatedAt'>) => {
-    const res = await fetch('/api/trades', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(data),
-    })
-    if (!res.ok) throw new Error('Failed to create trade')
-    const trade: Trade = await res.json()
+    if (!user) throw new Error('Not authenticated')
+    const id = `trade_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`
+    const trade: Trade = {
+      ...data,
+      id,
+      userId: user.uid,
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+    }
+    await setDoc(doc(db, col.trade(user.uid, id)), trade)
     upsertTrade(trade)
     return trade
-  }, [upsertTrade])
+  }, [user, upsertTrade])
 
   const updateTrade = useCallback(async (id: string, data: Partial<Trade>) => {
+    if (!user) throw new Error('Not authenticated')
+    const updated = { ...data, updatedAt: new Date().toISOString() }
+    await updateDoc(doc(db, col.trade(user.uid, id)), updated)
     const existing = useTradeStore.getState().trades.find(t => t.id === id)
-    if (!existing) throw new Error('Trade not found')
-    const res = await fetch(`/api/trades/${id}`, {
-      method: 'PUT',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ ...existing, ...data }),
-    })
-    if (!res.ok) throw new Error('Failed to update trade')
-    const trade: Trade = await res.json()
-    upsertTrade(trade)
-  }, [upsertTrade])
+    if (existing) upsertTrade({ ...existing, ...updated })
+  }, [user, upsertTrade])
 
   const deleteTrade = useCallback(async (id: string) => {
-    const res = await fetch(`/api/trades/${id}`, { method: 'DELETE' })
-    if (!res.ok) throw new Error('Failed to delete trade')
+    if (!user) throw new Error('Not authenticated')
+    await deleteDoc(doc(db, col.trade(user.uid, id)))
     removeFromStore(id)
-  }, [removeFromStore])
+  }, [user, removeFromStore])
 
   return { createTrade, updateTrade, deleteTrade }
 }

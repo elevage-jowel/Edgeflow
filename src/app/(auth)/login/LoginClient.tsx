@@ -5,7 +5,7 @@ import Link from 'next/link'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
-import { signIn } from 'next-auth/react'
+import { signIn, signInWithGoogle } from '@/lib/firebase/auth'
 import toast from 'react-hot-toast'
 import { Eye, EyeOff, TrendingUp, BarChart2, Target, Zap } from 'lucide-react'
 
@@ -25,20 +25,22 @@ export default function LoginClient() {
   })
 
   const onSubmit = async (data: FormData) => {
-    const res = await signIn('credentials', { email: data.email, password: data.password, redirect: false })
-    if (res?.error) {
-      toast.error('Invalid email or password')
-    } else {
+    try {
+      await signIn(data.email, data.password)
       router.push('/dashboard')
+    } catch {
+      toast.error('Invalid email or password')
     }
   }
 
   const handleGoogle = async () => {
     setIsGoogleLoading(true)
     try {
-      await signIn('google', { callbackUrl: '/dashboard' })
+      await signInWithGoogle()
+      router.push('/dashboard')
     } catch {
       toast.error('Google sign in failed')
+    } finally {
       setIsGoogleLoading(false)
     }
   }
