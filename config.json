@@ -1,0 +1,40 @@
+{
+  "output_path": "Daily_Trading_Levels",
+  "run_time": "07:00",
+  "timezone": "Europe/London",
+  "symbols": ["EURUSD", "GBPUSD", "XAUUSD", "DXY"],
+  "symbol_config": {
+    "EURUSD": {
+      "tv_exchange": "FX_IDC",
+      "tv_symbol": "EURUSD",
+      "yf_symbol": "EURUSD=X",
+      "decimals": 5
+    },
+    "GBPUSD": {
+      "tv_exchange": "FX_IDC",
+      "tv_symbol": "GBPUSD",
+      "yf_symbol": "GBPUSD=X",
+      "decimals": 5
+    },
+    "XAUUSD": {
+      "tv_exchange": "TVC",
+      "tv_symbol": "GOLD",
+      "yf_symbol": "GC=F",
+      "decimals": 2
+    },
+    "DXY": {
+      "tv_exchange": "TVC",
+      "tv_symbol": "DXY",
+      "yf_symbol": "DX-Y.NYB",
+      "decimals": 3
+    }
+  },
+  "tradingview": {
+    "username": "",
+    "password": ""
+  },
+  "screenshot": true,
+  "data_source": "tvDatafeed",
+  "lookback_bars": 15,
+  "log_level": "INFO"
+}
