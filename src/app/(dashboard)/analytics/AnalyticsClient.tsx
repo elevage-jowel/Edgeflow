@@ -7,10 +7,8 @@ import { DrawdownChart } from '@/components/charts/DrawdownChart'
 import { DayOfWeekChart } from '@/components/charts/DayOfWeekChart'
 import { MonthlyPnLChart } from '@/components/charts/MonthlyPnLChart'
 import { WinRateDonut } from '@/components/charts/WinRateDonut'
-import { PnLBarChart } from '@/components/charts/PnLBarChart'
 import { cn } from '@/lib/utils/cn'
 import { formatCurrency, formatWinRate, formatR, formatPnl } from '@/lib/utils/formatters'
-import { BarChart2, TrendingDown, Target, Zap } from 'lucide-react'
 
 const ranges: TimeRange[] = ['1W', '1M', '3M', '6M', 'YTD', '1Y', 'ALL']
 const tabs = ['Overview', 'By Symbol', 'By Day', 'By Session', 'Distribution']

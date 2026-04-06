@@ -192,9 +192,130 @@ export interface UserProfile {
   riskUnit: 'dollar' | 'percent' | 'r'
   accountSize?: number
   seeded?: boolean
+  points?: UserPoints
   createdAt: string
   updatedAt: string
 }
+
+// ─── SETUP PLANS & SCORING ───────────────────────────────────────────────────
+
+export type CriterionValidatorType =
+  | 'has_notes'
+  | 'has_screenshot'
+  | 'has_strategy'
+  | 'has_playbook'
+  | 'has_sl'
+  | 'has_tp'
+  | 'has_emotion'
+  | 'has_market_condition'
+  | 'no_rule_violation'
+  | 'has_session'
+  | 'min_rr'
+  | 'min_confidence'
+  | 'has_setup_rating'
+  | 'always_true'
+
+export interface CriterionValidator {
+  type: CriterionValidatorType
+  value?: number  // for min_rr, min_confidence
+}
+
+export interface PlanCriterion {
+  id: string
+  label: string
+  description?: string
+  weight: number  // total weights in a plan = 100
+  validator: CriterionValidator
+}
+
+export interface SetupPlan {
+  id: string
+  userId: string
+  name: string           // matches Trade.strategy or Trade.setup name
+  description?: string
+  criteria: PlanCriterion[]
+  isDefault: boolean
+  createdAt: string
+  updatedAt: string
+}
+
+export type TradeScoreClass = 'in_plan' | 'partial' | 'out_of_plan'
+
+export interface CriterionResult {
+  criterionId: string
+  label: string
+  weight: number
+  passed: boolean
+  pointsEarned: number
+}
+
+export interface TradeVerification {
+  id: string               // same as tradeId
+  tradeId: string
+  userId: string
+  tradeType: 'live' | 'backtest'
+  planName: string
+  score: number            // 0-100
+  scoreClass: TradeScoreClass
+  criteria: CriterionResult[]
+  pointsAwarded: number
+  bonusPoints: number
+  totalPoints: number
+  summary: string
+  streakAtTime: number
+  createdAt: string
+}
+
+// ─── BADGES ──────────────────────────────────────────────────────────────────
+
+export type BadgeId =
+  // Live badges
+  | 'first_live_setup'
+  | 'live_streak_5'
+  | 'live_perfect_100'
+  | 'live_30_days'
+  | 'live_50_setups'
+  // Backtest badges
+  | 'first_backtest_session'
+  | 'backtest_streak_10'
+  | 'backtest_perfect_100'
+  | 'backtest_50_setups'
+  // Combined
+  | 'apprentice_rank'
+  | 'confirmed_rank'
+  | 'expert_rank'
+  | 'elite_rank'
+
+export interface Badge {
+  id: BadgeId
+  name: string
+  description: string
+  icon: string         // emoji
+  category: 'live' | 'backtest' | 'rank'
+  earnedAt?: string    // set when unlocked
+  unlocked: boolean
+}
+
+// ─── USER POINTS & LEVEL ─────────────────────────────────────────────────────
+
+export type UserLevel = 'apprentice' | 'confirmed' | 'expert' | 'elite'
+
+export interface UserPoints {
+  total: number
+  live: number
+  backtest: number
+  currentStreak: number
+  longestStreak: number
+  avgScore7: number
+  avgScore30: number
+  avgScoreLive: number
+  avgScoreBacktest: number
+  level: UserLevel
+  badges: Badge[]
+  scoreHistory: { tradeId: string; score: number; date: string; type: 'live' | 'backtest' }[]
+}
+
+// ─── DATE RANGE ──────────────────────────────────────────────────────────────
 
 export interface DateRange {
   from: Date

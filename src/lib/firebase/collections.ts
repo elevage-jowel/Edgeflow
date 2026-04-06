@@ -10,4 +10,9 @@ export const col = {
   review: (uid: string, id: string) => `users/${uid}/reviews/${id}`,
   backtests: (uid: string) => `users/${uid}/backtests`,
   backtest: (uid: string, id: string) => `users/${uid}/backtests/${id}`,
+  // Scoring
+  setupPlans: (uid: string) => `users/${uid}/setupPlans`,
+  setupPlan: (uid: string, id: string) => `users/${uid}/setupPlans/${id}`,
+  verifications: (uid: string) => `users/${uid}/verifications`,
+  verification: (uid: string, id: string) => `users/${uid}/verifications/${id}`,
 }

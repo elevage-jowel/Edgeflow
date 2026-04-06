@@ -17,6 +17,8 @@ import {
   TrendingUp, TrendingDown, BarChart2, Target, Zap, DollarSign,
   Activity, Award, BookOpen, ArrowRight, Flame
 } from 'lucide-react'
+import { PointsWidget } from '@/components/scoring/PointsWidget'
+import { defaultUserPoints } from '@/lib/scoring/planEngine'
 
 const ranges: TimeRange[] = ['1W', '1M', '3M', '6M', 'YTD', '1Y', 'ALL']
 
@@ -126,6 +128,9 @@ export default function DashboardClient() {
           loading={isLoading}
         />
       </div>
+
+      {/* Discipline Score widget */}
+      <PointsWidget points={userProfile?.points ?? defaultUserPoints()} />
 
       {/* Charts row */}
       <div className="grid grid-cols-1 xl:grid-cols-3 gap-4">

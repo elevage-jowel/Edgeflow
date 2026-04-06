@@ -4,9 +4,10 @@ import { usePathname } from 'next/navigation'
 import { cn } from '@/lib/utils/cn'
 import { useUIStore } from '@/lib/stores/uiStore'
 import {
-  TrendingUp, LayoutDashboard, BookOpen, BarChart2, Target, BookMarked,
+  LayoutDashboard, BookOpen, BarChart2, Target, BookMarked,
   FlaskConical, Calendar, Settings, ChevronLeft, ChevronRight, Upload, X
 } from 'lucide-react'
+import { Logo } from '@/components/ui/Logo'
 
 const navItems = [
   { href: '/dashboard', icon: LayoutDashboard, label: 'Dashboard' },
@@ -40,12 +41,11 @@ export function Sidebar({ mobile = false, onClose }: SidebarProps) {
         'flex items-center gap-2.5 px-4 py-5 border-b border-surface-500',
         collapsed && 'justify-center px-0'
       )}>
-        <div className="w-8 h-8 rounded-lg gradient-brand flex items-center justify-center shrink-0">
-          <TrendingUp className="w-4 h-4 text-white" />
-        </div>
-        {(!collapsed || mobile) && (
-          <span className="text-base font-bold text-white tracking-tight">EdgeFlow</span>
-        )}
+        <Logo
+          size={collapsed && !mobile ? 30 : 28}
+          showText={!collapsed || mobile}
+          textClassName="text-base"
+        />
         {mobile && (
           <button onClick={onClose} className="ml-auto text-slate-400 hover:text-white">
             <X className="w-5 h-5" />

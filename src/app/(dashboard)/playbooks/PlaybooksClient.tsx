@@ -72,9 +72,9 @@ function PlaybookCard({ playbook, onDelete }: { playbook: Playbook; onDelete: ()
           </div>
         )}
 
-        {playbook.tags.length > 0 && (
+        {(playbook.tags ?? []).length > 0 && (
           <div className="flex flex-wrap gap-1 mb-3">
-            {playbook.tags.map(t => <Badge key={t} variant="default" className="text-xs">{t}</Badge>)}
+            {(playbook.tags ?? []).map(t => <Badge key={t} variant="default" className="text-xs">{t}</Badge>)}
           </div>
         )}
 
@@ -99,11 +99,11 @@ function PlaybookCard({ playbook, onDelete }: { playbook: Playbook; onDelete: ()
             </div>
           ))}
 
-          {playbook.checklist.length > 0 && (
+          {(playbook.checklist ?? []).length > 0 && (
             <div>
               <div className="text-xs font-medium text-brand-400 mb-2">Pre-Trade Checklist</div>
               <div className="space-y-1.5">
-                {playbook.checklist.map(item => (
+                {(playbook.checklist ?? []).map(item => (
                   <div key={item.id} className="flex items-center gap-2 text-sm text-slate-300">
                     <div className="w-4 h-4 border border-surface-400 rounded flex items-center justify-center">
                       {item.checked && <div className="w-2 h-2 bg-brand-500 rounded-sm" />}

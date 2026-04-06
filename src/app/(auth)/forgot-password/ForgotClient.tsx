@@ -6,7 +6,8 @@ import { z } from 'zod'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { resetPassword } from '@/lib/firebase/auth'
 import toast from 'react-hot-toast'
-import { TrendingUp, ArrowLeft, Mail } from 'lucide-react'
+import { ArrowLeft, Mail } from 'lucide-react'
+import { Logo } from '@/components/ui/Logo'
 
 const schema = z.object({ email: z.string().email('Valid email required') })
 type FormData = z.infer<typeof schema>
@@ -27,11 +28,8 @@ export default function ForgotClient() {
   return (
     <div className="flex-1 flex items-center justify-center p-8">
       <div className="w-full max-w-md">
-        <div className="flex items-center gap-2 mb-10">
-          <div className="w-9 h-9 rounded-xl gradient-brand flex items-center justify-center">
-            <TrendingUp className="w-5 h-5 text-white" />
-          </div>
-          <span className="text-xl font-bold text-white">EdgeFlow</span>
+        <div className="mb-10">
+          <Logo size={40} textClassName="text-xl" />
         </div>
 
         {sent ? (

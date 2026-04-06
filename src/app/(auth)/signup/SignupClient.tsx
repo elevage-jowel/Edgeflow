@@ -7,7 +7,8 @@ import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
 import { signUp, signInWithGoogle } from '@/lib/firebase/auth'
 import toast from 'react-hot-toast'
-import { Eye, EyeOff, TrendingUp, CheckCircle } from 'lucide-react'
+import { Eye, EyeOff, CheckCircle } from 'lucide-react'
+import { Logo } from '@/components/ui/Logo'
 
 const schema = z.object({
   name: z.string().min(2, 'Name must be at least 2 characters'),
@@ -64,11 +65,8 @@ export default function SignupClient() {
         <div className="absolute bottom-0 left-20 w-60 h-60 bg-cyan-500/10 rounded-full blur-3xl" />
 
         <div className="relative z-10">
-          <div className="flex items-center gap-2.5 mb-12">
-            <div className="w-9 h-9 rounded-xl gradient-brand flex items-center justify-center">
-              <TrendingUp className="w-5 h-5 text-white" />
-            </div>
-            <span className="text-xl font-bold text-white tracking-tight">EdgeFlow</span>
+          <div className="mb-12">
+            <Logo size={40} textClassName="text-xl" />
           </div>
 
           <h1 className="text-4xl font-bold text-white leading-tight mb-4">
@@ -106,11 +104,8 @@ export default function SignupClient() {
       {/* Right */}
       <div className="flex-1 flex items-center justify-center p-8">
         <div className="w-full max-w-md">
-          <div className="flex items-center gap-2 mb-8 lg:hidden">
-            <div className="w-8 h-8 rounded-lg gradient-brand flex items-center justify-center">
-              <TrendingUp className="w-4 h-4 text-white" />
-            </div>
-            <span className="text-lg font-bold text-white">EdgeFlow</span>
+          <div className="mb-8 lg:hidden">
+            <Logo size={32} textClassName="text-lg" />
           </div>
 
           <h2 className="text-2xl font-bold text-white mb-2">Create your account</h2>

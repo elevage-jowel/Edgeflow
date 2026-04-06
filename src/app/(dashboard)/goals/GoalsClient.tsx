@@ -18,7 +18,7 @@ import { Plus, Target, Trash2, CheckCircle2, Clock } from 'lucide-react'
 const schema = z.object({
   title: z.string().min(1, 'Title required'),
   description: z.string().optional(),
-  type: z.enum(['monthly_pnl', 'win_rate', 'max_drawdown', 'trade_count', 'daily_loss_limit', 'screenshot_rate']),
+  type: z.enum(['monthly_pnl', 'win_rate', 'max_drawdown', 'trade_count', 'risk_reward', 'daily_loss_limit', 'screenshot_rate']),
   period: z.enum(['weekly', 'monthly', 'quarterly', 'yearly']),
   targetValue: z.coerce.number().positive(),
   unit: z.string().min(1, 'Unit required'),
@@ -33,6 +33,7 @@ const goalTypeLabels: Record<string, string> = {
   win_rate: 'Win Rate Target',
   max_drawdown: 'Max Drawdown Limit',
   trade_count: 'Trade Count',
+  risk_reward: 'Risk/Reward Ratio',
   daily_loss_limit: 'Daily Loss Limit',
   screenshot_rate: 'Screenshot Rate',
 }
@@ -173,7 +174,9 @@ export default function GoalsClient() {
             <div>
               <label className="text-xs font-medium text-slate-400 mb-1 block">Goal Type *</label>
               <select {...register('type')} className={inputCls}>
-                {Object.entries(goalTypeLabels).map(([v, l]) => <option key={v} value={v}>{l}</option>)}
+                {Object.entries(goalTypeLabels).map(([v, l]) => (
+                  <option key={v} value={v}>{l}</option>
+                ))}
               </select>
             </div>
             <div>

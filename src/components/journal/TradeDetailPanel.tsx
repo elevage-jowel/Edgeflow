@@ -39,7 +39,7 @@ export function TradeDetailPanel({ trade, onEdit }: TradeDetailPanelProps) {
           <div>
             <div className="text-xl font-bold text-white">{trade.symbol}</div>
             <div className="flex items-center gap-2 mt-1">
-              <Badge variant={trade.direction === 'long' ? 'long' : 'short'}>{trade.direction.toUpperCase()}</Badge>
+              <Badge variant={trade.direction === 'long' ? 'long' : 'short'}>{(trade.direction ?? 'long').toUpperCase()}</Badge>
               <Badge variant="default" className="capitalize">{trade.assetClass}</Badge>
               {trade.status === 'open' && <Badge variant="open">Open</Badge>}
             </div>
@@ -64,7 +64,7 @@ export function TradeDetailPanel({ trade, onEdit }: TradeDetailPanelProps) {
         </div>
         <div className="bg-surface-700/60 rounded-xl p-3 text-center">
           <div className="text-lg font-bold font-mono text-slate-300">
-            {trade.commission > 0 ? formatCurrency(-trade.commission) : '$0.00'}
+            {(trade.commission ?? 0) > 0 ? formatCurrency(-(trade.commission ?? 0)) : '$0.00'}
           </div>
           <div className="text-xs text-slate-500">Fees</div>
         </div>
@@ -86,11 +86,11 @@ export function TradeDetailPanel({ trade, onEdit }: TradeDetailPanelProps) {
       </div>
 
       {/* Tags */}
-      {trade.tags.length > 0 && (
+      {(trade.tags ?? []).length > 0 && (
         <div className="mb-4">
           <div className="text-xs text-slate-500 mb-2">Tags</div>
           <div className="flex flex-wrap gap-1.5">
-            {trade.tags.map(tag => (
+            {(trade.tags ?? []).map(tag => (
               <Badge key={tag} variant="brand">{tag}</Badge>
             ))}
           </div>

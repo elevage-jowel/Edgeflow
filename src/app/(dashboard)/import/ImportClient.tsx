@@ -114,7 +114,7 @@ export default function ImportClient() {
             notes: ['notes', 'comment', 'description'],
           }
           const syns = synonyms[ef.key] ?? []
-          const idx = lf.findIndex(l => syns.includes(l.replace(/\s+/g, '')))
+          const idx = lf.findIndex(l => syns.map(s => s.replace(/\s+/g, '')).includes(l.replace(/\s+/g, '')))
           if (idx >= 0) auto[ef.key] = fields[idx]
         })
         setMapping(auto)

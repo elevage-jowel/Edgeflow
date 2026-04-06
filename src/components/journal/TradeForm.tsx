@@ -4,7 +4,12 @@ import { useForm, useWatch, Controller } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
 import { useTradeActions } from '@/lib/hooks/useTrades'
-import { Trade } from '@/lib/types'
+import { useSetupPlans } from '@/lib/hooks/useSetupPlans'
+import { usePoints } from '@/lib/hooks/usePoints'
+import { Trade, TradeVerification } from '@/lib/types'
+import { verifyTrade, findMatchingPlan, defaultUserPoints } from '@/lib/scoring/planEngine'
+import { ScoreCard } from '@/components/scoring/ScoreCard'
+import { useAuthStore } from '@/lib/stores/authStore'
 import { Button } from '@/components/ui/Button'
 import { cn } from '@/lib/utils/cn'
 import toast from 'react-hot-toast'
@@ -216,8 +221,12 @@ interface TradeFormProps {
 
 export function TradeForm({ trade, onClose }: TradeFormProps) {
   const { createTrade, updateTrade } = useTradeActions()
+  const { plans } = useSetupPlans()
+  const { runVerification } = usePoints()
+  const { userProfile } = useAuthStore()
   const [mode, setMode] = useState<'quick' | 'advanced'>('quick')
   const [sections, setSections] = useState({ account: true, context: false, management: false, psychology: false, ratings: false })
+  const [pendingVerification, setPendingVerification] = useState<TradeVerification | null>(null)
 
   const toggleSection = (k: keyof typeof sections) => setSections(p => ({ ...p, [k]: !p[k] }))
 
@@ -361,14 +370,27 @@ export function TradeForm({ trade, onClose }: TradeFormProps) {
         slippage: data.slippage ? Number(data.slippage) : undefined,
       }
 
+      let savedTrade: Trade
       if (trade) {
         await updateTrade(trade.id, payload as any)
+        savedTrade = { ...trade, ...(payload as any) }
         toast.success('Trade updated')
       } else {
-        await createTrade(payload as any)
+        savedTrade = await createTrade(payload as any)
         toast.success('Trade saved')
       }
-      onClose()
+
+      // Auto-verification: find matching plan and score the trade
+      const matchingPlan = findMatchingPlan(savedTrade, plans)
+      if (matchingPlan) {
+        const currentStreak = userProfile?.points?.currentStreak ?? 0
+        const verification = verifyTrade(savedTrade, matchingPlan, 'live', currentStreak)
+        setPendingVerification(verification)
+        // Save verification to Firestore in background
+        runVerification(savedTrade, matchingPlan, 'live').catch(() => {})
+      } else {
+        onClose()
+      }
     } catch (e: any) {
       toast.error(e.message ?? 'Failed to save trade')
     }
@@ -378,6 +400,23 @@ export function TradeForm({ trade, onClose }: TradeFormProps) {
   const lbl = "block text-xs font-medium text-slate-400 mb-1.5"
   const err = "text-red-400 text-[11px] mt-1"
   const divider = <div className="border-t border-surface-500/60" />
+
+  if (pendingVerification) {
+    return (
+      <div className="p-5 space-y-4">
+        <div>
+          <h3 className="text-sm font-bold text-white mb-0.5">Setup Verification</h3>
+          <p className="text-xs text-slate-500">Automatic analysis of your trade against the {pendingVerification.planName} plan</p>
+        </div>
+        <ScoreCard verification={pendingVerification} />
+        <div className="flex justify-end pt-2">
+          <Button variant="primary" onClick={() => { setPendingVerification(null); onClose() }}>
+            Continue
+          </Button>
+        </div>
+      </div>
+    )
+  }
 
   return (
     <form onSubmit={handleSubmit(onSubmit)}>
