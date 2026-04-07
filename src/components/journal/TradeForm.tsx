@@ -795,6 +795,7 @@ export function TradeForm({ trade, onClose }: TradeFormProps) {
                           {screenshots.map((url, i) => (
                             <div key={i} className="relative group">
                               <a href={url} target="_blank" rel="noopener noreferrer">
+                                {/* eslint-disable-next-line @next/next/no-img-element */}
                                 <img src={url} alt={`Screenshot ${i + 1}`} className="h-20 w-28 object-cover rounded-lg border border-surface-500 hover:border-brand-500 transition-all" />
                               </a>
                               <button
