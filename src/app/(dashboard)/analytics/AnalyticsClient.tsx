@@ -7,11 +7,12 @@ import { DrawdownChart } from '@/components/charts/DrawdownChart'
 import { DayOfWeekChart } from '@/components/charts/DayOfWeekChart'
 import { MonthlyPnLChart } from '@/components/charts/MonthlyPnLChart'
 import { WinRateDonut } from '@/components/charts/WinRateDonut'
+import { EmotionPnLChart } from '@/components/charts/EmotionPnLChart'
 import { cn } from '@/lib/utils/cn'
 import { formatCurrency, formatWinRate, formatR, formatPnl } from '@/lib/utils/formatters'
 
 const ranges: TimeRange[] = ['1W', '1M', '3M', '6M', 'YTD', '1Y', 'ALL']
-const tabs = ['Overview', 'By Symbol', 'By Day', 'By Session', 'Distribution']
+const tabs = ['Overview', 'By Symbol', 'By Setup', 'By Day', 'By Session', 'By Emotion', 'Distribution']
 
 interface MetricItemProps { label: string; value: string; sub?: string; color?: string }
 function MetricItem({ label, value, sub, color }: MetricItemProps) {
@@ -187,6 +188,88 @@ export default function AnalyticsClient() {
                 ))}
               </tbody>
             </table>
+          )}
+        </div>
+      )}
+
+      {tab === 'By Setup' && (
+        <div className="bg-surface-800 border border-surface-500 rounded-2xl overflow-hidden">
+          {a.bySetup.length === 0 ? (
+            <div className="p-12 text-center text-slate-500">No strategy data — add a strategy when logging trades</div>
+          ) : (
+            <table className="w-full">
+              <thead>
+                <tr className="border-b border-surface-500">
+                  {['Strategy / Setup', 'Trades', 'Win Rate', 'Net P&L', 'Avg R'].map(h => (
+                    <th key={h} className="px-5 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">{h}</th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-surface-600">
+                {a.bySetup.map(s => (
+                  <tr key={s.setup} className="hover:bg-surface-700/40 transition-colors">
+                    <td className="px-5 py-3 text-sm font-bold text-white">{s.setup}</td>
+                    <td className="px-5 py-3 text-sm text-slate-300 font-mono">{s.trades}</td>
+                    <td className="px-5 py-3 text-sm font-mono">
+                      <span className={s.winRate >= 50 ? 'text-emerald-400' : 'text-red-400'}>{s.winRate.toFixed(0)}%</span>
+                    </td>
+                    <td className="px-5 py-3 text-sm font-bold font-mono">
+                      <span className={s.pnl >= 0 ? 'text-emerald-400' : 'text-red-400'}>{formatPnl(s.pnl)}</span>
+                    </td>
+                    <td className="px-5 py-3 text-sm font-mono">
+                      <span className={s.avgR >= 0 ? 'text-emerald-400' : 'text-red-400'}>{formatR(s.avgR)}</span>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          )}
+        </div>
+      )}
+
+      {tab === 'By Emotion' && (
+        <div className="space-y-4">
+          <div className="grid grid-cols-1 xl:grid-cols-2 gap-4">
+            <div className="bg-surface-800 border border-surface-500 rounded-2xl p-5">
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="text-sm font-semibold text-white">Avg P&L by Emotion (before trade)</h3>
+              </div>
+              <EmotionPnLChart data={a.byEmotion} height={240} mode="avgPnl" />
+            </div>
+            <div className="bg-surface-800 border border-surface-500 rounded-2xl p-5">
+              <h3 className="text-sm font-semibold text-white mb-4">Win Rate by Emotion</h3>
+              <EmotionPnLChart data={a.byEmotion} height={240} mode="winRate" />
+            </div>
+          </div>
+          {a.byEmotion.length > 0 && (
+            <div className="bg-surface-800 border border-surface-500 rounded-2xl overflow-hidden">
+              <table className="w-full">
+                <thead>
+                  <tr className="border-b border-surface-500">
+                    {['Emotion', 'Trades', 'Win Rate', 'Total P&L', 'Avg P&L'].map(h => (
+                      <th key={h} className="px-5 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">{h}</th>
+                    ))}
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-surface-600">
+                  {a.byEmotion.map(e => (
+                    <tr key={e.emotion} className="hover:bg-surface-700/40">
+                      <td className="px-5 py-3 text-sm font-medium text-white capitalize">{e.emotion}</td>
+                      <td className="px-5 py-3 text-sm text-slate-300 font-mono">{e.trades}</td>
+                      <td className="px-5 py-3 text-sm font-mono">
+                        <span className={e.winRate >= 50 ? 'text-emerald-400' : 'text-red-400'}>{e.winRate.toFixed(0)}%</span>
+                      </td>
+                      <td className="px-5 py-3 text-sm font-bold font-mono">
+                        <span className={e.pnl >= 0 ? 'text-emerald-400' : 'text-red-400'}>{formatPnl(e.pnl)}</span>
+                      </td>
+                      <td className="px-5 py-3 text-sm font-mono">
+                        <span className={e.avgPnl >= 0 ? 'text-emerald-400' : 'text-red-400'}>{formatCurrency(e.avgPnl)}</span>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
           )}
         </div>
       )}

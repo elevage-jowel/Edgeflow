@@ -18,6 +18,8 @@ const pageTitles: Record<string, string> = {
   '/backtest': 'Backtest',
   '/calendar': 'Calendar',
   '/import': 'Import Trades',
+  '/planner': 'Daily Planner',
+  '/propfirm': 'Prop Firm Tracker',
   '/settings': 'Settings',
 }
 

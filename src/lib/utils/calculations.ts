@@ -179,6 +179,38 @@ export function computeAnalytics(trades: Trade[]): AnalyticsData {
   }
   const bySession = Array.from(sessionMap.entries()).map(([session, v]) => ({ session, pnl: v.pnl, trades: v.trades, winRate: v.trades > 0 ? (v.wins / v.trades) * 100 : 0 }))
 
+  // By setup/strategy
+  const setupMap = new Map<string, { pnl: number; trades: number; wins: number; rTotal: number; rCount: number }>()
+  for (const t of closed) {
+    const setup = t.strategy ?? 'Unknown'
+    const prev = setupMap.get(setup) ?? { pnl: 0, trades: 0, wins: 0, rTotal: 0, rCount: 0 }
+    setupMap.set(setup, {
+      pnl: prev.pnl + (t.netPnl ?? 0),
+      trades: prev.trades + 1,
+      wins: prev.wins + ((t.netPnl ?? 0) > 0 ? 1 : 0),
+      rTotal: prev.rTotal + (t.rMultiple ?? 0),
+      rCount: prev.rCount + (t.rMultiple !== undefined ? 1 : 0),
+    })
+  }
+  const bySetup = Array.from(setupMap.entries())
+    .map(([setup, v]) => ({ setup, pnl: v.pnl, trades: v.trades, winRate: v.trades > 0 ? (v.wins / v.trades) * 100 : 0, avgR: v.rCount > 0 ? v.rTotal / v.rCount : 0 }))
+    .sort((a, b) => b.pnl - a.pnl)
+
+  // By emotion (emotionBefore)
+  const emotionMap = new Map<string, { pnl: number; trades: number; wins: number }>()
+  for (const t of closed) {
+    const emotion = t.emotionBefore ?? 'Unknown'
+    const prev = emotionMap.get(emotion) ?? { pnl: 0, trades: 0, wins: 0 }
+    emotionMap.set(emotion, {
+      pnl: prev.pnl + (t.netPnl ?? 0),
+      trades: prev.trades + 1,
+      wins: prev.wins + ((t.netPnl ?? 0) > 0 ? 1 : 0),
+    })
+  }
+  const byEmotion = Array.from(emotionMap.entries())
+    .map(([emotion, v]) => ({ emotion, pnl: v.pnl, trades: v.trades, winRate: v.trades > 0 ? (v.wins / v.trades) * 100 : 0, avgPnl: v.trades > 0 ? v.pnl / v.trades : 0 }))
+    .sort((a, b) => b.pnl - a.pnl)
+
   // Best/worst day
   const bestDay = dailyPnlGrouped.length > 0 ? dailyPnlGrouped.reduce((b, d) => d.pnl > b.pnl ? d : b, dailyPnlGrouped[0]) : null
   const worstDay = dailyPnlGrouped.length > 0 ? dailyPnlGrouped.reduce((w, d) => d.pnl < w.pnl ? d : w, dailyPnlGrouped[0]) : null
@@ -240,5 +272,7 @@ export function computeAnalytics(trades: Trade[]): AnalyticsData {
     worstHour,
     winDistribution: buildDist(wins, true),
     lossDistribution: buildDist(losses, false),
+    bySetup,
+    byEmotion,
   }
 }

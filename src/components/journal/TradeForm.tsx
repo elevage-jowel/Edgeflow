@@ -13,7 +13,8 @@ import { useAuthStore } from '@/lib/stores/authStore'
 import { Button } from '@/components/ui/Button'
 import { cn } from '@/lib/utils/cn'
 import toast from 'react-hot-toast'
-import { TrendingUp, TrendingDown, ChevronDown, ChevronUp, Zap, SlidersHorizontal, Star, AlertTriangle } from 'lucide-react'
+import { TrendingUp, TrendingDown, ChevronDown, ChevronUp, Zap, SlidersHorizontal, Star, AlertTriangle, ImagePlus, X, Loader2 } from 'lucide-react'
+import { uploadTradeScreenshot } from '@/lib/firebase/storageUtils'
 
 // ─── Static options ───────────────────────────────────────────────────────────
 
@@ -227,6 +228,9 @@ export function TradeForm({ trade, onClose }: TradeFormProps) {
   const [mode, setMode] = useState<'quick' | 'advanced'>('quick')
   const [sections, setSections] = useState({ account: true, context: false, management: false, psychology: false, ratings: false })
   const [pendingVerification, setPendingVerification] = useState<TradeVerification | null>(null)
+  const [screenshots, setScreenshots] = useState<string[]>(trade?.screenshotUrls ?? [])
+  const [uploadingScreenshot, setUploadingScreenshot] = useState(false)
+  const { user } = useAuthStore()
 
   const toggleSection = (k: keyof typeof sections) => setSections(p => ({ ...p, [k]: !p[k] }))
 
@@ -298,6 +302,27 @@ export function TradeForm({ trade, onClose }: TradeFormProps) {
     setValue('mistakeTags', current.includes(tag) ? current.filter(t => t !== tag) : [...current, tag])
   }
 
+  const handleScreenshotUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (!file || !user) return
+    try {
+      setUploadingScreenshot(true)
+      const tradeId = trade?.id ?? `tmp_${Date.now()}`
+      const url = await uploadTradeScreenshot(user.uid, tradeId, file)
+      setScreenshots(prev => [...prev, url])
+      toast.success('Screenshot uploaded')
+    } catch {
+      toast.error('Upload failed')
+    } finally {
+      setUploadingScreenshot(false)
+      e.target.value = ''
+    }
+  }
+
+  const removeScreenshot = (url: string) => {
+    setScreenshots(prev => prev.filter(s => s !== url))
+  }
+
   const onSubmit = async (data: FormData) => {
     try {
       const dir = data.direction === 'long' ? 1 : -1
@@ -349,7 +374,7 @@ export function TradeForm({ trade, onClose }: TradeFormProps) {
         session: data.session || undefined,
         notes: data.notes || '',
         tags: data.tags ? data.tags.split(',').map(t => t.trim()).filter(Boolean) : [],
-        screenshotUrls: trade?.screenshotUrls ?? [],
+        screenshotUrls: screenshots,
         setupRating: data.setupRating ? Number(data.setupRating) : undefined,
         executionRating: data.executionRating ? Number(data.executionRating) : undefined,
         propFirm: data.propFirm || undefined,
@@ -759,6 +784,35 @@ export function TradeForm({ trade, onClose }: TradeFormProps) {
                     <div>
                       <label className={lbl}>Qualité d&apos;exécution</label>
                       <StarRating value={executionRating ? Number(executionRating) : undefined} onChange={v => setValue('executionRating', v)} />
+                    </div>
+                  </div>
+                  {/* Screenshots */}
+                  <div>
+                    <label className={lbl}>Screenshots</label>
+                    <div className="space-y-2">
+                      {screenshots.length > 0 && (
+                        <div className="flex flex-wrap gap-2">
+                          {screenshots.map((url, i) => (
+                            <div key={i} className="relative group">
+                              <a href={url} target="_blank" rel="noopener noreferrer">
+                                <img src={url} alt={`Screenshot ${i + 1}`} className="h-20 w-28 object-cover rounded-lg border border-surface-500 hover:border-brand-500 transition-all" />
+                              </a>
+                              <button
+                                type="button"
+                                onClick={() => removeScreenshot(url)}
+                                className="absolute -top-1.5 -right-1.5 w-5 h-5 bg-red-500 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
+                              >
+                                <X className="w-3 h-3 text-white" />
+                              </button>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                      <label className={cn('flex items-center gap-2 px-3 py-2 rounded-lg border border-dashed border-surface-400 text-slate-400 hover:text-white hover:border-brand-500 cursor-pointer transition-all text-xs w-fit', uploadingScreenshot && 'opacity-50 cursor-not-allowed')}>
+                        {uploadingScreenshot ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <ImagePlus className="w-3.5 h-3.5" />}
+                        {uploadingScreenshot ? 'Uploading...' : 'Add screenshot'}
+                        <input type="file" accept="image/*" className="hidden" onChange={handleScreenshotUpload} disabled={uploadingScreenshot} />
+                      </label>
                     </div>
                   </div>
                 </div>

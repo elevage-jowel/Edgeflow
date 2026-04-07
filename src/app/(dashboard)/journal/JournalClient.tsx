@@ -14,7 +14,7 @@ import { cn } from '@/lib/utils/cn'
 import toast from 'react-hot-toast'
 import {
   Plus, Search, SlidersHorizontal, ChevronUp, ChevronDown,
-  BookOpen, Pencil, Trash2, Eye, Filter
+  BookOpen, Pencil, Trash2, Eye, Filter, Download
 } from 'lucide-react'
 
 type SortField = 'entryDate' | 'symbol' | 'netPnl' | 'rMultiple'
@@ -87,7 +87,10 @@ export default function JournalClient() {
             <div className="text-xs text-slate-500">Win Rate</div>
           </div>
         </div>
-        <Button variant="primary" icon={Plus} onClick={() => setIsAddOpen(true)}>Add Trade</Button>
+        <div className="flex items-center gap-2">
+          <Button variant="ghost" icon={Download} onClick={() => window.print()} size="sm">Export PDF</Button>
+          <Button variant="primary" icon={Plus} onClick={() => setIsAddOpen(true)}>Add Trade</Button>
+        </div>
       </div>
 
       {/* Filters */}

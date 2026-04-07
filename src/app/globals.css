@@ -101,3 +101,19 @@ a, button {
     scrollbar-width: none;
   }
 }
+
+@media print {
+  body { background: white !important; color: black !important; font-size: 12px; }
+  aside, header, nav, [data-no-print], button:not([data-print-keep]) { display: none !important; }
+  .bg-surface-800, .bg-surface-700, .bg-surface-600 { background: white !important; }
+  .border-surface-500, .border-surface-600 { border-color: #e2e8f0 !important; }
+  .text-white { color: black !important; }
+  .text-slate-300, .text-slate-400, .text-slate-500 { color: #64748b !important; }
+  .text-emerald-400 { color: #059669 !important; }
+  .text-red-400 { color: #dc2626 !important; }
+  .text-brand-300, .text-brand-400 { color: #6366f1 !important; }
+  main { padding: 0 !important; margin: 0 !important; }
+  .space-y-5 > * + * { margin-top: 12px !important; }
+  .rounded-2xl, .rounded-xl { border-radius: 4px !important; }
+  @page { margin: 1.5cm; size: A4 landscape; }
+}

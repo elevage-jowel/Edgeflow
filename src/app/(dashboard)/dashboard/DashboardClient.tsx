@@ -19,6 +19,7 @@ import {
 } from 'lucide-react'
 import { PointsWidget } from '@/components/scoring/PointsWidget'
 import { defaultUserPoints } from '@/lib/scoring/planEngine'
+import { InsightsWidget } from '@/components/insights/InsightsWidget'
 
 const ranges: TimeRange[] = ['1W', '1M', '3M', '6M', 'YTD', '1Y', 'ALL']
 
@@ -131,6 +132,9 @@ export default function DashboardClient() {
 
       {/* Discipline Score widget */}
       <PointsWidget points={userProfile?.points ?? defaultUserPoints()} />
+
+      {/* AI Insights */}
+      <InsightsWidget />
 
       {/* Charts row */}
       <div className="grid grid-cols-1 xl:grid-cols-3 gap-4">

@@ -378,4 +378,6 @@ export interface AnalyticsData {
   worstHour: number | null
   winDistribution: { range: string; count: number }[]
   lossDistribution: { range: string; count: number }[]
+  bySetup: { setup: string; pnl: number; trades: number; winRate: number; avgR: number }[]
+  byEmotion: { emotion: string; pnl: number; trades: number; winRate: number; avgPnl: number }[]
 }

@@ -5,7 +5,7 @@ import { cn } from '@/lib/utils/cn'
 import { useUIStore } from '@/lib/stores/uiStore'
 import {
   LayoutDashboard, BookOpen, BarChart2, Target, BookMarked,
-  FlaskConical, Calendar, Settings, ChevronLeft, ChevronRight, Upload, X
+  FlaskConical, Calendar, Settings, ChevronLeft, ChevronRight, Upload, X, ClipboardList, Building2
 } from 'lucide-react'
 import { Logo } from '@/components/ui/Logo'
 
@@ -14,6 +14,8 @@ const navItems = [
   { href: '/journal', icon: BookOpen, label: 'Journal' },
   { href: '/analytics', icon: BarChart2, label: 'Analytics' },
   { href: '/goals', icon: Target, label: 'Goals' },
+  { href: '/planner', icon: ClipboardList, label: 'Planner' },
+  { href: '/propfirm', icon: Building2, label: 'Prop Firm' },
   { href: '/playbooks', icon: BookMarked, label: 'Playbooks' },
   { href: '/backtest', icon: FlaskConical, label: 'Backtest' },
   { href: '/calendar', icon: Calendar, label: 'Calendar' },
