@@ -6,6 +6,21 @@ import { col } from '@/lib/firebase/collections'
 import { SetupPlan } from '@/lib/types'
 import { DEFAULT_PLANS } from '@/lib/scoring/defaultPlans'
 import { useAuthStore } from '@/lib/stores/authStore'
+import { DEMO_MODE, DEMO_UID } from '@/lib/demo'
+
+const DEMO_PLANS_KEY = 'edgeflow_demo_plans'
+
+function getDemoPlans(): SetupPlan[] {
+  try {
+    const s = localStorage.getItem(DEMO_PLANS_KEY)
+    if (s) return JSON.parse(s)
+  } catch {}
+  return DEFAULT_PLANS.map(p => ({ ...p, userId: DEMO_UID }))
+}
+
+function saveDemoPlans(plans: SetupPlan[]) {
+  localStorage.setItem(DEMO_PLANS_KEY, JSON.stringify(plans))
+}
 
 export function useSetupPlans() {
   const { user } = useAuthStore()
@@ -22,6 +37,12 @@ export function useSetupPlans() {
   }, [])
 
   const load = useCallback(async () => {
+    // ── Demo mode ──────────────────────────────────────────────────────
+    if (DEMO_MODE) {
+      setPlans(getDemoPlans())
+      setIsLoading(false)
+      return
+    }
     if (!user) return
     setIsLoading(true)
     try {
@@ -40,6 +61,14 @@ export function useSetupPlans() {
   useEffect(() => { load() }, [load])
 
   const savePlan = async (plan: SetupPlan) => {
+    if (DEMO_MODE) {
+      const next = plans.some(p => p.id === plan.id)
+        ? plans.map(p => p.id === plan.id ? plan : p)
+        : [...plans, plan]
+      saveDemoPlans(next)
+      setPlans(next)
+      return
+    }
     if (!user) return
     await setDoc(doc(db, col.setupPlan(user.uid, plan.id)), {
       ...plan,
@@ -53,12 +82,24 @@ export function useSetupPlans() {
   }
 
   const deletePlan = async (planId: string) => {
+    if (DEMO_MODE) {
+      const next = plans.filter(p => p.id !== planId)
+      saveDemoPlans(next)
+      setPlans(next)
+      return
+    }
     if (!user) return
     await deleteDoc(doc(db, col.setupPlan(user.uid, planId)))
     setPlans(prev => prev.filter(p => p.id !== planId))
   }
 
   const resetToDefaults = async () => {
+    if (DEMO_MODE) {
+      const defaults = DEFAULT_PLANS.map(p => ({ ...p, userId: DEMO_UID }))
+      saveDemoPlans(defaults)
+      setPlans(defaults)
+      return
+    }
     if (!user) return
     const seeded = await seedDefaultPlans(user.uid)
     setPlans(seeded)

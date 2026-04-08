@@ -8,11 +8,21 @@ import { seedDemoData } from '@/data/seed'
 import { doc, updateDoc } from 'firebase/firestore'
 import { db } from '@/lib/firebase/config'
 import { col } from '@/lib/firebase/collections'
+import { DEMO_MODE, DEMO_USER, DEMO_PROFILE } from '@/lib/demo'
 
 export function useAuthListener() {
   const { setUser, setProfile, setLoading } = useAuthStore()
 
   useEffect(() => {
+    // ── Demo mode: bypass Firebase entirely ──────────────────────────────
+    if (DEMO_MODE) {
+      setUser(DEMO_USER as any)
+      setProfile(DEMO_PROFILE)
+      setLoading(false)
+      return
+    }
+
+    // ── Normal Firebase auth ─────────────────────────────────────────────
     const unsub = onAuthStateChanged(auth, async (user) => {
       setUser(user)
       if (user) {

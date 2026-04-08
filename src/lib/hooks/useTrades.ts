@@ -6,12 +6,23 @@ import { col } from '@/lib/firebase/collections'
 import { useTradeStore } from '@/lib/stores/tradeStore'
 import { useAuthStore } from '@/lib/stores/authStore'
 import { Trade } from '@/lib/types'
+import { DEMO_MODE, DEMO_UID, getDemoTrades, saveDemoTrades } from '@/lib/demo'
 
 export function useTradesSubscription() {
   const { user } = useAuthStore()
   const { setTrades, setLoading } = useTradeStore()
 
   useEffect(() => {
+    // ── Demo mode: load from localStorage ───────────────────────────────
+    if (DEMO_MODE) {
+      setLoading(true)
+      const trades = getDemoTrades().sort((a, b) => b.entryDate.localeCompare(a.entryDate))
+      setTrades(trades)
+      setLoading(false)
+      return
+    }
+
+    // ── Normal Firestore subscription ────────────────────────────────────
     if (!user) return
     setLoading(true)
     const q = query(collection(db, col.trades(user.uid)), orderBy('entryDate', 'desc'))
@@ -51,31 +62,48 @@ export function useTradeActions() {
   const { upsertTrade, deleteTrade: removeFromStore } = useTradeStore()
 
   const createTrade = useCallback(async (data: Omit<Trade, 'id' | 'userId' | 'createdAt' | 'updatedAt'>) => {
-    if (!user) throw new Error('Not authenticated')
+    const uid = DEMO_MODE ? DEMO_UID : user?.uid
+    if (!uid) throw new Error('Not authenticated')
     const id = `trade_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`
     const trade: Trade = {
       ...data,
       id,
-      userId: user.uid,
+      userId: uid,
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
     }
-    await setDoc(doc(db, col.trade(user.uid, id)), trade)
+    if (DEMO_MODE) {
+      const all = getDemoTrades()
+      saveDemoTrades([trade, ...all])
+    } else {
+      await setDoc(doc(db, col.trade(uid, id)), trade)
+    }
     upsertTrade(trade)
     return trade
   }, [user, upsertTrade])
 
   const updateTrade = useCallback(async (id: string, data: Partial<Trade>) => {
-    if (!user) throw new Error('Not authenticated')
+    const uid = DEMO_MODE ? DEMO_UID : user?.uid
+    if (!uid) throw new Error('Not authenticated')
     const updated = { ...data, updatedAt: new Date().toISOString() }
-    await updateDoc(doc(db, col.trade(user.uid, id)), updated)
+    if (DEMO_MODE) {
+      const all = getDemoTrades().map(t => t.id === id ? { ...t, ...updated } : t)
+      saveDemoTrades(all)
+    } else {
+      await updateDoc(doc(db, col.trade(uid, id)), updated)
+    }
     const existing = useTradeStore.getState().trades.find(t => t.id === id)
     if (existing) upsertTrade({ ...existing, ...updated })
   }, [user, upsertTrade])
 
   const deleteTrade = useCallback(async (id: string) => {
-    if (!user) throw new Error('Not authenticated')
-    await deleteDoc(doc(db, col.trade(user.uid, id)))
+    const uid = DEMO_MODE ? DEMO_UID : user?.uid
+    if (!uid) throw new Error('Not authenticated')
+    if (DEMO_MODE) {
+      saveDemoTrades(getDemoTrades().filter(t => t.id !== id))
+    } else {
+      await deleteDoc(doc(db, col.trade(uid, id)))
+    }
     removeFromStore(id)
   }, [user, removeFromStore])
 
