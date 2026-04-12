@@ -10,7 +10,7 @@ import {
 } from 'lucide-react'
 import { useStore } from '../store/useStore'
 import { useI18n } from '../i18n'
-import { computeStats, getEquityCurve, getPnLDistribution, formatCurrency } from '../lib/stats'
+import { computeStats, computeSetupStats, getEquityCurve, getPnLDistribution, formatCurrency } from '../lib/stats'
 import { StatCard } from '../components/ui/StatCard'
 import { Header } from '../components/Layout/Header'
 
@@ -34,6 +34,7 @@ export function Dashboard() {
 
   const realTrades = useMemo(() => trades.filter(t => !t.backtest_session_id), [trades])
   const stats = useMemo(() => computeStats(realTrades), [realTrades])
+  const setupStats = useMemo(() => computeSetupStats(realTrades), [realTrades])
   const equityCurve = useMemo(() => getEquityCurve(realTrades, initialBalance), [realTrades, initialBalance])
   const distribution = useMemo(() => getPnLDistribution(realTrades), [realTrades])
 
@@ -215,6 +216,57 @@ export function Dashboard() {
               </ResponsiveContainer>
             </div>
           </div>
+
+          {/* Setup Quality Performance */}
+          {setupStats.some(s => s.totalTrades > 0) && (
+            <div className="bg-surface-850 border border-surface-700 rounded-xl p-5">
+              <h3 className="text-sm font-semibold text-white mb-4">Performance by Setup Quality</h3>
+              <div className="grid grid-cols-3 gap-4">
+                {setupStats.map(s => {
+                  const colors: Record<string, string> = {
+                    'A+': 'border-yellow-500/30 bg-yellow-500/5',
+                    'A':  'border-brand-500/30 bg-brand-500/5',
+                    'B':  'border-blue-500/30 bg-blue-500/5',
+                  }
+                  const textColors: Record<string, string> = {
+                    'A+': 'text-yellow-300',
+                    'A':  'text-brand-400',
+                    'B':  'text-blue-400',
+                  }
+                  return (
+                    <div key={s.quality} className={`rounded-xl border p-4 ${s.totalTrades === 0 ? 'border-surface-700 opacity-40' : colors[s.quality]}`}>
+                      <div className="flex items-center justify-between mb-3">
+                        <span className={`text-lg font-bold ${textColors[s.quality]}`}>{s.quality}</span>
+                        <span className="text-xs text-surface-400">{s.totalTrades} trades</span>
+                      </div>
+                      <div className="space-y-1.5 text-xs">
+                        <div className="flex justify-between">
+                          <span className="text-surface-500">Win Rate</span>
+                          <span className={`font-mono font-semibold ${s.winRate >= 50 ? 'text-brand-400' : 'text-red-400'}`}>{s.winRate.toFixed(1)}%</span>
+                        </div>
+                        <div className="flex justify-between">
+                          <span className="text-surface-500">Total PnL</span>
+                          <span className={`font-mono font-semibold ${s.totalPnL >= 0 ? 'text-brand-400' : 'text-red-400'}`}>{fmt(s.totalPnL)}</span>
+                        </div>
+                        <div className="flex justify-between">
+                          <span className="text-surface-500">Profit Factor</span>
+                          <span className="font-mono text-white">{isFinite(s.profitFactor) ? s.profitFactor.toFixed(2) : '∞'}</span>
+                        </div>
+                        <div className="flex justify-between">
+                          <span className="text-surface-500">Avg R</span>
+                          <span className="font-mono text-white">{s.avgRMultiple !== 0 ? `${s.avgRMultiple.toFixed(2)}R` : '—'}</span>
+                        </div>
+                        <div className="flex justify-between">
+                          <span className="text-surface-500">W / L</span>
+                          <span className="font-mono text-surface-300">{s.wins}W / {s.losses}L</span>
+                        </div>
+                      </div>
+                    </div>
+                  )
+                })}
+              </div>
+            </div>
+          )}
 
           {/* Best / Worst */}
           {realTrades.length > 0 && (() => {

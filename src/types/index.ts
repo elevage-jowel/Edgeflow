@@ -13,6 +13,7 @@ export interface Profile {
 // ─── Trade ────────────────────────────────────────────────────────────────────
 export type TradeType = 'buy' | 'sell'
 export type TradeStatus = 'win' | 'loss' | 'breakeven'
+export type SetupQuality = 'A+' | 'A' | 'B'
 export type EmotionalState =
   | 'confident'
   | 'fearful'
@@ -34,8 +35,11 @@ export interface Trade {
   stop_loss?: number
   take_profit?: number
   pnl: number
+  pnl_percent?: number
   r_multiple?: number
+  risk_reward?: number
   status: TradeStatus
+  setup_quality?: SetupQuality
   strategy?: string
   timeframe?: string
   emotion_before?: EmotionalState
@@ -58,6 +62,7 @@ export interface TradeFormData {
   take_profit: string
   strategy: string
   timeframe: string
+  setup_quality: SetupQuality | ''
   emotion_before: EmotionalState | ''
   emotion_after: EmotionalState | ''
   notes: string
@@ -122,6 +127,9 @@ export interface UserSettings {
   risk_per_trade: number
   default_risk_reward: number
   notifications_enabled: boolean
+  discord_webhook?: string
+  notion_api_key?: string
+  notion_database_id?: string
   created_at: string
   updated_at: string
 }
@@ -148,6 +156,17 @@ export interface TradingStats {
   maxDrawdown: number
   sharpeRatio: number
   avgRMultiple: number
+}
+
+export interface SetupStats {
+  quality: SetupQuality
+  totalTrades: number
+  wins: number
+  losses: number
+  winRate: number
+  totalPnL: number
+  avgRMultiple: number
+  profitFactor: number
 }
 
 // ─── Sync ─────────────────────────────────────────────────────────────────────

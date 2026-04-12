@@ -1,4 +1,4 @@
-import type { Trade, TradingStats, DailyPnL } from '../types'
+import type { Trade, TradingStats, DailyPnL, SetupStats, SetupQuality } from '../types'
 import { format, parseISO } from 'date-fns'
 
 export function computeStats(trades: Trade[]): TradingStats {
@@ -111,6 +111,34 @@ export function computeStats(trades: Trade[]): TradingStats {
   }
 }
 
+export function computeSetupStats(trades: Trade[]): SetupStats[] {
+  const closed = trades.filter(t => !t.backtest_session_id && t.setup_quality)
+  const qualities: SetupQuality[] = ['A+', 'A', 'B']
+
+  return qualities.map(quality => {
+    const group = closed.filter(t => t.setup_quality === quality)
+    const wins = group.filter(t => t.status === 'win')
+    const losses = group.filter(t => t.status === 'loss')
+    const grossProfit = wins.reduce((s, t) => s + t.pnl, 0)
+    const grossLoss = Math.abs(losses.reduce((s, t) => s + t.pnl, 0))
+    const rTrades = group.filter(t => t.r_multiple !== undefined)
+
+    return {
+      quality,
+      totalTrades: group.length,
+      wins: wins.length,
+      losses: losses.length,
+      winRate: group.length > 0 ? (wins.length / group.length) * 100 : 0,
+      totalPnL: group.reduce((s, t) => s + t.pnl, 0),
+      avgRMultiple:
+        rTrades.length > 0
+          ? rTrades.reduce((s, t) => s + (t.r_multiple ?? 0), 0) / rTrades.length
+          : 0,
+      profitFactor: grossLoss > 0 ? grossProfit / grossLoss : grossProfit > 0 ? Infinity : 0,
+    }
+  })
+}
+
 export function getEquityCurve(
   trades: Trade[],
   initialBalance: number
@@ -196,4 +224,23 @@ export function formatPercent(value: number): string {
 
 export function generateId(): string {
   return crypto.randomUUID()
+}
+
+/** Compute P&L percentage based on account balance at time of trade */
+export function computePnlPercent(pnl: number, initialBalance: number): number {
+  if (initialBalance <= 0) return 0
+  return (pnl / initialBalance) * 100
+}
+
+/** Compute R:R ratio from entry, SL, TP */
+export function computeRiskReward(
+  entry: number,
+  sl: number,
+  tp: number,
+  type: 'buy' | 'sell'
+): number | undefined {
+  const risk = type === 'buy' ? entry - sl : sl - entry
+  const reward = type === 'buy' ? tp - entry : entry - tp
+  if (risk <= 0 || reward <= 0) return undefined
+  return reward / risk
 }

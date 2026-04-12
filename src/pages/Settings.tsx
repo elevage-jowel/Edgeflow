@@ -20,6 +20,9 @@ export function Settings() {
     initial_balance: String(settings.initial_balance ?? 10000),
     risk_per_trade: String(settings.risk_per_trade ?? 1),
     default_risk_reward: String(settings.default_risk_reward ?? 2),
+    discord_webhook: settings.discord_webhook ?? '',
+    notion_api_key: settings.notion_api_key ?? '',
+    notion_database_id: settings.notion_database_id ?? '',
   })
 
   const [saved, setSaved] = useState(false)
@@ -31,6 +34,9 @@ export function Settings() {
       risk_per_trade: parseFloat(form.risk_per_trade),
       default_risk_reward: parseFloat(form.default_risk_reward),
       language,
+      discord_webhook: form.discord_webhook || undefined,
+      notion_api_key: form.notion_api_key || undefined,
+      notion_database_id: form.notion_database_id || undefined,
     })
     setSaved(true)
     setTimeout(() => setSaved(false), 3000)
@@ -156,6 +162,40 @@ export function Settings() {
               options={[
                 { value: 'dark', label: 'Dark (Default)' },
               ]}
+            />
+          </div>
+        </motion.div>
+
+        {/* Integrations */}
+        <motion.div
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.12 }}
+          className="bg-surface-850 border border-surface-700 rounded-xl p-5"
+        >
+          <h2 className="text-sm font-semibold text-white mb-1 uppercase tracking-wider">Integrations</h2>
+          <p className="text-xs text-surface-500 mb-4">Export trades to Discord &amp; Notion directly from the journal.</p>
+          <div className="space-y-4">
+            <Input
+              label="Discord Webhook URL"
+              value={form.discord_webhook}
+              onChange={e => set('discord_webhook', e.target.value)}
+              placeholder="https://discord.com/api/webhooks/..."
+              hint="Paste your Discord channel webhook URL"
+            />
+            <Input
+              label="Notion API Key"
+              value={form.notion_api_key}
+              onChange={e => set('notion_api_key', e.target.value)}
+              placeholder="secret_..."
+              hint="Internal integration token from notion.so/my-integrations"
+            />
+            <Input
+              label="Notion Database ID"
+              value={form.notion_database_id}
+              onChange={e => set('notion_database_id', e.target.value)}
+              placeholder="xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"
+              hint="ID from your Notion database URL"
             />
           </div>
         </motion.div>
