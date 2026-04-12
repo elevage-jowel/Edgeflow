@@ -65,9 +65,9 @@ export default function CalendarClient() {
     if (!selectedDay) return
     try {
       await saveReview({ ...data, type: 'daily', date: format(selectedDay, 'yyyy-MM-dd'), habits: [] })
-      toast.success('Review saved')
+      toast.success('Revue sauvegardée')
       setModalOpen(false)
-    } catch { toast.error('Failed to save') }
+    } catch { toast.error('Échec de la sauvegarde') }
   }
 
   // Monthly summary
@@ -183,28 +183,28 @@ export default function CalendarClient() {
             </div>
           </div>
           <div>
-            <label className="text-xs font-medium text-slate-400 mb-1 block">Discipline Score (1–10)</label>
+            <label className="text-xs font-medium text-slate-400 mb-1 block">Score de discipline (1–10)</label>
             <input {...register('disciplineScore')} type="number" min="1" max="10" placeholder="7"
               className="w-full px-3 py-2 bg-surface-700 border border-surface-500 rounded-lg text-sm text-white focus:outline-none focus:border-brand-500" />
           </div>
           <div>
-            <label className="text-xs font-medium text-slate-400 mb-1 block">What went well?</label>
-            <textarea {...register('wins')} rows={2} placeholder="Today I followed my plan on..."
+            <label className="text-xs font-medium text-slate-400 mb-1 block">Ce qui a bien fonctionné ?</label>
+            <textarea {...register('wins')} rows={2} placeholder="Aujourd'hui j'ai suivi mon plan sur..."
               className="w-full px-3 py-2 bg-surface-700 border border-surface-500 rounded-lg text-sm text-white focus:outline-none focus:border-brand-500 resize-none" />
           </div>
           <div>
-            <label className="text-xs font-medium text-slate-400 mb-1 block">What to improve?</label>
-            <textarea {...register('improvements')} rows={2} placeholder="Next time I should..."
+            <label className="text-xs font-medium text-slate-400 mb-1 block">Ce à améliorer ?</label>
+            <textarea {...register('improvements')} rows={2} placeholder="La prochaine fois je devrais..."
               className="w-full px-3 py-2 bg-surface-700 border border-surface-500 rounded-lg text-sm text-white focus:outline-none focus:border-brand-500 resize-none" />
           </div>
           <div>
-            <label className="text-xs font-medium text-slate-400 mb-1 block">General Notes</label>
-            <textarea {...register('notes')} rows={2} placeholder="Market conditions, thoughts..."
+            <label className="text-xs font-medium text-slate-400 mb-1 block">Notes générales</label>
+            <textarea {...register('notes')} rows={2} placeholder="Conditions de marché, réflexions..."
               className="w-full px-3 py-2 bg-surface-700 border border-surface-500 rounded-lg text-sm text-white focus:outline-none focus:border-brand-500 resize-none" />
           </div>
           <div className="flex justify-end gap-3 pt-2">
-            <Button type="button" variant="ghost" onClick={() => setModalOpen(false)}>Cancel</Button>
-            <Button type="submit" variant="primary" loading={isSubmitting}>Save Review</Button>
+            <Button type="button" variant="ghost" onClick={() => setModalOpen(false)}>Annuler</Button>
+            <Button type="submit" variant="primary" loading={isSubmitting}>Sauvegarder la revue</Button>
           </div>
         </form>
       </Modal>

@@ -17,12 +17,12 @@ import { User, Lock, Download, Trash2, Globe, BookOpen, Plus, Pencil, X, Check, 
 import { cn } from '@/lib/utils/cn'
 
 const tabs = [
-  { id: 'profile', label: 'Profile', icon: User },
-  { id: 'account', label: 'Account', icon: Lock },
-  { id: 'preferences', label: 'Preferences', icon: Globe },
-  { id: 'plans', label: 'Setup Plans', icon: BookOpen },
+  { id: 'profile', label: 'Profil', icon: User },
+  { id: 'account', label: 'Compte', icon: Lock },
+  { id: 'preferences', label: 'Préférences', icon: Globe },
+  { id: 'plans', label: 'Plans de setup', icon: BookOpen },
   { id: 'badges', label: 'Badges', icon: Award },
-  { id: 'data', label: 'Data', icon: Download },
+  { id: 'data', label: 'Données', icon: Download },
 ]
 
 const inputCls = "w-full px-3 py-2 bg-surface-700 border border-surface-500 rounded-lg text-sm text-white placeholder-slate-500 focus:outline-none focus:border-brand-500"
@@ -73,8 +73,8 @@ export default function SettingsClient() {
     try {
       await updateDoc(doc(db, col.user(user.uid)), { displayName, updatedAt: new Date().toISOString() })
       setProfile({ ...userProfile!, displayName })
-      toast.success('Profile updated')
-    } catch { toast.error('Failed to save') } finally { setIsSaving(false) }
+      toast.success('Profil mis à jour')
+    } catch { toast.error('Échec de la sauvegarde') } finally { setIsSaving(false) }
   }
 
   const savePreferences = async () => {
@@ -83,8 +83,8 @@ export default function SettingsClient() {
     try {
       await updateDoc(doc(db, col.user(user.uid)), { currency, riskUnit, updatedAt: new Date().toISOString() })
       setProfile({ ...userProfile!, currency, riskUnit })
-      toast.success('Preferences saved')
-    } catch { toast.error('Failed') } finally { setIsSaving(false) }
+      toast.success('Préférences sauvegardées')
+    } catch { toast.error('Échec') } finally { setIsSaving(false) }
   }
 
   const changePassword = async () => {
@@ -94,16 +94,16 @@ export default function SettingsClient() {
       const cred = EmailAuthProvider.credential(user.email!, currentPassword)
       await reauthenticateWithCredential(user, cred)
       await updatePassword(user, newPassword)
-      toast.success('Password updated')
+      toast.success('Mot de passe mis à jour')
       setCurrentPassword('')
       setNewPassword('')
     } catch (e: any) {
-      toast.error(e.code === 'auth/wrong-password' ? 'Incorrect current password' : 'Failed to update password')
+      toast.error(e.code === 'auth/wrong-password' ? 'Mot de passe actuel incorrect' : 'Échec de la mise à jour du mot de passe')
     } finally { setIsSaving(false) }
   }
 
   const exportData = () => {
-    toast('Export functionality — connect to your Firebase instance to download your data.', { icon: '📦' })
+    toast('Fonctionnalité d\'export — connecte ton instance Firebase pour télécharger tes données.', { icon: '📦' })
   }
 
   const initials = (userProfile?.displayName ?? user?.email ?? 'U').split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2)
@@ -111,8 +111,8 @@ export default function SettingsClient() {
   return (
     <div className="max-w-3xl space-y-5">
       <div>
-        <h2 className="text-lg font-bold text-white">Settings</h2>
-        <p className="text-sm text-slate-500">Manage your account and preferences</p>
+        <h2 className="text-lg font-bold text-white">Paramètres</h2>
+        <p className="text-sm text-slate-500">Gérer ton compte et tes préférences</p>
       </div>
 
       <div className="flex gap-1 bg-surface-800 border border-surface-500 rounded-xl p-1">
@@ -133,33 +133,33 @@ export default function SettingsClient() {
             </div>
           </div>
           <div>
-            <label className={labelCls}>Display Name</label>
-            <input value={displayName} onChange={e => setDisplayName(e.target.value)} className={inputCls} placeholder="Your name" />
+            <label className={labelCls}>Nom d&apos;affichage</label>
+            <input value={displayName} onChange={e => setDisplayName(e.target.value)} className={inputCls} placeholder="Ton nom" />
           </div>
           <div>
             <label className={labelCls}>Email</label>
             <input value={user?.email ?? ''} disabled className={`${inputCls} opacity-50 cursor-not-allowed`} />
           </div>
           <div className="flex justify-end">
-            <Button variant="primary" onClick={saveProfile} loading={isSaving}>Save Profile</Button>
+            <Button variant="primary" onClick={saveProfile} loading={isSaving}>Sauvegarder le profil</Button>
           </div>
         </div>
       )}
 
       {tab === 'account' && (
         <div className="bg-surface-800 border border-surface-500 rounded-2xl p-6 space-y-5">
-          <h3 className="text-sm font-semibold text-white">Change Password</h3>
+          <h3 className="text-sm font-semibold text-white">Changer le mot de passe</h3>
           <div>
-            <label className={labelCls}>Current Password</label>
+            <label className={labelCls}>Mot de passe actuel</label>
             <input type="password" value={currentPassword} onChange={e => setCurrentPassword(e.target.value)} className={inputCls} placeholder="••••••••" />
           </div>
           <div>
-            <label className={labelCls}>New Password</label>
-            <input type="password" value={newPassword} onChange={e => setNewPassword(e.target.value)} className={inputCls} placeholder="Min. 8 characters" />
+            <label className={labelCls}>Nouveau mot de passe</label>
+            <input type="password" value={newPassword} onChange={e => setNewPassword(e.target.value)} className={inputCls} placeholder="Min. 8 caractères" />
           </div>
           <div className="flex justify-end">
             <Button variant="primary" onClick={changePassword} loading={isSaving} disabled={!currentPassword || !newPassword}>
-              Update Password
+              Mettre à jour le mot de passe
             </Button>
           </div>
         </div>
