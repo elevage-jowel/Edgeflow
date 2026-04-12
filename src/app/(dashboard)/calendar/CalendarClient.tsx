@@ -13,15 +13,15 @@ import { useForm } from 'react-hook-form'
 import { EmotionalState, Review } from '@/lib/types'
 import toast from 'react-hot-toast'
 
-const DAYS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']
+const DAYS = ['Dim', 'Lun', 'Mar', 'Mer', 'Jeu', 'Ven', 'Sam']
 const emotions: { value: EmotionalState; label: string; icon: React.ReactNode }[] = [
   { value: 'excellent', label: 'Excellent', icon: '😄' },
-  { value: 'good', label: 'Good', icon: '🙂' },
-  { value: 'neutral', label: 'Neutral', icon: '😐' },
-  { value: 'stressed', label: 'Stressed', icon: '😰' },
-  { value: 'anxious', label: 'Anxious', icon: '😟' },
-  { value: 'fear', label: 'Fear', icon: '😱' },
-  { value: 'greed', label: 'Greed', icon: '🤑' },
+  { value: 'good', label: 'Bien', icon: '🙂' },
+  { value: 'neutral', label: 'Neutre', icon: '😐' },
+  { value: 'stressed', label: 'Stressé', icon: '😰' },
+  { value: 'anxious', label: 'Anxieux', icon: '😟' },
+  { value: 'fear', label: 'Peur', icon: '😱' },
+  { value: 'greed', label: 'Avidité', icon: '🤑' },
 ]
 
 export default function CalendarClient() {
@@ -79,11 +79,11 @@ export default function CalendarClient() {
     <div className="space-y-5 max-w-5xl">
       <div className="flex items-center justify-between">
         <div>
-          <h2 className="text-lg font-bold text-white">Trading Calendar</h2>
-          <p className="text-sm text-slate-500">Review your trading day by day</p>
+          <h2 className="text-lg font-bold text-white">Calendrier de trading</h2>
+          <p className="text-sm text-slate-500">Revois ton trading jour après jour</p>
         </div>
         <div className={cn('text-xl font-bold font-mono', monthPnl >= 0 ? 'text-emerald-400' : 'text-red-400')}>
-          {formatPnl(monthPnl)} <span className="text-sm font-normal text-slate-500">this month</span>
+          {formatPnl(monthPnl)} <span className="text-sm font-normal text-slate-500">ce mois</span>
         </div>
       </div>
 
@@ -147,13 +147,13 @@ export default function CalendarClient() {
 
       {/* Monthly summary */}
       <div className="bg-surface-800 border border-surface-500 rounded-2xl p-5">
-        <h3 className="text-sm font-semibold text-white mb-3">Monthly Summary</h3>
+        <h3 className="text-sm font-semibold text-white mb-3">Résumé mensuel</h3>
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
           {[
-            { label: 'Trading Days', value: String(Array.from(dailyData.entries()).filter(([k]) => isSameMonth(parseISO(k), month)).length) },
-            { label: 'Total P&L', value: formatPnl(monthPnl), color: monthPnl >= 0 ? 'text-emerald-400' : 'text-red-400' },
-            { label: 'Reviews Written', value: String(reviews.length) },
-            { label: 'Total Trades', value: String(Array.from(dailyData.entries()).filter(([k]) => isSameMonth(parseISO(k), month)).reduce((s, [, v]) => s + v.trades, 0)) },
+            { label: 'Jours de trading', value: String(Array.from(dailyData.entries()).filter(([k]) => isSameMonth(parseISO(k), month)).length) },
+            { label: 'P&L total', value: formatPnl(monthPnl), color: monthPnl >= 0 ? 'text-emerald-400' : 'text-red-400' },
+            { label: 'Revues écrites', value: String(reviews.length) },
+            { label: 'Total trades', value: String(Array.from(dailyData.entries()).filter(([k]) => isSameMonth(parseISO(k), month)).reduce((s, [, v]) => s + v.trades, 0)) },
           ].map(({ label, value, color }) => (
             <div key={label} className="bg-surface-700/50 rounded-xl p-3 text-center">
               <div className={cn('text-lg font-bold font-mono', color ?? 'text-white')}>{value}</div>
@@ -164,10 +164,10 @@ export default function CalendarClient() {
       </div>
 
       {/* Review modal */}
-      <Modal isOpen={modalOpen} onClose={() => setModalOpen(false)} title={selectedDay ? `Review: ${format(selectedDay, 'MMM d, yyyy')}` : 'Daily Review'} size="md">
+      <Modal isOpen={modalOpen} onClose={() => setModalOpen(false)} title={selectedDay ? `Revue : ${format(selectedDay, 'MMM d, yyyy')}` : 'Revue journalière'} size="md">
         <form onSubmit={handleSubmit(onSubmit)} className="p-6 space-y-4">
           <div>
-            <label className="text-xs font-medium text-slate-400 mb-2 block">Emotional State</label>
+            <label className="text-xs font-medium text-slate-400 mb-2 block">État émotionnel</label>
             <div className="grid grid-cols-4 gap-2">
               {emotions.map(e => (
                 <button

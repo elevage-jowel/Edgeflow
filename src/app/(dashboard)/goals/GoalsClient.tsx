@@ -29,13 +29,13 @@ const schema = z.object({
 type FormData = z.infer<typeof schema>
 
 const goalTypeLabels: Record<string, string> = {
-  monthly_pnl: 'Monthly P&L Target',
-  win_rate: 'Win Rate Target',
-  max_drawdown: 'Max Drawdown Limit',
-  trade_count: 'Trade Count',
-  risk_reward: 'Risk/Reward Ratio',
-  daily_loss_limit: 'Daily Loss Limit',
-  screenshot_rate: 'Screenshot Rate',
+  monthly_pnl: 'Objectif P&L mensuel',
+  win_rate: 'Objectif de taux de réussite',
+  max_drawdown: 'Limite de drawdown max',
+  trade_count: 'Nombre de trades',
+  risk_reward: 'Ratio Risque/Récompense',
+  daily_loss_limit: 'Limite de perte journalière',
+  screenshot_rate: 'Taux de screenshots',
 }
 
 export default function GoalsClient() {
@@ -50,17 +50,17 @@ export default function GoalsClient() {
   const onSubmit = async (data: FormData) => {
     try {
       await createGoal({ ...data, currentValue: 0, isActive: true, isCompleted: false, notes: data.notes ?? '' })
-      toast.success('Goal created')
+      toast.success('Objectif créé')
       setIsOpen(false)
       reset()
     } catch {
-      toast.error('Failed to create goal')
+      toast.error('Échec de la création de l\'objectif')
     }
   }
 
   const handleDelete = async (id: string) => {
-    if (!confirm('Delete this goal?')) return
-    try { await deleteGoal(id); toast.success('Goal deleted') } catch { toast.error('Failed to delete') }
+    if (!confirm('Supprimer cet objectif ?')) return
+    try { await deleteGoal(id); toast.success('Objectif supprimé') } catch { toast.error('Échec de la suppression') }
   }
 
   const active = goals.filter(g => g.isActive && !g.isCompleted)
@@ -81,10 +81,10 @@ export default function GoalsClient() {
     <div className="space-y-6 max-w-5xl">
       <div className="flex items-center justify-between">
         <div>
-          <h2 className="text-lg font-bold text-white">Trading Goals</h2>
-          <p className="text-sm text-slate-500">Set targets, track progress, stay disciplined</p>
+          <h2 className="text-lg font-bold text-white">Objectifs de trading</h2>
+          <p className="text-sm text-slate-500">Fixe des cibles, suis ta progression, reste discipliné</p>
         </div>
-        <Button variant="primary" icon={Plus} onClick={() => setIsOpen(true)}>New Goal</Button>
+        <Button variant="primary" icon={Plus} onClick={() => setIsOpen(true)}>Nouvel objectif</Button>
       </div>
 
       {isLoading ? (
@@ -92,12 +92,12 @@ export default function GoalsClient() {
           {Array.from({ length: 4 }).map((_, i) => <div key={i} className="h-40 bg-surface-800 rounded-2xl animate-pulse" />)}
         </div>
       ) : active.length === 0 && completed.length === 0 ? (
-        <EmptyState icon={Target} title="No goals yet" description="Set your first trading goal to track your progress and build discipline." action={{ label: 'Create Goal', onClick: () => setIsOpen(true) }} />
+        <EmptyState icon={Target} title="Aucun objectif pour l'instant" description="Crée ton premier objectif de trading pour suivre ta progression et rester discipliné." action={{ label: 'Créer un objectif', onClick: () => setIsOpen(true) }} />
       ) : (
         <>
           {active.length > 0 && (
             <div>
-              <h3 className="text-sm font-semibold text-slate-400 mb-3 flex items-center gap-2"><Clock className="w-4 h-4" /> Active Goals ({active.length})</h3>
+              <h3 className="text-sm font-semibold text-slate-400 mb-3 flex items-center gap-2"><Clock className="w-4 h-4" /> Objectifs actifs ({active.length})</h3>
               <div className="grid gap-4 sm:grid-cols-2">
                 {active.map(goal => (
                   <div key={goal.id} className="bg-surface-800 border border-surface-500 rounded-2xl p-5 hover:border-surface-400 transition-all">
@@ -129,7 +129,7 @@ export default function GoalsClient() {
                     <div className="flex items-center justify-between text-xs text-slate-500">
                       <span>{goal.startDate} → {goal.endDate}</span>
                       <span className={cn('font-medium', getPct(goal) >= 75 ? 'text-emerald-400' : getPct(goal) >= 40 ? 'text-amber-400' : 'text-red-400')}>
-                        {getPct(goal).toFixed(0)}% complete
+                        {getPct(goal).toFixed(0)}% complété
                       </span>
                     </div>
                     {goal.notes && <p className="text-xs text-slate-500 mt-2 italic">{goal.notes}</p>}
@@ -141,7 +141,7 @@ export default function GoalsClient() {
 
           {completed.length > 0 && (
             <div>
-              <h3 className="text-sm font-semibold text-emerald-400 mb-3 flex items-center gap-2"><CheckCircle2 className="w-4 h-4" /> Completed ({completed.length})</h3>
+              <h3 className="text-sm font-semibold text-emerald-400 mb-3 flex items-center gap-2"><CheckCircle2 className="w-4 h-4" /> Complétés ({completed.length})</h3>
               <div className="grid gap-4 sm:grid-cols-2">
                 {completed.map(goal => (
                   <div key={goal.id} className="bg-surface-800/50 border border-emerald-500/20 rounded-2xl p-5 opacity-75">
@@ -150,7 +150,7 @@ export default function GoalsClient() {
                       <CheckCircle2 className="w-4 h-4 text-emerald-400" />
                     </div>
                     <ProgressBar value={100} max={100} color="emerald" />
-                    <div className="text-xs text-slate-500 mt-2">Completed · {goal.period}</div>
+                    <div className="text-xs text-slate-500 mt-2">Complété · {goal.period}</div>
                   </div>
                 ))}
               </div>
@@ -159,20 +159,20 @@ export default function GoalsClient() {
         </>
       )}
 
-      <Modal isOpen={isOpen} onClose={() => setIsOpen(false)} title="Create Goal" size="md">
+      <Modal isOpen={isOpen} onClose={() => setIsOpen(false)} title="Créer un objectif" size="md">
         <form onSubmit={handleSubmit(onSubmit)} className="p-6 space-y-4">
           <div>
-            <label className="text-xs font-medium text-slate-400 mb-1 block">Goal Title *</label>
-            <input {...register('title')} placeholder="e.g. Monthly P&L Target" className={inputCls} />
+            <label className="text-xs font-medium text-slate-400 mb-1 block">Titre de l&apos;objectif *</label>
+            <input {...register('title')} placeholder="ex. Objectif P&L mensuel" className={inputCls} />
             {errors.title && <p className="text-red-400 text-xs mt-1">{errors.title.message}</p>}
           </div>
           <div>
             <label className="text-xs font-medium text-slate-400 mb-1 block">Description</label>
-            <input {...register('description')} placeholder="Short description" className={inputCls} />
+            <input {...register('description')} placeholder="Courte description" className={inputCls} />
           </div>
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <label className="text-xs font-medium text-slate-400 mb-1 block">Goal Type *</label>
+              <label className="text-xs font-medium text-slate-400 mb-1 block">Type d&apos;objectif *</label>
               <select {...register('type')} className={inputCls}>
                 {Object.entries(goalTypeLabels).map(([v, l]) => (
                   <option key={v} value={v}>{l}</option>
@@ -180,32 +180,32 @@ export default function GoalsClient() {
               </select>
             </div>
             <div>
-              <label className="text-xs font-medium text-slate-400 mb-1 block">Period *</label>
+              <label className="text-xs font-medium text-slate-400 mb-1 block">Période *</label>
               <select {...register('period')} className={inputCls}>
-                <option value="weekly">Weekly</option>
-                <option value="monthly">Monthly</option>
-                <option value="quarterly">Quarterly</option>
-                <option value="yearly">Yearly</option>
+                <option value="weekly">Hebdomadaire</option>
+                <option value="monthly">Mensuel</option>
+                <option value="quarterly">Trimestriel</option>
+                <option value="yearly">Annuel</option>
               </select>
             </div>
           </div>
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <label className="text-xs font-medium text-slate-400 mb-1 block">Target Value *</label>
+              <label className="text-xs font-medium text-slate-400 mb-1 block">Valeur cible *</label>
               <input {...register('targetValue')} type="number" step="any" placeholder="5000" className={inputCls} />
             </div>
             <div>
-              <label className="text-xs font-medium text-slate-400 mb-1 block">Unit *</label>
-              <input {...register('unit')} placeholder="USD or %" className={inputCls} />
+              <label className="text-xs font-medium text-slate-400 mb-1 block">Unité *</label>
+              <input {...register('unit')} placeholder="USD ou %" className={inputCls} />
             </div>
           </div>
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <label className="text-xs font-medium text-slate-400 mb-1 block">Start Date *</label>
+              <label className="text-xs font-medium text-slate-400 mb-1 block">Date de début *</label>
               <input {...register('startDate')} type="date" className={inputCls} />
             </div>
             <div>
-              <label className="text-xs font-medium text-slate-400 mb-1 block">End Date *</label>
+              <label className="text-xs font-medium text-slate-400 mb-1 block">Date de fin *</label>
               <input {...register('endDate')} type="date" className={inputCls} />
             </div>
           </div>
@@ -214,8 +214,8 @@ export default function GoalsClient() {
             <textarea {...register('notes')} rows={2} className={`${inputCls} resize-none`} />
           </div>
           <div className="flex justify-end gap-3 pt-2">
-            <Button type="button" variant="ghost" onClick={() => setIsOpen(false)}>Cancel</Button>
-            <Button type="submit" variant="primary" loading={isSubmitting}>Create Goal</Button>
+            <Button type="button" variant="ghost" onClick={() => setIsOpen(false)}>Annuler</Button>
+            <Button type="submit" variant="primary" loading={isSubmitting}>Créer l&apos;objectif</Button>
           </div>
         </form>
       </Modal>

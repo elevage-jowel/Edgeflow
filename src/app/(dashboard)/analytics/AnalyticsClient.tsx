@@ -12,7 +12,7 @@ import { cn } from '@/lib/utils/cn'
 import { formatCurrency, formatWinRate, formatR, formatPnl } from '@/lib/utils/formatters'
 
 const ranges: TimeRange[] = ['1W', '1M', '3M', '6M', 'YTD', '1Y', 'ALL']
-const tabs = ['Overview', 'By Symbol', 'By Setup', 'By Day', 'By Session', 'By Emotion', 'Distribution']
+const tabs = ['Vue d\'ensemble', 'Par symbole', 'Par setup', 'Par jour', 'Par session', 'Par émotion', 'Distribution']
 
 interface MetricItemProps { label: string; value: string; sub?: string; color?: string }
 function MetricItem({ label, value, sub, color }: MetricItemProps) {
@@ -28,15 +28,15 @@ function MetricItem({ label, value, sub, color }: MetricItemProps) {
 export default function AnalyticsClient() {
   const { trades } = useTradeStore()
   const [range, setRange] = useState<TimeRange>('3M')
-  const [tab, setTab] = useState('Overview')
+  const [tab, setTab] = useState('Vue d\'ensemble')
   const a = useAnalytics(trades, range)
 
   return (
     <div className="space-y-6 max-w-screen-2xl">
       <div className="flex items-center justify-between flex-wrap gap-3">
         <div>
-          <h2 className="text-lg font-bold text-white">Performance Analytics</h2>
-          <p className="text-sm text-slate-500">Deep insights into your trading performance</p>
+          <h2 className="text-lg font-bold text-white">Analytiques de performance</h2>
+          <p className="text-sm text-slate-500">Analyse approfondie de ta performance de trading</p>
         </div>
         <div className="flex items-center gap-1 bg-surface-800 border border-surface-500 rounded-xl p-1">
           {ranges.map(r => (
@@ -48,20 +48,20 @@ export default function AnalyticsClient() {
       {/* Key metrics grid */}
       <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
         <MetricItem label="Net P&L" value={formatPnl(a.totalNetPnl)} color={a.totalNetPnl >= 0 ? 'text-emerald-400' : 'text-red-400'} sub={`${a.closedTrades} trades`} />
-        <MetricItem label="Win Rate" value={formatWinRate(a.winRate)} sub={`${a.winCount}W/${a.lossCount}L`} />
+        <MetricItem label="Taux de réussite" value={formatWinRate(a.winRate)} sub={`${a.winCount}W/${a.lossCount}L`} />
         <MetricItem label="Profit Factor" value={a.profitFactor.toFixed(2)} color={a.profitFactor >= 2 ? 'text-emerald-400' : a.profitFactor >= 1.5 ? 'text-brand-400' : 'text-slate-300'} />
-        <MetricItem label="Avg R" value={formatR(a.avgRMultiple)} color={a.avgRMultiple > 0 ? 'text-emerald-400' : 'text-red-400'} />
-        <MetricItem label="Sharpe Ratio" value={a.sharpeRatio.toFixed(2)} color={a.sharpeRatio > 1 ? 'text-emerald-400' : 'text-slate-300'} />
-        <MetricItem label="Max Drawdown" value={a.maxDrawdown > 0 ? `-${formatCurrency(a.maxDrawdown)}` : '$0'} color="text-red-400" sub={`${a.maxDrawdownPct.toFixed(1)}%`} />
+        <MetricItem label="R moyen" value={formatR(a.avgRMultiple)} color={a.avgRMultiple > 0 ? 'text-emerald-400' : 'text-red-400'} />
+        <MetricItem label="Ratio Sharpe" value={a.sharpeRatio.toFixed(2)} color={a.sharpeRatio > 1 ? 'text-emerald-400' : 'text-slate-300'} />
+        <MetricItem label="Drawdown max" value={a.maxDrawdown > 0 ? `-${formatCurrency(a.maxDrawdown)}` : '$0'} color="text-red-400" sub={`${a.maxDrawdownPct.toFixed(1)}%`} />
       </div>
 
       <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
-        <MetricItem label="Expectancy" value={formatCurrency(a.expectancy)} color={a.expectancy > 0 ? 'text-emerald-400' : 'text-red-400'} sub="per trade" />
-        <MetricItem label="Avg Winner" value={a.avgWin > 0 ? formatCurrency(a.avgWin) : '—'} color="text-emerald-400" />
-        <MetricItem label="Avg Loser" value={a.avgLoss > 0 ? formatCurrency(-a.avgLoss) : '—'} color="text-red-400" />
+        <MetricItem label="Espérance" value={formatCurrency(a.expectancy)} color={a.expectancy > 0 ? 'text-emerald-400' : 'text-red-400'} sub="par trade" />
+        <MetricItem label="Gain moyen" value={a.avgWin > 0 ? formatCurrency(a.avgWin) : '—'} color="text-emerald-400" />
+        <MetricItem label="Perte moyenne" value={a.avgLoss > 0 ? formatCurrency(-a.avgLoss) : '—'} color="text-red-400" />
         <MetricItem label="Sortino" value={a.sortinoRatio.toFixed(2)} color={a.sortinoRatio > 1.5 ? 'text-emerald-400' : 'text-slate-300'} />
-        <MetricItem label="Recovery Factor" value={a.recoveryFactor > 0 ? a.recoveryFactor.toFixed(2) : '—'} />
-        <MetricItem label="Win Streak" value={`${a.longestWinStreak}`} sub="trades" color="text-amber-400" />
+        <MetricItem label="Facteur de récupération" value={a.recoveryFactor > 0 ? a.recoveryFactor.toFixed(2) : '—'} />
+        <MetricItem label="Série gagnante" value={`${a.longestWinStreak}`} sub="trades" color="text-amber-400" />
       </div>
 
       {/* Tabs */}
@@ -72,36 +72,36 @@ export default function AnalyticsClient() {
       </div>
 
       {/* Tab content */}
-      {tab === 'Overview' && (
+      {tab === 'Vue d\'ensemble' && (
         <div className="grid grid-cols-1 xl:grid-cols-2 gap-4">
           <div className="bg-surface-800 border border-surface-500 rounded-2xl p-5">
-            <h3 className="text-sm font-semibold text-white mb-4">Equity Curve</h3>
-            {a.equityCurve.length > 1 ? <EquityCurveChart data={a.equityCurve} height={240} /> : <div className="h-48 flex items-center justify-center text-slate-500 text-sm">Not enough data</div>}
+            <h3 className="text-sm font-semibold text-white mb-4">Courbe des capitaux</h3>
+            {a.equityCurve.length > 1 ? <EquityCurveChart data={a.equityCurve} height={240} /> : <div className="h-48 flex items-center justify-center text-slate-500 text-sm">Pas assez de données</div>}
           </div>
           <div className="bg-surface-800 border border-surface-500 rounded-2xl p-5">
             <h3 className="text-sm font-semibold text-white mb-4">Drawdown</h3>
-            {a.equityCurve.length > 1 ? <DrawdownChart equityCurve={a.equityCurve} height={240} /> : <div className="h-48 flex items-center justify-center text-slate-500 text-sm">Not enough data</div>}
+            {a.equityCurve.length > 1 ? <DrawdownChart equityCurve={a.equityCurve} height={240} /> : <div className="h-48 flex items-center justify-center text-slate-500 text-sm">Pas assez de données</div>}
           </div>
           <div className="bg-surface-800 border border-surface-500 rounded-2xl p-5">
-            <h3 className="text-sm font-semibold text-white mb-4">Monthly P&L</h3>
-            {a.monthlyPnl.length > 0 ? <MonthlyPnLChart data={a.monthlyPnl} height={200} /> : <div className="h-48 flex items-center justify-center text-slate-500 text-sm">No data</div>}
+            <h3 className="text-sm font-semibold text-white mb-4">P&L mensuel</h3>
+            {a.monthlyPnl.length > 0 ? <MonthlyPnLChart data={a.monthlyPnl} height={200} /> : <div className="h-48 flex items-center justify-center text-slate-500 text-sm">Aucune donnée</div>}
           </div>
           <div className="bg-surface-800 border border-surface-500 rounded-2xl p-5">
-            <h3 className="text-sm font-semibold text-white mb-4">Win/Loss Distribution</h3>
+            <h3 className="text-sm font-semibold text-white mb-4">Distribution Gains/Pertes</h3>
             <WinRateDonut wins={a.winCount} losses={a.lossCount} breakevens={a.breakevenCount} height={200} />
           </div>
         </div>
       )}
 
-      {tab === 'By Symbol' && (
+      {tab === 'Par symbole' && (
         <div className="bg-surface-800 border border-surface-500 rounded-2xl overflow-hidden">
           {a.bySymbol.length === 0 ? (
-            <div className="p-12 text-center text-slate-500">No closed trade data</div>
+            <div className="p-12 text-center text-slate-500">Aucune donnée de trade fermé</div>
           ) : (
             <table className="w-full">
               <thead>
                 <tr className="border-b border-surface-500">
-                  {['Symbol', 'Trades', 'Win Rate', 'Net P&L', 'Avg R', 'Best', 'Worst'].map(h => (
+                  {['Symbole', 'Trades', 'Taux de réussite', 'Net P&L', 'R moyen', 'Meilleur', 'Pire'].map(h => (
                     <th key={h} className="px-5 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">{h}</th>
                   ))}
                 </tr>
@@ -130,17 +130,17 @@ export default function AnalyticsClient() {
         </div>
       )}
 
-      {tab === 'By Day' && (
+      {tab === 'Par jour' && (
         <div className="grid grid-cols-1 xl:grid-cols-2 gap-4">
           <div className="bg-surface-800 border border-surface-500 rounded-2xl p-5">
-            <h3 className="text-sm font-semibold text-white mb-4">P&L by Day of Week</h3>
+            <h3 className="text-sm font-semibold text-white mb-4">P&L par jour de la semaine</h3>
             <DayOfWeekChart data={a.byDayOfWeek} height={220} />
           </div>
           <div className="bg-surface-800 border border-surface-500 rounded-2xl overflow-hidden">
             <table className="w-full">
               <thead>
                 <tr className="border-b border-surface-500">
-                  {['Day', 'Trades', 'Win Rate', 'Net P&L'].map(h => (
+                  {['Jour', 'Trades', 'Taux de réussite', 'Net P&L'].map(h => (
                     <th key={h} className="px-5 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">{h}</th>
                   ))}
                 </tr>
@@ -164,15 +164,15 @@ export default function AnalyticsClient() {
         </div>
       )}
 
-      {tab === 'By Session' && (
+      {tab === 'Par session' && (
         <div className="bg-surface-800 border border-surface-500 rounded-2xl overflow-hidden">
           {a.bySession.length === 0 ? (
-            <div className="p-12 text-center text-slate-500">No session data</div>
+            <div className="p-12 text-center text-slate-500">Aucune donnée de session</div>
           ) : (
             <table className="w-full">
               <thead>
                 <tr className="border-b border-surface-500">
-                  {['Session', 'Trades', 'Win Rate', 'Net P&L'].map(h => (
+                  {['Session', 'Trades', 'Taux de réussite', 'Net P&L'].map(h => (
                     <th key={h} className="px-5 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">{h}</th>
                   ))}
                 </tr>
@@ -192,15 +192,15 @@ export default function AnalyticsClient() {
         </div>
       )}
 
-      {tab === 'By Setup' && (
+      {tab === 'Par setup' && (
         <div className="bg-surface-800 border border-surface-500 rounded-2xl overflow-hidden">
           {a.bySetup.length === 0 ? (
-            <div className="p-12 text-center text-slate-500">No strategy data — add a strategy when logging trades</div>
+            <div className="p-12 text-center text-slate-500">Aucune donnée de stratégie — ajoute une stratégie lors de la saisie des trades</div>
           ) : (
             <table className="w-full">
               <thead>
                 <tr className="border-b border-surface-500">
-                  {['Strategy / Setup', 'Trades', 'Win Rate', 'Net P&L', 'Avg R'].map(h => (
+                  {['Stratégie / Setup', 'Trades', 'Taux de réussite', 'Net P&L', 'R moyen'].map(h => (
                     <th key={h} className="px-5 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">{h}</th>
                   ))}
                 </tr>
@@ -227,17 +227,17 @@ export default function AnalyticsClient() {
         </div>
       )}
 
-      {tab === 'By Emotion' && (
+      {tab === 'Par émotion' && (
         <div className="space-y-4">
           <div className="grid grid-cols-1 xl:grid-cols-2 gap-4">
             <div className="bg-surface-800 border border-surface-500 rounded-2xl p-5">
               <div className="flex items-center justify-between mb-4">
-                <h3 className="text-sm font-semibold text-white">Avg P&L by Emotion (before trade)</h3>
+                <h3 className="text-sm font-semibold text-white">P&L moyen par émotion (avant le trade)</h3>
               </div>
               <EmotionPnLChart data={a.byEmotion} height={240} mode="avgPnl" />
             </div>
             <div className="bg-surface-800 border border-surface-500 rounded-2xl p-5">
-              <h3 className="text-sm font-semibold text-white mb-4">Win Rate by Emotion</h3>
+              <h3 className="text-sm font-semibold text-white mb-4">Taux de réussite par émotion</h3>
               <EmotionPnLChart data={a.byEmotion} height={240} mode="winRate" />
             </div>
           </div>
@@ -246,7 +246,7 @@ export default function AnalyticsClient() {
               <table className="w-full">
                 <thead>
                   <tr className="border-b border-surface-500">
-                    {['Emotion', 'Trades', 'Win Rate', 'Total P&L', 'Avg P&L'].map(h => (
+                    {['Émotion', 'Trades', 'Taux de réussite', 'P&L total', 'P&L moyen'].map(h => (
                       <th key={h} className="px-5 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">{h}</th>
                     ))}
                   </tr>
@@ -277,7 +277,7 @@ export default function AnalyticsClient() {
       {tab === 'Distribution' && (
         <div className="grid grid-cols-1 xl:grid-cols-2 gap-4">
           <div className="bg-surface-800 border border-surface-500 rounded-2xl p-5">
-            <h3 className="text-sm font-semibold text-emerald-400 mb-4">Winner Distribution</h3>
+            <h3 className="text-sm font-semibold text-emerald-400 mb-4">Distribution des gains</h3>
             {a.winDistribution.length > 0 ? (
               <div className="space-y-2">
                 {a.winDistribution.map(d => (
@@ -290,10 +290,10 @@ export default function AnalyticsClient() {
                   </div>
                 ))}
               </div>
-            ) : <div className="h-32 flex items-center justify-center text-slate-500 text-sm">No wins yet</div>}
+            ) : <div className="h-32 flex items-center justify-center text-slate-500 text-sm">Aucun gain pour l&apos;instant</div>}
           </div>
           <div className="bg-surface-800 border border-surface-500 rounded-2xl p-5">
-            <h3 className="text-sm font-semibold text-red-400 mb-4">Loser Distribution</h3>
+            <h3 className="text-sm font-semibold text-red-400 mb-4">Distribution des pertes</h3>
             {a.lossDistribution.length > 0 ? (
               <div className="space-y-2">
                 {a.lossDistribution.map(d => (
@@ -306,7 +306,7 @@ export default function AnalyticsClient() {
                   </div>
                 ))}
               </div>
-            ) : <div className="h-32 flex items-center justify-center text-slate-500 text-sm">No losses yet</div>}
+            ) : <div className="h-32 flex items-center justify-center text-slate-500 text-sm">Aucune perte pour l&apos;instant</div>}
           </div>
         </div>
       )}

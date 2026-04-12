@@ -38,9 +38,9 @@ export default function DashboardClient() {
       <div className="flex items-center justify-between">
         <div>
           <h2 className="text-lg font-bold text-white">
-            Welcome back, {userProfile?.displayName?.split(' ')[0] ?? 'Trader'} 👋
+            Bon retour, {userProfile?.displayName?.split(' ')[0] ?? 'Trader'} 👋
           </h2>
-          <p className="text-sm text-slate-500 mt-0.5">Here&apos;s your performance overview</p>
+          <p className="text-sm text-slate-500 mt-0.5">Voici ton aperçu de performance</p>
         </div>
 
         {/* Time range selector */}
@@ -66,13 +66,13 @@ export default function DashboardClient() {
           title="Net P&L"
           value={formatPnl(analytics.totalNetPnl)}
           valueColor={analytics.totalNetPnl >= 0 ? 'text-emerald-400' : 'text-red-400'}
-          sub="closed trades"
+          sub="trades fermés"
           icon={analytics.totalNetPnl >= 0 ? TrendingUp : TrendingDown}
           iconColor={analytics.totalNetPnl >= 0 ? 'text-emerald-400' : 'text-red-400'}
           loading={isLoading}
         />
         <StatCard
-          title="Win Rate"
+          title="Taux de réussite"
           value={formatWinRate(analytics.winRate)}
           sub={`${analytics.winCount}W / ${analytics.lossCount}L`}
           icon={Target}
@@ -82,21 +82,21 @@ export default function DashboardClient() {
         <StatCard
           title="Profit Factor"
           value={analytics.profitFactor > 0 ? analytics.profitFactor.toFixed(2) : '—'}
-          sub={analytics.profitFactor >= 2 ? 'Excellent' : analytics.profitFactor >= 1.5 ? 'Good' : 'Developing'}
+          sub={analytics.profitFactor >= 2 ? 'Excellent' : analytics.profitFactor >= 1.5 ? 'Bon' : 'En développement'}
           icon={BarChart2}
           iconColor="text-cyan-400"
           loading={isLoading}
         />
         <StatCard
-          title="Avg R Multiple"
+          title="R moyen"
           value={analytics.avgRMultiple !== 0 ? formatR(analytics.avgRMultiple) : '—'}
-          sub={`${analytics.closedTrades} closed trades`}
+          sub={`${analytics.closedTrades} trades fermés`}
           icon={Activity}
           iconColor="text-violet-400"
           loading={isLoading}
         />
         <StatCard
-          title="Avg Winner"
+          title="Gain moyen"
           value={analytics.avgWin > 0 ? formatCurrency(analytics.avgWin) : '—'}
           valueColor="text-emerald-400"
           icon={Award}
@@ -104,7 +104,7 @@ export default function DashboardClient() {
           loading={isLoading}
         />
         <StatCard
-          title="Avg Loser"
+          title="Perte moyenne"
           value={analytics.avgLoss > 0 ? formatCurrency(-analytics.avgLoss) : '—'}
           valueColor="text-red-400"
           icon={TrendingDown}
@@ -112,18 +112,18 @@ export default function DashboardClient() {
           loading={isLoading}
         />
         <StatCard
-          title="Expectancy"
+          title="Espérance"
           value={analytics.expectancy !== 0 ? formatCurrency(analytics.expectancy) : '—'}
           valueColor={analytics.expectancy >= 0 ? 'text-emerald-400' : 'text-red-400'}
-          sub="per trade"
+          sub="par trade"
           icon={DollarSign}
           iconColor={analytics.expectancy >= 0 ? 'text-emerald-400' : 'text-red-400'}
           loading={isLoading}
         />
         <StatCard
-          title="Current Streak"
+          title="Série en cours"
           value={analytics.currentStreak === 0 ? '—' : `${Math.abs(analytics.currentStreak)}${analytics.currentStreak > 0 ? '🔥' : '❄️'}`}
-          sub={analytics.currentStreak > 0 ? 'win streak' : analytics.currentStreak < 0 ? 'loss streak' : ''}
+          sub={analytics.currentStreak > 0 ? 'série gagnante' : analytics.currentStreak < 0 ? 'série perdante' : ''}
           icon={Flame}
           iconColor={analytics.currentStreak > 0 ? 'text-amber-400' : 'text-slate-400'}
           loading={isLoading}
@@ -142,8 +142,8 @@ export default function DashboardClient() {
         <div className="xl:col-span-2 bg-surface-800 border border-surface-500 rounded-2xl p-5">
           <div className="flex items-center justify-between mb-4">
             <div>
-              <h3 className="text-sm font-semibold text-white">Equity Curve</h3>
-              <p className="text-xs text-slate-500 mt-0.5">Cumulative P&L over time</p>
+              <h3 className="text-sm font-semibold text-white">Courbe des capitaux</h3>
+              <p className="text-xs text-slate-500 mt-0.5">P&L cumulatif dans le temps</p>
             </div>
             <div className={cn('text-lg font-bold font-mono', analytics.totalNetPnl >= 0 ? 'text-emerald-400' : 'text-red-400')}>
               {formatPnl(analytics.totalNetPnl)}
@@ -153,20 +153,20 @@ export default function DashboardClient() {
             <EquityCurveChart data={analytics.equityCurve} height={220} />
           ) : (
             <div className="h-48 flex items-center justify-center text-slate-500 text-sm">
-              {isLoading ? 'Loading...' : 'Not enough data yet. Add more trades.'}
+              {isLoading ? 'Chargement...' : 'Pas assez de données. Ajoute plus de trades.'}
             </div>
           )}
         </div>
 
         {/* Win rate donut */}
         <div className="bg-surface-800 border border-surface-500 rounded-2xl p-5">
-          <h3 className="text-sm font-semibold text-white mb-1">Win/Loss Ratio</h3>
-          <p className="text-xs text-slate-500 mb-2">{analytics.closedTrades} closed trades</p>
+          <h3 className="text-sm font-semibold text-white mb-1">Ratio Gains/Pertes</h3>
+          <p className="text-xs text-slate-500 mb-2">{analytics.closedTrades} trades fermés</p>
           <WinRateDonut wins={analytics.winCount} losses={analytics.lossCount} breakevens={analytics.breakevenCount} height={180} />
           <div className="grid grid-cols-3 gap-2 mt-3">
             {[
-              { label: 'Wins', value: analytics.winCount, color: 'text-emerald-400' },
-              { label: 'Losses', value: analytics.lossCount, color: 'text-red-400' },
+              { label: 'Gains', value: analytics.winCount, color: 'text-emerald-400' },
+              { label: 'Pertes', value: analytics.lossCount, color: 'text-red-400' },
               { label: 'B/E', value: analytics.breakevenCount, color: 'text-slate-400' },
             ].map(({ label, value, color }) => (
               <div key={label} className="text-center">
@@ -181,19 +181,19 @@ export default function DashboardClient() {
       {/* Daily P&L and Monthly P&L */}
       <div className="grid grid-cols-1 xl:grid-cols-2 gap-4">
         <div className="bg-surface-800 border border-surface-500 rounded-2xl p-5">
-          <h3 className="text-sm font-semibold text-white mb-4">Daily P&L</h3>
+          <h3 className="text-sm font-semibold text-white mb-4">P&L journalier</h3>
           {analytics.dailyPnl.length > 0 ? (
             <PnLBarChart data={analytics.dailyPnl.slice(-30).map(d => ({ ...d, date: d.date.slice(5) }))} height={180} />
           ) : (
-            <div className="h-40 flex items-center justify-center text-slate-500 text-sm">No data</div>
+            <div className="h-40 flex items-center justify-center text-slate-500 text-sm">Aucune donnée</div>
           )}
         </div>
         <div className="bg-surface-800 border border-surface-500 rounded-2xl p-5">
-          <h3 className="text-sm font-semibold text-white mb-4">Monthly Performance</h3>
+          <h3 className="text-sm font-semibold text-white mb-4">Performance mensuelle</h3>
           {analytics.monthlyPnl.length > 0 ? (
             <MonthlyPnLChart data={analytics.monthlyPnl} height={180} />
           ) : (
-            <div className="h-40 flex items-center justify-center text-slate-500 text-sm">No data</div>
+            <div className="h-40 flex items-center justify-center text-slate-500 text-sm">Aucune donnée</div>
           )}
         </div>
       </div>
@@ -203,9 +203,9 @@ export default function DashboardClient() {
         {/* Recent trades */}
         <div className="xl:col-span-2 bg-surface-800 border border-surface-500 rounded-2xl overflow-hidden">
           <div className="flex items-center justify-between px-5 py-4 border-b border-surface-500">
-            <h3 className="text-sm font-semibold text-white">Recent Trades</h3>
+            <h3 className="text-sm font-semibold text-white">Trades récents</h3>
             <Link href="/journal" className="flex items-center gap-1 text-xs text-brand-400 hover:text-brand-300 transition-colors">
-              View all <ArrowRight className="w-3.5 h-3.5" />
+              Voir tout <ArrowRight className="w-3.5 h-3.5" />
             </Link>
           </div>
           {isLoading ? (
@@ -215,13 +215,13 @@ export default function DashboardClient() {
               ))}
             </div>
           ) : recentTrades.length === 0 ? (
-            <EmptyState icon={BookOpen} title="No trades yet" description="Add your first trade to see it here." action={{ label: 'Add Trade', onClick: () => {} }} />
+            <EmptyState icon={BookOpen} title="Aucun trade pour l'instant" description="Ajoute ton premier trade pour le voir ici." action={{ label: 'Ajouter un trade', onClick: () => {} }} />
           ) : (
             <div className="overflow-x-auto">
               <table className="w-full">
                 <thead>
                   <tr className="border-b border-surface-500">
-                    {['Symbol', 'Direction', 'Entry', 'Exit', 'P&L', 'R', 'Date'].map(h => (
+                    {['Symbole', 'Direction', 'Entrée', 'Sortie', 'P&L', 'R', 'Date'].map(h => (
                       <th key={h} className="px-4 py-2.5 text-left text-xs font-medium text-slate-500 whitespace-nowrap">{h}</th>
                     ))}
                   </tr>
@@ -265,9 +265,9 @@ export default function DashboardClient() {
         <div className="space-y-4">
           {/* Open positions */}
           <div className="bg-surface-800 border border-surface-500 rounded-2xl p-5">
-            <h3 className="text-sm font-semibold text-white mb-3">Open Positions</h3>
+            <h3 className="text-sm font-semibold text-white mb-3">Positions ouvertes</h3>
             {openTrades.length === 0 ? (
-              <p className="text-xs text-slate-500">No open positions</p>
+              <p className="text-xs text-slate-500">Aucune position ouverte</p>
             ) : (
               <div className="space-y-2">
                 {openTrades.map(t => (
@@ -285,15 +285,15 @@ export default function DashboardClient() {
 
           {/* Key metrics */}
           <div className="bg-surface-800 border border-surface-500 rounded-2xl p-5">
-            <h3 className="text-sm font-semibold text-white mb-3">Key Metrics</h3>
+            <h3 className="text-sm font-semibold text-white mb-3">Métriques clés</h3>
             <div className="space-y-3">
               {[
-                { label: 'Max Drawdown', value: analytics.maxDrawdown > 0 ? `-${formatCurrency(analytics.maxDrawdown)}` : '$0.00', color: 'text-red-400' },
-                { label: 'Sharpe Ratio', value: analytics.sharpeRatio.toFixed(2), color: analytics.sharpeRatio > 1 ? 'text-emerald-400' : 'text-slate-300' },
-                { label: 'Best Day', value: analytics.bestDay ? formatCurrency(analytics.bestDay.pnl) : '—', color: 'text-emerald-400' },
-                { label: 'Worst Day', value: analytics.worstDay ? formatCurrency(analytics.worstDay.pnl) : '—', color: 'text-red-400' },
-                { label: 'Total Trades', value: String(analytics.totalTrades), color: 'text-white' },
-                { label: 'Win Streak', value: `${analytics.longestWinStreak} trades`, color: 'text-amber-400' },
+                { label: 'Drawdown max', value: analytics.maxDrawdown > 0 ? `-${formatCurrency(analytics.maxDrawdown)}` : '$0.00', color: 'text-red-400' },
+                { label: 'Ratio Sharpe', value: analytics.sharpeRatio.toFixed(2), color: analytics.sharpeRatio > 1 ? 'text-emerald-400' : 'text-slate-300' },
+                { label: 'Meilleur jour', value: analytics.bestDay ? formatCurrency(analytics.bestDay.pnl) : '—', color: 'text-emerald-400' },
+                { label: 'Pire jour', value: analytics.worstDay ? formatCurrency(analytics.worstDay.pnl) : '—', color: 'text-red-400' },
+                { label: 'Total trades', value: String(analytics.totalTrades), color: 'text-white' },
+                { label: 'Série gagnante', value: `${analytics.longestWinStreak} trades`, color: 'text-amber-400' },
               ].map(({ label, value, color }) => (
                 <div key={label} className="flex items-center justify-between">
                   <span className="text-xs text-slate-500">{label}</span>
