@@ -42,10 +42,10 @@ export function generateInsights(trades: Trade[]): Insight[] {
   if (setups.length > 0) {
     const best = setups.sort((a, b) => pct(b[1].wins, b[1].total) - pct(a[1].wins, a[1].total))[0]
     const wr = pct(best[1].wins, best[1].total)
-    insights.push({ id: 'best_setup', type: 'positive', icon: '🎯', title: 'Best Setup', value: best[0], description: `${wr.toFixed(0)}% win rate over ${best[1].total} trades`, priority: 1 })
+    insights.push({ id: 'best_setup', type: 'positive', icon: '🎯', title: 'Meilleur setup', value: best[0], description: `${wr.toFixed(0)}% de taux de réussite sur ${best[1].total} trades`, priority: 1 })
     const worst = setups.sort((a, b) => pct(a[1].wins, a[1].total) - pct(b[1].wins, b[1].total))[0]
     if (worst[0] !== best[0] && pct(worst[1].wins, worst[1].total) < 40) {
-      insights.push({ id: 'worst_setup', type: 'warning', icon: '⚠️', title: 'Weak Setup', value: worst[0], description: `Only ${pct(worst[1].wins, worst[1].total).toFixed(0)}% win rate — consider skipping it`, priority: 2 })
+      insights.push({ id: 'worst_setup', type: 'warning', icon: '⚠️', title: 'Setup faible', value: worst[0], description: `Seulement ${pct(worst[1].wins, worst[1].total).toFixed(0)}% de réussite — envisage de l'éviter`, priority: 2 })
     }
   }
 
@@ -65,16 +65,16 @@ export function generateInsights(trades: Trade[]): Insight[] {
     const bestAvg = avg(best[1])
     const worstAvg = avg(worst[1])
     if (bestAvg > 0) {
-      insights.push({ id: 'best_emotion', type: 'positive', icon: '😌', title: 'Best Mental State', value: EMOTION_LABELS[best[0]] ?? best[0], description: `Avg P&L of $${bestAvg.toFixed(0)} when trading ${EMOTION_LABELS[best[0]] ?? best[0]}`, priority: 1 })
+      insights.push({ id: 'best_emotion', type: 'positive', icon: '😌', title: 'Meilleur état mental', value: EMOTION_LABELS[best[0]] ?? best[0], description: `P&L moyen de $${bestAvg.toFixed(0)} en tradant ${EMOTION_LABELS[best[0]] ?? best[0]}`, priority: 1 })
     }
     if (worstAvg < 0 && worst[0] !== best[0]) {
-      insights.push({ id: 'worst_emotion', type: 'negative', icon: '😤', title: 'Harmful State', value: EMOTION_LABELS[worst[0]] ?? worst[0], description: `Avg P&L of $${worstAvg.toFixed(0)} when trading ${EMOTION_LABELS[worst[0]] ?? worst[0]}. Avoid it.`, priority: 1 })
+      insights.push({ id: 'worst_emotion', type: 'negative', icon: '😤', title: 'État nuisible', value: EMOTION_LABELS[worst[0]] ?? worst[0], description: `P&L moyen de $${worstAvg.toFixed(0)} en tradant ${EMOTION_LABELS[worst[0]] ?? worst[0]}. À éviter.`, priority: 1 })
     }
   }
 
   // 3. Best day of week
   const byDay = new Map<string, number[]>()
-  const dayNames = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday']
+  const dayNames = ['Dimanche', 'Lundi', 'Mardi', 'Mercredi', 'Jeudi', 'Vendredi', 'Samedi']
   closed.forEach(t => {
     const day = dayNames[new Date(t.entryDate).getDay()]
     const arr = byDay.get(day) ?? []
@@ -85,9 +85,9 @@ export function generateInsights(trades: Trade[]): Insight[] {
   if (days.length >= 3) {
     const bestDay = days.sort((a, b) => avg(b[1]) - avg(a[1]))[0]
     const worstDay = days.sort((a, b) => avg(a[1]) - avg(b[1]))[0]
-    insights.push({ id: 'best_day', type: 'positive', icon: '📅', title: 'Best Day', value: bestDay[0], description: `Avg $${avg(bestDay[1]).toFixed(0)} P&L on ${bestDay[0]}s`, priority: 2 })
+    insights.push({ id: 'best_day', type: 'positive', icon: '📅', title: 'Meilleur jour', value: bestDay[0], description: `P&L moyen de $${avg(bestDay[1]).toFixed(0)} le ${bestDay[0]}`, priority: 2 })
     if (avg(worstDay[1]) < 0) {
-      insights.push({ id: 'worst_day', type: 'negative', icon: '🚫', title: 'Worst Day', value: worstDay[0], description: `Avg $${avg(worstDay[1]).toFixed(0)} P&L on ${worstDay[0]}s — consider not trading`, priority: 2 })
+      insights.push({ id: 'worst_day', type: 'negative', icon: '🚫', title: 'Pire jour', value: worstDay[0], description: `P&L moyen de $${avg(worstDay[1]).toFixed(0)} le ${worstDay[0]} — envisage de ne pas trader`, priority: 2 })
     }
   }
 
@@ -99,7 +99,7 @@ export function generateInsights(trades: Trade[]): Insight[] {
     const cleanAvg = avg(clean.map(t => t.netPnl ?? 0))
     const diff = cleanAvg - violAvg
     if (diff > 0) {
-      insights.push({ id: 'rule_violations', type: 'warning', icon: '⚡', title: 'Rule Violations Cost You', value: `$${diff.toFixed(0)}/trade`, description: `Clean trades avg $${cleanAvg.toFixed(0)} vs rule breaks avg $${violAvg.toFixed(0)}`, priority: 1 })
+      insights.push({ id: 'rule_violations', type: 'warning', icon: '⚡', title: 'Les violations te coûtent', value: `$${diff.toFixed(0)}/trade`, description: `Trades propres: $${cleanAvg.toFixed(0)} en moyenne vs violations: $${violAvg.toFixed(0)}`, priority: 1 })
     }
   }
 
@@ -111,7 +111,7 @@ export function generateInsights(trades: Trade[]): Insight[] {
   })
   const highVolDays = Array.from(byDate.entries()).filter(([, c]) => c >= 5)
   if (highVolDays.length >= 2) {
-    insights.push({ id: 'overtrading', type: 'warning', icon: '🔄', title: 'Overtrading Detected', value: `${highVolDays.length} days`, description: `You traded 5+ times in a day on ${highVolDays.length} occasions — risk management alert`, priority: 2 })
+    insights.push({ id: 'overtrading', type: 'warning', icon: '🔄', title: 'Surtrading détecté', value: `${highVolDays.length} jours`, description: `Tu as tradé 5+ fois en un jour sur ${highVolDays.length} occasions — alerte gestion du risque`, priority: 2 })
   }
 
   // 6. Screenshot discipline
@@ -119,9 +119,9 @@ export function generateInsights(trades: Trade[]): Insight[] {
   const screenshotRate = pct(withScreenshot.length, closed.length)
   if (closed.length >= 10) {
     if (screenshotRate >= 80) {
-      insights.push({ id: 'screenshot_discipline', type: 'positive', icon: '📸', title: 'Great Screenshot Habit', value: `${screenshotRate.toFixed(0)}%`, description: 'You document your trades consistently — keep it up', priority: 3 })
+      insights.push({ id: 'screenshot_discipline', type: 'positive', icon: '📸', title: 'Excellente habitude de screenshots', value: `${screenshotRate.toFixed(0)}%`, description: 'Tu documentes tes trades régulièrement — continue comme ça', priority: 3 })
     } else if (screenshotRate < 30) {
-      insights.push({ id: 'no_screenshots', type: 'neutral', icon: '📸', title: 'Low Screenshot Rate', value: `${screenshotRate.toFixed(0)}%`, description: 'Add screenshots to track your setups visually', priority: 3 })
+      insights.push({ id: 'no_screenshots', type: 'neutral', icon: '📸', title: 'Faible taux de screenshots', value: `${screenshotRate.toFixed(0)}%`, description: 'Ajoute des screenshots pour visualiser tes setups', priority: 3 })
     }
   }
 
@@ -136,7 +136,7 @@ export function generateInsights(trades: Trade[]): Insight[] {
   const sessions = Array.from(bySession.entries()).filter(([, v]) => v.length >= 3)
   if (sessions.length >= 2) {
     const bestSession = sessions.sort((a, b) => avg(b[1]) - avg(a[1]))[0]
-    insights.push({ id: 'best_session', type: 'positive', icon: '⏰', title: 'Best Session', value: bestSession[0], description: `Avg $${avg(bestSession[1]).toFixed(0)} P&L during ${bestSession[0]}`, priority: 2 })
+    insights.push({ id: 'best_session', type: 'positive', icon: '⏰', title: 'Meilleure session', value: bestSession[0], description: `P&L moyen de $${avg(bestSession[1]).toFixed(0)} durant la session ${bestSession[0]}`, priority: 2 })
   }
 
   return insights.sort((a, b) => a.priority - b.priority).slice(0, 8)

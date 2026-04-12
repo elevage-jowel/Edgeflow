@@ -136,20 +136,20 @@ export function generateSummary(
   const passed = criteria.filter(c => c.passed)
 
   if (scoreClass === 'in_plan') {
-    if (missed.length === 0) return `Perfect setup — ${planName} plan respected at 100%`
-    return `${planName} plan respected at ${score}% — minor gap: ${missed[0].label.toLowerCase()}`
+    if (missed.length === 0) return `Setup parfait — plan ${planName} respecté à 100%`
+    return `Plan ${planName} respecté à ${score}% — écart mineur : ${missed[0].label.toLowerCase()}`
   }
   if (scoreClass === 'partial') {
     if (missed.length === 1) {
-      return `Partial setup at ${score}% — missing criterion: ${missed[0].label.toLowerCase()}`
+      return `Setup partiel à ${score}% — critère manquant : ${missed[0].label.toLowerCase()}`
     }
-    return `Partial setup at ${score}% — missing: ${missed.slice(0, 2).map(c => c.label.toLowerCase()).join(', ')}`
+    return `Setup partiel à ${score}% — manquants : ${missed.slice(0, 2).map(c => c.label.toLowerCase()).join(', ')}`
   }
   // out_of_plan
   if (passed.length === 0) {
-    return `Setup out of plan (${score}%) — no criteria matched`
+    return `Setup hors plan (${score}%) — aucun critère validé`
   }
-  return `Setup out of plan at ${score}% — only validated: ${passed.map(c => c.label.toLowerCase()).join(', ')}`
+  return `Setup hors plan à ${score}% — seulement validé : ${passed.map(c => c.label.toLowerCase()).join(', ')}`
 }
 
 // ─── FIND MATCHING PLAN ───────────────────────────────────────────────────────
@@ -180,10 +180,10 @@ export function computeLevel(totalPoints: number): UserLevel {
 }
 
 export const LEVEL_CONFIG: Record<UserLevel, { label: string; color: string; icon: string; min: number; max: number }> = {
-  apprentice: { label: 'Apprentice', color: 'text-slate-400', icon: '📘', min: 0, max: 500 },
-  confirmed:  { label: 'Confirmed',  color: 'text-emerald-400', icon: '📗', min: 500, max: 2000 },
+  apprentice: { label: 'Apprenti', color: 'text-slate-400', icon: '📘', min: 0, max: 500 },
+  confirmed:  { label: 'Confirmé',  color: 'text-emerald-400', icon: '📗', min: 500, max: 2000 },
   expert:     { label: 'Expert',     color: 'text-brand-400', icon: '📙', min: 2000, max: 5000 },
-  elite:      { label: 'Elite',      color: 'text-amber-400', icon: '👑', min: 5000, max: 10000 },
+  elite:      { label: 'Élite',      color: 'text-amber-400', icon: '👑', min: 5000, max: 10000 },
 }
 
 export function applyVerificationToPoints(

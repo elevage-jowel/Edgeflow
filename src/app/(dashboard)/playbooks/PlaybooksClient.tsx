@@ -58,7 +58,7 @@ function PlaybookCard({ playbook, onDelete }: { playbook: Playbook; onDelete: ()
                 <div className={cn('text-sm font-bold font-mono', playbook.winRate >= 50 ? 'text-emerald-400' : 'text-red-400')}>
                   {playbook.winRate.toFixed(0)}%
                 </div>
-                <div className="text-xs text-slate-500">Win Rate</div>
+                <div className="text-xs text-slate-500">Taux de réussite</div>
               </div>
             )}
             {playbook.avgRMultiple !== undefined && (
@@ -66,7 +66,7 @@ function PlaybookCard({ playbook, onDelete }: { playbook: Playbook; onDelete: ()
                 <div className={cn('text-sm font-bold font-mono', playbook.avgRMultiple >= 0 ? 'text-emerald-400' : 'text-red-400')}>
                   {playbook.avgRMultiple >= 0 ? '+' : ''}{playbook.avgRMultiple.toFixed(2)}R
                 </div>
-                <div className="text-xs text-slate-500">Avg R</div>
+                <div className="text-xs text-slate-500">R moyen</div>
               </div>
             )}
           </div>
@@ -80,18 +80,18 @@ function PlaybookCard({ playbook, onDelete }: { playbook: Playbook; onDelete: ()
 
         <button onClick={() => setExpanded(!expanded)} className="flex items-center gap-1 text-xs text-brand-400 hover:text-brand-300 transition-colors">
           {expanded ? <ChevronUp className="w-3.5 h-3.5" /> : <ChevronDown className="w-3.5 h-3.5" />}
-          {expanded ? 'Hide details' : 'Show details'}
+          {expanded ? 'Masquer les détails' : 'Afficher les détails'}
         </button>
       </div>
 
       {expanded && (
         <div className="border-t border-surface-500 p-5 space-y-4">
           {[
-            { label: 'Market Condition', value: playbook.marketCondition },
-            { label: 'Entry Criteria', value: playbook.entryCriteria },
+            { label: 'Condition de marché', value: playbook.marketCondition },
+            { label: 'Critères d\'entrée', value: playbook.entryCriteria },
             { label: 'Invalidation', value: playbook.invalidationCriteria },
-            { label: 'Management Rules', value: playbook.managementRules },
-            { label: 'Exit Criteria', value: playbook.exitCriteria },
+            { label: 'Règles de gestion', value: playbook.managementRules },
+            { label: 'Critères de sortie', value: playbook.exitCriteria },
           ].filter(s => s.value).map(s => (
             <div key={s.label}>
               <div className="text-xs font-medium text-brand-400 mb-1">{s.label}</div>
@@ -101,7 +101,7 @@ function PlaybookCard({ playbook, onDelete }: { playbook: Playbook; onDelete: ()
 
           {(playbook.checklist ?? []).length > 0 && (
             <div>
-              <div className="text-xs font-medium text-brand-400 mb-2">Pre-Trade Checklist</div>
+              <div className="text-xs font-medium text-brand-400 mb-2">Checklist pré-trade</div>
               <div className="space-y-1.5">
                 {(playbook.checklist ?? []).map(item => (
                   <div key={item.id} className="flex items-center gap-2 text-sm text-slate-300">
@@ -134,17 +134,17 @@ export default function PlaybooksClient() {
         checklist: [],
         isActive: true,
       })
-      toast.success('Playbook created')
+      toast.success('Playbook créé')
       setIsOpen(false)
       reset()
     } catch {
-      toast.error('Failed to create playbook')
+      toast.error('Échec de la création du playbook')
     }
   }
 
   const handleDelete = async (id: string) => {
-    if (!confirm('Delete this playbook?')) return
-    try { await deletePlaybook(id); toast.success('Deleted') } catch { toast.error('Failed') }
+    if (!confirm('Supprimer ce playbook ?')) return
+    try { await deletePlaybook(id); toast.success('Supprimé') } catch { toast.error('Échec') }
   }
 
   const inputCls = "w-full px-3 py-2 bg-surface-700 border border-surface-500 rounded-lg text-sm text-white placeholder-slate-500 focus:outline-none focus:border-brand-500"
@@ -154,10 +154,10 @@ export default function PlaybooksClient() {
     <div className="space-y-6 max-w-5xl">
       <div className="flex items-center justify-between">
         <div>
-          <h2 className="text-lg font-bold text-white">Trading Playbooks</h2>
-          <p className="text-sm text-slate-500">Document your proven setups and link them to trades</p>
+          <h2 className="text-lg font-bold text-white">Playbooks de trading</h2>
+          <p className="text-sm text-slate-500">Documente tes setups éprouvés et lie-les à tes trades</p>
         </div>
-        <Button variant="primary" icon={Plus} onClick={() => setIsOpen(true)}>New Playbook</Button>
+        <Button variant="primary" icon={Plus} onClick={() => setIsOpen(true)}>Nouveau playbook</Button>
       </div>
 
       {isLoading ? (
@@ -165,46 +165,46 @@ export default function PlaybooksClient() {
           {Array.from({ length: 4 }).map((_, i) => <div key={i} className="h-48 bg-surface-800 rounded-2xl animate-pulse" />)}
         </div>
       ) : playbooks.length === 0 ? (
-        <EmptyState icon={BookMarked} title="No playbooks yet" description="Document your best trading setups to analyze their performance." action={{ label: 'Create Playbook', onClick: () => setIsOpen(true) }} />
+        <EmptyState icon={BookMarked} title="Aucun playbook pour l'instant" description="Documente tes meilleurs setups de trading pour analyser leurs performances." action={{ label: 'Créer un playbook', onClick: () => setIsOpen(true) }} />
       ) : (
         <div className="grid gap-4 sm:grid-cols-2">
           {playbooks.map(pb => <PlaybookCard key={pb.id} playbook={pb} onDelete={() => handleDelete(pb.id)} />)}
         </div>
       )}
 
-      <Modal isOpen={isOpen} onClose={() => setIsOpen(false)} title="Create Playbook" size="lg">
+      <Modal isOpen={isOpen} onClose={() => setIsOpen(false)} title="Créer un playbook" size="lg">
         <form onSubmit={handleSubmit(onSubmit)} className="p-6 space-y-4">
           <div>
-            <label className="text-xs font-medium text-slate-400 mb-1 block">Playbook Name *</label>
-            <input {...register('name')} placeholder="e.g. Momentum Breakout" className={inputCls} />
+            <label className="text-xs font-medium text-slate-400 mb-1 block">Nom du playbook *</label>
+            <input {...register('name')} placeholder="ex. Momentum Breakout" className={inputCls} />
           </div>
           <div>
             <label className="text-xs font-medium text-slate-400 mb-1 block">Description</label>
-            <input {...register('description')} placeholder="Brief description of the setup" className={inputCls} />
+            <input {...register('description')} placeholder="Brève description du setup" className={inputCls} />
           </div>
           <div>
-            <label className="text-xs font-medium text-slate-400 mb-1 block">Market Condition</label>
-            <textarea {...register('marketCondition')} rows={2} placeholder="When does this work best?" className={textareaCls} />
+            <label className="text-xs font-medium text-slate-400 mb-1 block">Condition de marché</label>
+            <textarea {...register('marketCondition')} rows={2} placeholder="Quand est-ce que ça fonctionne le mieux ?" className={textareaCls} />
           </div>
           <div>
-            <label className="text-xs font-medium text-slate-400 mb-1 block">Entry Criteria</label>
-            <textarea {...register('entryCriteria')} rows={3} placeholder="List entry conditions..." className={textareaCls} />
+            <label className="text-xs font-medium text-slate-400 mb-1 block">Critères d&apos;entrée</label>
+            <textarea {...register('entryCriteria')} rows={3} placeholder="Lister les conditions d'entrée..." className={textareaCls} />
           </div>
           <div>
             <label className="text-xs font-medium text-slate-400 mb-1 block">Invalidation</label>
-            <textarea {...register('invalidationCriteria')} rows={2} placeholder="When is the setup invalid?" className={textareaCls} />
+            <textarea {...register('invalidationCriteria')} rows={2} placeholder="Quand le setup est-il invalide ?" className={textareaCls} />
           </div>
           <div>
-            <label className="text-xs font-medium text-slate-400 mb-1 block">Exit Criteria</label>
-            <textarea {...register('exitCriteria')} rows={2} placeholder="How do you exit?" className={textareaCls} />
+            <label className="text-xs font-medium text-slate-400 mb-1 block">Critères de sortie</label>
+            <textarea {...register('exitCriteria')} rows={2} placeholder="Comment tu sors ?" className={textareaCls} />
           </div>
           <div>
-            <label className="text-xs font-medium text-slate-400 mb-1 block">Tags (comma separated)</label>
+            <label className="text-xs font-medium text-slate-400 mb-1 block">Tags (séparés par des virgules)</label>
             <input {...register('tags')} placeholder="momentum, breakout, intraday" className={inputCls} />
           </div>
           <div className="flex justify-end gap-3 pt-2">
-            <Button type="button" variant="ghost" onClick={() => setIsOpen(false)}>Cancel</Button>
-            <Button type="submit" variant="primary" loading={isSubmitting}>Create Playbook</Button>
+            <Button type="button" variant="ghost" onClick={() => setIsOpen(false)}>Annuler</Button>
+            <Button type="submit" variant="primary" loading={isSubmitting}>Créer le playbook</Button>
           </div>
         </form>
       </Modal>

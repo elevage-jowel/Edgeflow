@@ -60,7 +60,7 @@ export default function SettingsClient() {
     }
     await savePlan(updated)
     setEditingPlan(null)
-    toast.success('Plan saved')
+    toast.success('Plan sauvegardé')
   }
 
   const toggleCriterionValidator = async (plan: SetupPlan, criterionId: string) => {
@@ -168,25 +168,25 @@ export default function SettingsClient() {
       {tab === 'preferences' && (
         <div className="bg-surface-800 border border-surface-500 rounded-2xl p-6 space-y-5">
           <div>
-            <label className={labelCls}>Currency</label>
+            <label className={labelCls}>Devise</label>
             <select value={currency} onChange={e => setCurrency(e.target.value)} className={inputCls}>
               {['USD', 'EUR', 'GBP', 'CAD', 'AUD', 'JPY', 'CHF'].map(c => <option key={c} value={c}>{c}</option>)}
             </select>
           </div>
           <div>
-            <label className={labelCls}>Risk Unit</label>
+            <label className={labelCls}>Unité de risque</label>
             <select value={riskUnit} onChange={e => setRiskUnit(e.target.value as any)} className={inputCls}>
-              <option value="dollar">Dollar Amount ($)</option>
-              <option value="percent">Percentage (%)</option>
-              <option value="r">R Multiple</option>
+              <option value="dollar">Montant en dollars ($)</option>
+              <option value="percent">Pourcentage (%)</option>
+              <option value="r">Multiple R</option>
             </select>
           </div>
           <div>
-            <label className={labelCls}>Timezone</label>
+            <label className={labelCls}>Fuseau horaire</label>
             <input value={userProfile?.timezone ?? 'UTC'} disabled className={`${inputCls} opacity-50 cursor-not-allowed`} />
           </div>
           <div className="flex justify-end">
-            <Button variant="primary" onClick={savePreferences} loading={isSaving}>Save Preferences</Button>
+            <Button variant="primary" onClick={savePreferences} loading={isSaving}>Sauvegarder les préférences</Button>
           </div>
         </div>
       )}
@@ -195,11 +195,11 @@ export default function SettingsClient() {
         <div className="space-y-4">
           <div className="flex items-center justify-between">
             <div>
-              <h3 className="text-sm font-semibold text-white">Setup Plans</h3>
-              <p className="text-xs text-slate-500">Define criteria to automatically score your trades</p>
+              <h3 className="text-sm font-semibold text-white">Plans de setup</h3>
+              <p className="text-xs text-slate-500">Définis les critères pour scorer automatiquement tes trades</p>
             </div>
-            <Button variant="ghost" size="sm" icon={RotateCcw} onClick={() => { resetToDefaults(); toast.success('Reset to defaults') }}>
-              Reset defaults
+            <Button variant="ghost" size="sm" icon={RotateCcw} onClick={() => { resetToDefaults(); toast.success('Réinitialisation effectuée') }}>
+              Réinitialiser
             </Button>
           </div>
 
@@ -215,7 +215,7 @@ export default function SettingsClient() {
                     <div className="space-y-3">
                       <div className="grid grid-cols-2 gap-3">
                         <div>
-                          <label className={labelCls}>Plan Name</label>
+                          <label className={labelCls}>Nom du plan</label>
                           <input value={editingPlanName} onChange={e => setEditingPlanName(e.target.value)} className={inputCls} />
                         </div>
                         <div>
@@ -224,8 +224,8 @@ export default function SettingsClient() {
                         </div>
                       </div>
                       <div className="flex gap-2 justify-end">
-                        <Button variant="ghost" size="sm" icon={X} onClick={() => setEditingPlan(null)}>Cancel</Button>
-                        <Button variant="primary" size="sm" icon={Check} onClick={saveEditPlan}>Save</Button>
+                        <Button variant="ghost" size="sm" icon={X} onClick={() => setEditingPlan(null)}>Annuler</Button>
+                        <Button variant="primary" size="sm" icon={Check} onClick={saveEditPlan}>Sauvegarder</Button>
                       </div>
                     </div>
                   ) : (
@@ -270,7 +270,7 @@ export default function SettingsClient() {
         <div className="space-y-5">
           <PointsWidget points={userProfile?.points ?? defaultUserPoints()} />
           <div className="bg-surface-800 border border-surface-500 rounded-2xl p-6">
-            <h3 className="text-sm font-semibold text-white mb-4">All Badges</h3>
+            <h3 className="text-sm font-semibold text-white mb-4">Tous les badges</h3>
             <BadgesPanel badges={userProfile?.points?.badges ?? defaultUserPoints().badges} />
           </div>
         </div>
@@ -279,15 +279,15 @@ export default function SettingsClient() {
       {tab === 'data' && (
         <div className="space-y-4">
           <div className="bg-surface-800 border border-surface-500 rounded-2xl p-6">
-            <h3 className="text-sm font-semibold text-white mb-2">Export Data</h3>
-            <p className="text-sm text-slate-500 mb-4">Download all your trades and settings as a CSV or JSON file.</p>
-            <Button variant="secondary" icon={Download} onClick={exportData}>Export All Data</Button>
+            <h3 className="text-sm font-semibold text-white mb-2">Exporter les données</h3>
+            <p className="text-sm text-slate-500 mb-4">Télécharge tous tes trades et paramètres au format CSV ou JSON.</p>
+            <Button variant="secondary" icon={Download} onClick={exportData}>Exporter toutes les données</Button>
           </div>
           <div className="bg-red-500/5 border border-red-500/20 rounded-2xl p-6">
-            <h3 className="text-sm font-semibold text-red-400 mb-2">Danger Zone</h3>
-            <p className="text-sm text-slate-500 mb-4">Permanently delete your account and all associated data.</p>
-            <Button variant="danger" icon={Trash2} onClick={() => toast.error('Please contact support to delete your account.')}>
-              Delete Account
+            <h3 className="text-sm font-semibold text-red-400 mb-2">Zone dangereuse</h3>
+            <p className="text-sm text-slate-500 mb-4">Supprimer définitivement ton compte et toutes les données associées.</p>
+            <Button variant="danger" icon={Trash2} onClick={() => toast.error('Contacte le support pour supprimer ton compte.')}>
+              Supprimer le compte
             </Button>
           </div>
         </div>

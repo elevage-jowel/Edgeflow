@@ -45,8 +45,8 @@ export function PointsWidget({ points, className }: PointsWidgetProps) {
       <div className="p-5">
         <div className="flex items-center justify-between mb-4">
           <div>
-            <h3 className="text-sm font-bold text-white">Discipline Score</h3>
-            <p className="text-xs text-slate-500">Live &amp; Backtest combined</p>
+            <h3 className="text-sm font-bold text-white">Score de discipline</h3>
+            <p className="text-xs text-slate-500">Live &amp; Backtest combinés</p>
           </div>
           <div className="text-2xl">{cfg.icon}</div>
         </div>
@@ -61,21 +61,21 @@ export function PointsWidget({ points, className }: PointsWidgetProps) {
               <TrendingUp className="w-3 h-3 text-brand-400" />
             </div>
             <div className="text-base font-bold text-white tabular-nums">{Math.round(points.avgScore30) || '—'}</div>
-            <div className="text-[10px] text-slate-500 mt-0.5">Avg Score</div>
+            <div className="text-[10px] text-slate-500 mt-0.5">Score moyen</div>
           </div>
           <div className="bg-surface-700/50 rounded-xl p-3 text-center">
             <div className="flex items-center justify-center gap-1 mb-1">
               <Flame className="w-3 h-3 text-orange-400" />
             </div>
             <div className="text-base font-bold text-white tabular-nums">{points.currentStreak}</div>
-            <div className="text-[10px] text-slate-500 mt-0.5">Streak</div>
+            <div className="text-[10px] text-slate-500 mt-0.5">Série</div>
           </div>
           <div className="bg-surface-700/50 rounded-xl p-3 text-center">
             <div className="flex items-center justify-center gap-1 mb-1">
               <Zap className="w-3 h-3 text-amber-400" />
             </div>
             <div className="text-base font-bold text-white tabular-nums">{points.total.toLocaleString()}</div>
-            <div className="text-[10px] text-slate-500 mt-0.5">Total Pts</div>
+            <div className="text-[10px] text-slate-500 mt-0.5">Total pts</div>
           </div>
         </div>
 
@@ -96,7 +96,7 @@ export function PointsWidget({ points, className }: PointsWidgetProps) {
         {/* Badges */}
         {recentBadges.length > 0 && (
           <div className="mt-4 pt-4 border-t border-surface-600">
-            <div className="text-xs text-slate-500 mb-2">Recent Badges</div>
+            <div className="text-xs text-slate-500 mb-2">Badges récents</div>
             <div className="flex flex-wrap gap-1.5">
               {recentBadges.map(b => (
                 <div

@@ -30,8 +30,8 @@ export function InsightsWidget() {
       <div className="p-5">
         <div className="flex items-center gap-2 mb-4">
           <Lightbulb className="w-4 h-4 text-amber-400" />
-          <h3 className="text-sm font-bold text-white">AI Insights</h3>
-          <span className="ml-auto text-xs text-slate-500">Based on your trades</span>
+          <h3 className="text-sm font-bold text-white">Insights</h3>
+          <span className="ml-auto text-xs text-slate-500">Basé sur tes trades</span>
         </div>
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
           {insights.map(insight => (

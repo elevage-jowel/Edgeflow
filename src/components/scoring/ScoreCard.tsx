@@ -11,21 +11,21 @@ interface ScoreCardProps {
 
 const CLASS_CONFIG = {
   in_plan: {
-    label: 'In Plan',
+    label: 'Dans le plan',
     badge: 'bg-emerald-500/15 text-emerald-400 border-emerald-500/30',
     glow: 'shadow-emerald-500/10',
     border: 'border-emerald-500/20',
     icon: '✅',
   },
   partial: {
-    label: 'Partial',
+    label: 'Partiel',
     badge: 'bg-amber-500/15 text-amber-400 border-amber-500/30',
     glow: 'shadow-amber-500/10',
     border: 'border-amber-500/20',
     icon: '⚠️',
   },
   out_of_plan: {
-    label: 'Out of Plan',
+    label: 'Hors plan',
     badge: 'bg-red-500/15 text-red-400 border-red-500/30',
     glow: 'shadow-red-500/10',
     border: 'border-red-500/20',
@@ -86,7 +86,7 @@ export function ScoreCard({ verification, compact = false }: ScoreCardProps) {
               {verification.pointsAwarded > 0 && (
                 <div className="flex items-center gap-1.5 text-xs bg-amber-500/10 text-amber-400 border border-amber-500/20 px-2.5 py-1 rounded-full">
                   <Star className="w-3 h-3" />
-                  <span>{verification.pointsAwarded} base pts</span>
+                  <span>{verification.pointsAwarded} pts de base</span>
                 </div>
               )}
               {verification.bonusPoints > 0 && (
@@ -97,12 +97,12 @@ export function ScoreCard({ verification, compact = false }: ScoreCardProps) {
               )}
               {verification.totalPoints > 0 && (
                 <div className="flex items-center gap-1.5 text-xs bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 px-2.5 py-1 rounded-full font-bold">
-                  <span>= {verification.totalPoints} pts total</span>
+                  <span>= {verification.totalPoints} pts au total</span>
                 </div>
               )}
               {verification.streakAtTime >= 2 && (
                 <div className="flex items-center gap-1.5 text-xs bg-orange-500/10 text-orange-400 border border-orange-500/20 px-2.5 py-1 rounded-full">
-                  🔥 <span>{verification.streakAtTime} streak</span>
+                  🔥 <span>{verification.streakAtTime} de suite</span>
                 </div>
               )}
             </div>
@@ -112,7 +112,7 @@ export function ScoreCard({ verification, compact = false }: ScoreCardProps) {
         {/* Criteria list */}
         <div className="space-y-1.5">
           <div className="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2">
-            Criteria breakdown
+            Détail des critères
           </div>
           {verification.criteria.map(c => (
             <div
@@ -145,7 +145,7 @@ export function ScoreCard({ verification, compact = false }: ScoreCardProps) {
         {/* Summary bar */}
         <div className="mt-4 pt-4 border-t border-surface-600">
           <div className="flex items-center justify-between text-xs text-slate-500 mb-1.5">
-            <span>{passed.length}/{verification.criteria.length} criteria passed</span>
+            <span>{passed.length}/{verification.criteria.length} critères validés</span>
             <span>{verification.score}/100 pts</span>
           </div>
           <div className="h-1.5 bg-surface-700 rounded-full overflow-hidden">
