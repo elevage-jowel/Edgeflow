@@ -42,6 +42,7 @@ interface StoreState {
   addTrade: (trade: Omit<Trade, 'id' | 'user_id' | 'created_at'>) => Promise<void>
   updateTrade: (id: string, updates: Partial<Trade>) => Promise<void>
   deleteTrade: (id: string) => Promise<void>
+  clearAllTrades: () => Promise<void>
 
   // Backtest actions
   addBacktestSession: (session: Omit<BacktestSession, 'id' | 'user_id' | 'created_at' | 'updated_at'>) => Promise<void>
@@ -233,6 +234,19 @@ export const useStore = create<StoreState>()(
         if (isSupabaseConfigured && supabase && !get().isOfflineMode) {
           try {
             await supabase.from('trades').delete().eq('id', id)
+          } catch {
+            set({ syncStatus: 'error' })
+          }
+        }
+      },
+
+      clearAllTrades: async () => {
+        const { user } = get()
+        set({ trades: [] })
+
+        if (isSupabaseConfigured && supabase && !get().isOfflineMode && user) {
+          try {
+            await supabase.from('trades').delete().eq('user_id', user.id)
           } catch {
             set({ syncStatus: 'error' })
           }

@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { motion } from 'framer-motion'
-import { Check, Settings as SettingsIcon } from 'lucide-react'
+import { Check, Settings as SettingsIcon, Trash2 } from 'lucide-react'
 import { useStore } from '../store/useStore'
 import { useI18n } from '../i18n'
 import { isSupabaseConfigured } from '../lib/supabase'
@@ -13,7 +13,7 @@ const CURRENCIES: Currency[] = ['USD', 'EUR', 'GBP', 'JPY', 'CHF', 'CAD', 'AUD']
 
 export function Settings() {
   const { t, language, setLanguage } = useI18n()
-  const { settings, updateSettings, user, syncStatus } = useStore()
+  const { settings, updateSettings, clearAllTrades, user, syncStatus } = useStore()
 
   const [form, setForm] = useState({
     currency: settings.currency ?? 'USD',
@@ -226,6 +226,26 @@ export function Settings() {
                 URL.revokeObjectURL(url)
               }}>
                 Export JSON
+              </Button>
+            </div>
+
+            <div className="flex items-center justify-between py-2 border-t border-surface-700">
+              <div>
+                <p className="text-sm text-white">Clear All Trades</p>
+                <p className="text-xs text-surface-500">Delete every recorded trade permanently</p>
+              </div>
+              <Button
+                variant="secondary"
+                size="sm"
+                icon={<Trash2 size={14} />}
+                onClick={async () => {
+                  if (window.confirm('Supprimer TOUS les trades ? Cette action est irréversible.')) {
+                    await clearAllTrades()
+                  }
+                }}
+                className="!text-red-400 hover:!border-red-500/40"
+              >
+                Clear All
               </Button>
             </div>
 
