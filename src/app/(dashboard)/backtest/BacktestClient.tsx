@@ -1,10 +1,11 @@
 'use client'
 import { useState, useEffect, useMemo } from 'react'
 import { useAuthStore } from '@/lib/stores/authStore'
-import { collection, getDocs, doc, setDoc, orderBy, query } from 'firebase/firestore'
+import { collection, getDocs, doc, setDoc, deleteDoc, orderBy, query } from 'firebase/firestore'
 import { db } from '@/lib/firebase/config'
 import { col } from '@/lib/firebase/collections'
 import { Backtest, Trade, TradeVerification } from '@/lib/types'
+import { DEMO_MODE, DEMO_UID } from '@/lib/demo'
 import { useSetupPlans } from '@/lib/hooks/useSetupPlans'
 import { usePoints } from '@/lib/hooks/usePoints'
 import { verifyTrade, findMatchingPlan, defaultUserPoints, LEVEL_CONFIG } from '@/lib/scoring/planEngine'
@@ -20,6 +21,17 @@ import { z } from 'zod'
 import { zodResolver } from '@hookform/resolvers/zod'
 import toast from 'react-hot-toast'
 import { Plus, FlaskConical, TrendingUp, TrendingDown, Target, BarChart2, ChevronRight, Zap } from 'lucide-react'
+
+// ─── Demo localStorage helpers ───────────────────────────────────────────────
+
+const DEMO_BT_KEY = 'edgeflow_demo_backtests'
+function getDemoBacktests(): Backtest[] {
+  try { const s = localStorage.getItem(DEMO_BT_KEY); if (s) return JSON.parse(s) } catch {}
+  return []
+}
+function saveDemoBacktests(bts: Backtest[]) {
+  localStorage.setItem(DEMO_BT_KEY, JSON.stringify(bts))
+}
 
 // ─── Backtest creation schema ─────────────────────────────────────────────────
 
@@ -67,6 +79,11 @@ export default function BacktestClient() {
   const [pendingVerification, setPendingVerification] = useState<TradeVerification | null>(null)
 
   useEffect(() => {
+    if (DEMO_MODE) {
+      setBacktests(getDemoBacktests())
+      setIsLoading(false)
+      return
+    }
     if (!user) return
     const load = async () => {
       const q = query(collection(db, col.backtests(user.uid)), orderBy('createdAt', 'desc'))
@@ -81,15 +98,22 @@ export default function BacktestClient() {
   const { register: rt, handleSubmit: ht, formState: { isSubmitting: ist }, reset: resetTradeForm } = useForm<TradeFormData>({ resolver: zodResolver(tradeSchema) })
 
   const onSubmit = async (data: FormData) => {
-    if (!user) return
+    const uid = DEMO_MODE ? DEMO_UID : user?.uid
+    if (!uid) return
     try {
       const id = `backtest_${Date.now()}`
       const bt: Backtest = {
-        ...data, id, userId: user.uid, trades: [],
+        ...data, id, userId: uid, trades: [],
         createdAt: new Date().toISOString(), updatedAt: new Date().toISOString(),
       }
-      await setDoc(doc(db, col.backtest(user.uid, id)), bt)
-      setBacktests(prev => [bt, ...prev])
+      if (DEMO_MODE) {
+        const updated = [bt, ...backtests]
+        saveDemoBacktests(updated)
+        setBacktests(updated)
+      } else {
+        await setDoc(doc(db, col.backtest(uid, id)), bt)
+        setBacktests(prev => [bt, ...prev])
+      }
       toast.success('Backtest session created')
       setIsOpen(false)
       reset()
@@ -97,7 +121,8 @@ export default function BacktestClient() {
   }
 
   const onAddTrade = async (data: TradeFormData) => {
-    if (!user || !selected) return
+    const uid = DEMO_MODE ? DEMO_UID : user?.uid
+    if (!uid || !selected) return
     try {
       const dir = data.direction === 'long' ? 1 : -1
       const gross = parseFloat(((data.exitPrice - data.entryPrice) * data.quantity * dir).toFixed(2))
@@ -112,7 +137,7 @@ export default function BacktestClient() {
       const tradeId = `bt_trade_${Date.now()}`
       const newTrade: Trade = {
         id: tradeId,
-        userId: user.uid,
+        userId: uid,
         symbol: data.symbol.toUpperCase(),
         assetClass: 'forex',
         direction: data.direction,
@@ -144,9 +169,16 @@ export default function BacktestClient() {
       const winRate = updatedTrades.length > 0 ? updatedTrades.filter(t => t.pnl > 0).length / updatedTrades.length : 0
       const updatedBt: Backtest = { ...selected, trades: updatedTrades, totalPnl, winRate, updatedAt: new Date().toISOString() }
 
-      await setDoc(doc(db, col.backtest(user.uid, selected.id)), updatedBt)
-      setBacktests(prev => prev.map(b => b.id === selected.id ? updatedBt : b))
-      setSelected(updatedBt)
+      if (DEMO_MODE) {
+        const updatedBts = backtests.map(b => b.id === selected.id ? updatedBt : b)
+        saveDemoBacktests(updatedBts)
+        setBacktests(updatedBts)
+        setSelected(updatedBt)
+      } else {
+        await setDoc(doc(db, col.backtest(uid, selected.id)), updatedBt)
+        setBacktests(prev => prev.map(b => b.id === selected.id ? updatedBt : b))
+        setSelected(updatedBt)
+      }
 
       // Auto-verification for backtest trade
       const matchingPlan = findMatchingPlan(newTrade, plans)
@@ -161,6 +193,26 @@ export default function BacktestClient() {
       setIsTradeOpen(false)
       resetTradeForm()
     } catch (e: any) { toast.error(e.message ?? 'Failed') }
+  }
+
+  // ─── Delete backtest ──────────────────────────────────────────────────────
+
+  const deleteBacktest = async (bt: Backtest) => {
+    if (!confirm(`Delete "${bt.name}"?`)) return
+    const uid = DEMO_MODE ? DEMO_UID : user?.uid
+    if (!uid) return
+    try {
+      if (DEMO_MODE) {
+        const updated = backtests.filter(b => b.id !== bt.id)
+        saveDemoBacktests(updated)
+        setBacktests(updated)
+      } else {
+        await deleteDoc(doc(db, col.backtest(uid, bt.id)))
+        setBacktests(prev => prev.filter(b => b.id !== bt.id))
+      }
+      if (selected?.id === bt.id) setSelected(null)
+      toast.success('Session deleted')
+    } catch { toast.error('Failed to delete') }
   }
 
   // ─── Analytics ────────────────────────────────────────────────────────────
@@ -202,33 +254,41 @@ export default function BacktestClient() {
       ) : (
         <div className="grid gap-4 sm:grid-cols-2">
           {backtests.map(bt => (
-            <button key={bt.id} onClick={() => setSelected(bt)}
-              className="bg-surface-800 border border-surface-500 rounded-2xl p-5 text-left hover:border-brand-500/40 transition-all group">
-              <div className="flex items-start justify-between mb-2">
-                <div>
-                  <div className="text-sm font-bold text-white mb-0.5">{bt.name}</div>
-                  <div className="text-xs text-slate-500">{bt.strategy}</div>
-                </div>
-                <div className="flex items-center gap-2">
-                  <div className={cn('text-sm font-bold font-mono', (bt.totalPnl ?? 0) >= 0 ? 'text-emerald-400' : 'text-red-400')}>
-                    {bt.totalPnl !== undefined ? formatPnl(bt.totalPnl) : '—'}
+            <div key={bt.id} className="relative group bg-surface-800 border border-surface-500 rounded-2xl hover:border-brand-500/40 transition-all">
+              <button onClick={() => setSelected(bt)} className="w-full p-5 text-left">
+                <div className="flex items-start justify-between mb-2">
+                  <div>
+                    <div className="text-sm font-bold text-white mb-0.5">{bt.name}</div>
+                    <div className="text-xs text-slate-500">{bt.strategy}</div>
                   </div>
-                  <ChevronRight className="w-4 h-4 text-slate-600 group-hover:text-slate-400 transition-colors" />
-                </div>
-              </div>
-              <div className="flex items-center gap-4 text-xs text-slate-500 mb-2">
-                <span>{formatDate(bt.startDate, 'MMM d')} — {formatDate(bt.endDate, 'MMM d, yyyy')}</span>
-                <span>{bt.trades.length} trades</span>
-              </div>
-              {bt.winRate !== undefined && (
-                <div className="flex items-center gap-1.5">
-                  <div className="flex-1 h-1 bg-surface-600 rounded-full overflow-hidden">
-                    <div className="h-full bg-emerald-500 rounded-full" style={{ width: `${(bt.winRate ?? 0) * 100}%` }} />
+                  <div className="flex items-center gap-2">
+                    <div className={cn('text-sm font-bold font-mono', (bt.totalPnl ?? 0) >= 0 ? 'text-emerald-400' : 'text-red-400')}>
+                      {bt.totalPnl !== undefined ? formatPnl(bt.totalPnl) : '—'}
+                    </div>
+                    <ChevronRight className="w-4 h-4 text-slate-600 group-hover:text-slate-400 transition-colors" />
                   </div>
-                  <span className="text-[10px] text-slate-500 tabular-nums">{((bt.winRate ?? 0) * 100).toFixed(0)}% WR</span>
                 </div>
-              )}
-            </button>
+                <div className="flex items-center gap-4 text-xs text-slate-500 mb-2">
+                  <span>{formatDate(bt.startDate, 'MMM d')} — {formatDate(bt.endDate, 'MMM d, yyyy')}</span>
+                  <span>{bt.trades.length} trades</span>
+                </div>
+                {bt.winRate !== undefined && (
+                  <div className="flex items-center gap-1.5">
+                    <div className="flex-1 h-1 bg-surface-600 rounded-full overflow-hidden">
+                      <div className="h-full bg-emerald-500 rounded-full" style={{ width: `${(bt.winRate ?? 0) * 100}%` }} />
+                    </div>
+                    <span className="text-[10px] text-slate-500 tabular-nums">{((bt.winRate ?? 0) * 100).toFixed(0)}% WR</span>
+                  </div>
+                )}
+              </button>
+              <button
+                onClick={() => deleteBacktest(bt)}
+                className="absolute top-3 right-3 w-6 h-6 flex items-center justify-center rounded-md bg-red-500/0 hover:bg-red-500/20 text-slate-600 hover:text-red-400 opacity-0 group-hover:opacity-100 transition-all"
+                title="Delete session"
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4h6v2"/></svg>
+              </button>
+            </div>
           ))}
         </div>
       )}

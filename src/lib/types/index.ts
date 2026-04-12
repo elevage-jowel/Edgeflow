@@ -65,6 +65,7 @@ export interface Trade {
   notes: string
   screenshotUrls: string[]
   setupRating?: number
+  setupGrade?: 'A+' | 'A' | 'B' | 'C' | 'D'
   executionRating?: number
   emotionRating?: number     // kept for backward compat
 

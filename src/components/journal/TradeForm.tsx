@@ -15,6 +15,7 @@ import { cn } from '@/lib/utils/cn'
 import toast from 'react-hot-toast'
 import { TrendingUp, TrendingDown, ChevronDown, ChevronUp, Zap, SlidersHorizontal, Star, AlertTriangle, ImagePlus, X, Loader2 } from 'lucide-react'
 import { uploadTradeScreenshot } from '@/lib/firebase/storageUtils'
+import { DEMO_MODE } from '@/lib/demo'
 
 // ─── Static options ───────────────────────────────────────────────────────────
 
@@ -104,6 +105,7 @@ const schema = z.object({
   // Advanced — Ratings
   setupRating: z.coerce.number().min(1).max(5).optional().or(z.literal('')),
   executionRating: z.coerce.number().min(1).max(5).optional().or(z.literal('')),
+  setupGrade: z.enum(['A+', 'A', 'B', 'C', 'D']).optional(),
   tags: z.string().optional(),
   playbookId: z.string().optional(),
 })
@@ -256,6 +258,7 @@ export function TradeForm({ trade, onClose }: TradeFormProps) {
       outcome: trade.outcome,
       setupRating: trade.setupRating ?? '',
       executionRating: trade.executionRating ?? '',
+      setupGrade: trade.setupGrade,
       propFirm: trade.propFirm ?? '',
       accountType: trade.accountType,
       accountName: trade.accountName ?? '',
@@ -295,6 +298,7 @@ export function TradeForm({ trade, onClose }: TradeFormProps) {
   const confidenceScore = watch('confidenceScore')
   const setupRating = watch('setupRating')
   const executionRating = watch('executionRating')
+  const setupGrade = watch('setupGrade')
   const mistakeTags = watch('mistakeTags') ?? []
 
   const toggleMistakeTag = (tag: string) => {
