@@ -2,7 +2,7 @@ import { getSeedTrades } from '@/data/seedTrades'
 import { Trade, UserProfile } from '@/lib/types'
 import { defaultUserPoints } from '@/lib/scoring/planEngine'
 
-export const DEMO_MODE = process.env.NEXT_PUBLIC_DEMO === 'true'
+export const DEMO_MODE = true
 
 export const DEMO_UID = 'demo_user_001'
 
