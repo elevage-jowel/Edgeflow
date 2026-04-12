@@ -308,15 +308,28 @@ export function TradeForm({ trade, onClose }: TradeFormProps) {
 
   const handleScreenshotUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
-    if (!file || !user) return
+    if (!file) return
     try {
       setUploadingScreenshot(true)
-      const tradeId = trade?.id ?? `tmp_${Date.now()}`
-      const url = await uploadTradeScreenshot(user.uid, tradeId, file)
-      setScreenshots(prev => [...prev, url])
-      toast.success('Screenshot uploaded')
+      if (DEMO_MODE) {
+        // Local preview — convert to data URL
+        const url = await new Promise<string>((resolve, reject) => {
+          const reader = new FileReader()
+          reader.onload = () => resolve(reader.result as string)
+          reader.onerror = reject
+          reader.readAsDataURL(file)
+        })
+        setScreenshots(prev => [...prev, url])
+        toast.success('Screenshot ajouté')
+      } else {
+        if (!user) return
+        const tradeId = trade?.id ?? `tmp_${Date.now()}`
+        const url = await uploadTradeScreenshot(user.uid, tradeId, file)
+        setScreenshots(prev => [...prev, url])
+        toast.success('Screenshot uploadé')
+      }
     } catch {
-      toast.error('Upload failed')
+      toast.error('Échec de l\'upload')
     } finally {
       setUploadingScreenshot(false)
       e.target.value = ''
@@ -380,6 +393,7 @@ export function TradeForm({ trade, onClose }: TradeFormProps) {
         tags: data.tags ? data.tags.split(',').map(t => t.trim()).filter(Boolean) : [],
         screenshotUrls: screenshots,
         setupRating: data.setupRating ? Number(data.setupRating) : undefined,
+        setupGrade: data.setupGrade || undefined,
         executionRating: data.executionRating ? Number(data.executionRating) : undefined,
         propFirm: data.propFirm || undefined,
         accountType: data.accountType || undefined,
@@ -780,6 +794,30 @@ export function TradeForm({ trade, onClose }: TradeFormProps) {
               <SectionHeader title="⭐ Notation & Revue" open={sections.ratings} onToggle={() => toggleSection('ratings')} />
               {sections.ratings && (
                 <div className="space-y-4 pt-2">
+                  <div>
+                    <label className={lbl}>Grade du setup</label>
+                    <div className="flex gap-2">
+                      {(['A+', 'A', 'B', 'C', 'D'] as const).map(g => (
+                        <button
+                          key={g}
+                          type="button"
+                          onClick={() => setValue('setupGrade', g === setupGrade ? undefined : g)}
+                          className={cn(
+                            'w-10 h-10 rounded-lg text-sm font-bold border transition-all',
+                            setupGrade === g
+                              ? g === 'A+' ? 'bg-emerald-500/20 border-emerald-500 text-emerald-400'
+                              : g === 'A' ? 'bg-green-500/20 border-green-500 text-green-400'
+                              : g === 'B' ? 'bg-brand-500/20 border-brand-500 text-brand-400'
+                              : g === 'C' ? 'bg-amber-500/20 border-amber-500 text-amber-400'
+                              : 'bg-red-500/20 border-red-500 text-red-400'
+                              : 'border-surface-500 text-slate-400 hover:border-slate-400'
+                          )}
+                        >
+                          {g}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
                   <div className="grid grid-cols-2 gap-4">
                     <div>
                       <label className={lbl}>Qualité du setup</label>

@@ -64,7 +64,7 @@ export default function JournalClient() {
   const totalPnl = allTrades.reduce((s, t) => s + (t.netPnl ?? 0), 0)
 
   return (
-    <div className="space-y-5 max-w-screen-2xl">
+    <div className="space-y-5 w-full">
       {/* Header */}
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div className="flex items-center gap-6">

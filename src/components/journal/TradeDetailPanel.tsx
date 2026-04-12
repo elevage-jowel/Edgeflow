@@ -82,6 +82,17 @@ export function TradeDetailPanel({ trade, onEdit }: TradeDetailPanelProps) {
         <Row label="Strategy" value={trade.strategy ?? '—'} />
         <Row label="Session" value={trade.session ?? '—'} />
         <Row label="Setup Rating" value={<RatingStars value={trade.setupRating} />} />
+        {trade.setupGrade && (
+          <Row label="Grade" value={
+            <span className={cn('px-2 py-0.5 rounded text-xs font-bold',
+              trade.setupGrade === 'A+' ? 'bg-emerald-500/20 text-emerald-400' :
+              trade.setupGrade === 'A' ? 'bg-green-500/20 text-green-400' :
+              trade.setupGrade === 'B' ? 'bg-brand-500/20 text-brand-400' :
+              trade.setupGrade === 'C' ? 'bg-amber-500/20 text-amber-400' :
+              'bg-red-500/20 text-red-400'
+            )}>{trade.setupGrade}</span>
+          } />
+        )}
         <Row label="Execution Rating" value={<RatingStars value={trade.executionRating} />} />
       </div>
 
