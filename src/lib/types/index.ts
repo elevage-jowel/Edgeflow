@@ -194,6 +194,7 @@ export interface UserProfile {
   accountSize?: number
   seeded?: boolean
   points?: UserPoints
+  notionConfig?: NotionConfig
   createdAt: string
   updatedAt: string
 }
@@ -314,6 +315,15 @@ export interface UserPoints {
   level: UserLevel
   badges: Badge[]
   scoreHistory: { tradeId: string; score: number; date: string; type: 'live' | 'backtest' }[]
+}
+
+// ─── NOTION INTEGRATION ──────────────────────────────────────────────────────
+
+export interface NotionConfig {
+  integrationToken: string  // secret_xxx
+  databaseId?: string       // ID of the created database
+  parentPageId?: string     // Parent page used for creation
+  lastSyncAt?: string       // ISO datetime of last sync
 }
 
 // ─── DATE RANGE ──────────────────────────────────────────────────────────────

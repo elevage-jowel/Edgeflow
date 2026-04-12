@@ -10,10 +10,11 @@ import { useSetupPlans } from '@/lib/hooks/useSetupPlans'
 import { SetupPlan, PlanCriterion } from '@/lib/types'
 import { BadgesPanel } from '@/components/scoring/BadgesPanel'
 import { PointsWidget } from '@/components/scoring/PointsWidget'
+import { NotionIntegration } from '@/components/settings/NotionIntegration'
 import { defaultUserPoints } from '@/lib/scoring/planEngine'
 import { Button } from '@/components/ui/Button'
 import toast from 'react-hot-toast'
-import { User, Lock, Download, Trash2, Globe, BookOpen, Plus, Pencil, X, Check, RotateCcw, Award } from 'lucide-react'
+import { User, Lock, Download, Trash2, Globe, BookOpen, Plus, Pencil, X, Check, RotateCcw, Award, Database } from 'lucide-react'
 import { cn } from '@/lib/utils/cn'
 
 const tabs = [
@@ -22,6 +23,7 @@ const tabs = [
   { id: 'preferences', label: 'Préférences', icon: Globe },
   { id: 'plans', label: 'Plans de setup', icon: BookOpen },
   { id: 'badges', label: 'Badges', icon: Award },
+  { id: 'notion', label: 'Notion', icon: Database },
   { id: 'data', label: 'Données', icon: Download },
 ]
 
@@ -273,6 +275,12 @@ export default function SettingsClient() {
             <h3 className="text-sm font-semibold text-white mb-4">Tous les badges</h3>
             <BadgesPanel badges={userProfile?.points?.badges ?? defaultUserPoints().badges} />
           </div>
+        </div>
+      )}
+
+      {tab === 'notion' && (
+        <div className="bg-surface-800 border border-surface-500 rounded-2xl p-6">
+          <NotionIntegration />
         </div>
       )}
 
