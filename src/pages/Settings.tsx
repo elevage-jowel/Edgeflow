@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { motion } from 'framer-motion'
-import { Check, Settings as SettingsIcon } from 'lucide-react'
+import { Check, Settings as SettingsIcon, Eye, EyeOff, Bot } from 'lucide-react'
 import { useStore } from '../store/useStore'
 import { useI18n } from '../i18n'
 import { isSupabaseConfigured } from '../lib/supabase'
@@ -20,9 +20,13 @@ export function Settings() {
     initial_balance: String(settings.initial_balance ?? 10000),
     risk_per_trade: String(settings.risk_per_trade ?? 1),
     default_risk_reward: String(settings.default_risk_reward ?? 2),
+    anthropic_api_key: (settings as Record<string, unknown>).anthropic_api_key as string ?? '',
+    alphavantage_api_key: (settings as Record<string, unknown>).alphavantage_api_key as string ?? '',
   })
 
   const [saved, setSaved] = useState(false)
+  const [showAnthropicKey, setShowAnthropicKey] = useState(false)
+  const [showAVKey, setShowAVKey] = useState(false)
 
   const handleSave = async () => {
     await updateSettings({
@@ -31,6 +35,8 @@ export function Settings() {
       risk_per_trade: parseFloat(form.risk_per_trade),
       default_risk_reward: parseFloat(form.default_risk_reward),
       language,
+      anthropic_api_key: form.anthropic_api_key.trim(),
+      alphavantage_api_key: form.alphavantage_api_key.trim(),
     })
     setSaved(true)
     setTimeout(() => setSaved(false), 3000)
@@ -157,6 +163,72 @@ export function Settings() {
                 { value: 'dark', label: 'Dark (Default)' },
               ]}
             />
+          </div>
+        </motion.div>
+
+        {/* AI Monitor */}
+        <motion.div
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.12 }}
+          className="bg-surface-850 border border-surface-700 rounded-xl p-5"
+        >
+          <h2 className="text-sm font-semibold text-white mb-1 uppercase tracking-wider flex items-center gap-2">
+            <Bot size={14} className="text-brand-400" />
+            AI Monitor
+          </h2>
+          <p className="text-xs text-surface-500 mb-4">
+            Clés API pour la détection automatique de setups de trading.
+          </p>
+          <div className="space-y-4">
+            <div>
+              <label className="block text-xs font-medium text-surface-400 uppercase tracking-wider mb-1.5">
+                Clé API Anthropic (Claude)
+              </label>
+              <div className="relative">
+                <input
+                  type={showAnthropicKey ? 'text' : 'password'}
+                  value={form.anthropic_api_key}
+                  onChange={e => setForm(f => ({ ...f, anthropic_api_key: e.target.value }))}
+                  placeholder="sk-ant-..."
+                  className="w-full bg-surface-800 border border-surface-600 rounded-lg px-3 py-2 text-sm text-white placeholder-surface-500 focus:outline-none focus:border-brand-500 pr-10 font-mono"
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowAnthropicKey(!showAnthropicKey)}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-surface-500 hover:text-white transition-colors"
+                >
+                  {showAnthropicKey ? <EyeOff size={14} /> : <Eye size={14} />}
+                </button>
+              </div>
+              <p className="text-xs text-surface-500 mt-1">
+                Requise pour l'analyse IA des setups. Disponible sur console.anthropic.com.
+              </p>
+            </div>
+            <div>
+              <label className="block text-xs font-medium text-surface-400 uppercase tracking-wider mb-1.5">
+                Clé API Alpha Vantage (Actions / Forex)
+              </label>
+              <div className="relative">
+                <input
+                  type={showAVKey ? 'text' : 'password'}
+                  value={form.alphavantage_api_key}
+                  onChange={e => setForm(f => ({ ...f, alphavantage_api_key: e.target.value }))}
+                  placeholder="Optionnel — pour actions et forex"
+                  className="w-full bg-surface-800 border border-surface-600 rounded-lg px-3 py-2 text-sm text-white placeholder-surface-500 focus:outline-none focus:border-brand-500 pr-10 font-mono"
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowAVKey(!showAVKey)}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-surface-500 hover:text-white transition-colors"
+                >
+                  {showAVKey ? <EyeOff size={14} /> : <Eye size={14} />}
+                </button>
+              </div>
+              <p className="text-xs text-surface-500 mt-1">
+                Pour scanner des actions/forex. Crypto (Binance) fonctionne sans clé. Tier gratuit sur alphavantage.co.
+              </p>
+            </div>
           </div>
         </motion.div>
 

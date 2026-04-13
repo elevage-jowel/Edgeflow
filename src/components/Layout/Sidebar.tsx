@@ -9,6 +9,7 @@ import {
   Settings,
   TrendingUp,
   LogOut,
+  Bot,
 } from 'lucide-react'
 import { useStore } from '../../store/useStore'
 import { useI18n } from '../../i18n'
@@ -20,12 +21,14 @@ const navItems = [
   { to: '/backtest', icon: FlaskConical, key: 'nav.backtest' },
   { to: '/diary', icon: NotebookPen, key: 'nav.diary' },
   { to: '/calendar', icon: CalendarDays, key: 'nav.calendar' },
+  { to: '/ai-monitor', icon: Bot, key: 'nav.ai_monitor' },
   { to: '/settings', icon: Settings, key: 'nav.settings' },
 ]
 
 export function Sidebar() {
   const { t } = useI18n()
-  const { user, logout, syncStatus } = useStore()
+  const { user, logout, syncStatus, scanResults, monitorActive } = useStore()
+  const alertCount = scanResults.filter(r => r.detected && r.confidence >= 70).length
 
   return (
     <motion.aside
@@ -66,7 +69,15 @@ export function Sidebar() {
               <>
                 <Icon className={`w-4.5 h-4.5 ${isActive ? 'text-brand-400' : ''}`} size={18} />
                 <span>{t(key)}</span>
-                {isActive && (
+                {to === '/ai-monitor' && monitorActive && (
+                  <span className="ml-auto w-1.5 h-1.5 rounded-full bg-brand-400 animate-pulse" />
+                )}
+                {to === '/ai-monitor' && alertCount > 0 && !monitorActive && (
+                  <span className="ml-auto text-xs bg-brand-500 text-white px-1.5 py-0.5 rounded-full font-mono">
+                    {alertCount}
+                  </span>
+                )}
+                {isActive && to !== '/ai-monitor' && (
                   <motion.div
                     layoutId="nav-indicator"
                     className="ml-auto w-1.5 h-1.5 rounded-full bg-brand-400"

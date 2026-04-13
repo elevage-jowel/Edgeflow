@@ -15,6 +15,7 @@ import type {
   AppTheme,
   MoodLevel,
 } from '../types'
+import type { TradingSetup, ScanResult } from '../types/monitor'
 
 interface StoreState {
   // Auth
@@ -26,7 +27,15 @@ interface StoreState {
   trades: Trade[]
   backtestSessions: BacktestSession[]
   journalEntries: JournalEntry[]
-  settings: Partial<UserSettings>
+  settings: Partial<UserSettings> & {
+    anthropic_api_key?: string
+    alphavantage_api_key?: string
+  }
+
+  // AI Monitor
+  monitorSetups: TradingSetup[]
+  scanResults: ScanResult[]
+  monitorActive: boolean
 
   // UI
   syncStatus: SyncStatus
@@ -54,7 +63,15 @@ interface StoreState {
   deleteJournalEntry: (id: string) => Promise<void>
 
   // Settings actions
-  updateSettings: (updates: Partial<UserSettings>) => Promise<void>
+  updateSettings: (updates: Partial<UserSettings> & { anthropic_api_key?: string; alphavantage_api_key?: string }) => Promise<void>
+
+  // AI Monitor actions
+  addSetup: (setup: Omit<TradingSetup, 'id' | 'created_at'>) => void
+  updateSetup: (id: string, updates: Partial<TradingSetup>) => void
+  deleteSetup: (id: string) => void
+  addScanResult: (result: ScanResult) => void
+  clearScanResults: () => void
+  setMonitorActive: (active: boolean) => void
 
   // Sync
   syncWithCloud: () => Promise<void>
@@ -83,6 +100,9 @@ export const useStore = create<StoreState>()(
       backtestSessions: [],
       journalEntries: [],
       settings: DEFAULT_SETTINGS,
+      monitorSetups: [],
+      scanResults: [],
+      monitorActive: false,
       syncStatus: 'local',
       isLoading: false,
 
@@ -174,6 +194,7 @@ export const useStore = create<StoreState>()(
           backtestSessions: [],
           journalEntries: [],
           settings: DEFAULT_SETTINGS,
+          monitorActive: false,
           syncStatus: 'local',
         })
       },
@@ -363,6 +384,39 @@ export const useStore = create<StoreState>()(
         }
       },
 
+      // ─── AI Monitor ───────────────────────────────────────────────────────
+      addSetup: (setupData) => {
+        const setup: TradingSetup = {
+          ...setupData,
+          id: generateId(),
+          created_at: new Date().toISOString(),
+        }
+        set(s => ({ monitorSetups: [setup, ...s.monitorSetups] }))
+      },
+
+      updateSetup: (id, updates) => {
+        set(s => ({
+          monitorSetups: s.monitorSetups.map(s => s.id === id ? { ...s, ...updates } : s),
+        }))
+      },
+
+      deleteSetup: (id) => {
+        set(s => ({ monitorSetups: s.monitorSetups.filter(s => s.id !== id) }))
+      },
+
+      addScanResult: (result) => {
+        // Keep last 200 results
+        set(s => ({ scanResults: [result, ...s.scanResults].slice(0, 200) }))
+      },
+
+      clearScanResults: () => {
+        set({ scanResults: [] })
+      },
+
+      setMonitorActive: (active) => {
+        set({ monitorActive: active })
+      },
+
       // ─── Sync ──────────────────────────────────────────────────────────────
       syncWithCloud: async () => {
         if (!isSupabaseConfigured || !supabase) {
@@ -404,6 +458,8 @@ export const useStore = create<StoreState>()(
         backtestSessions: state.backtestSessions,
         journalEntries: state.journalEntries,
         settings: state.settings,
+        monitorSetups: state.monitorSetups,
+        scanResults: state.scanResults,
       }),
     }
   )

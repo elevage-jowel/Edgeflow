@@ -10,6 +10,7 @@ const fr: Translations = {
   'nav.backtest': 'Backtesting Lab',
   'nav.diary': 'Journal Intime',
   'nav.calendar': 'Calendrier',
+  'nav.ai_monitor': 'AI Monitor',
   'nav.settings': 'Paramètres',
 
   // Auth
@@ -183,6 +184,7 @@ const en: Translations = {
   'nav.backtest': 'Backtesting Lab',
   'nav.diary': 'Trader Diary',
   'nav.calendar': 'Calendar',
+  'nav.ai_monitor': 'AI Monitor',
   'nav.settings': 'Settings',
 
   // Auth
