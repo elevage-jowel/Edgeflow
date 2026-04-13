@@ -115,6 +115,8 @@ export async function exportTradeToDiscord(
 }
 
 // ─── Notion ───────────────────────────────────────────────────────────────────
+// Property names match the user's Notion database exactly.
+// Always creates a NEW page — never updates existing ones.
 
 interface NotionRichText {
   type: 'text'
@@ -122,66 +124,101 @@ interface NotionRichText {
 }
 
 function richText(content: string): NotionRichText[] {
+  if (!content) return [{ type: 'text', text: { content: '' } }]
   return [{ type: 'text', text: { content: content.slice(0, 2000) } }]
-}
-
-function notionNumber(n?: number) {
-  return n !== undefined ? { number: n } : { number: null }
-}
-
-function notionSelect(value?: string) {
-  return value ? { select: { name: value } } : { select: null }
 }
 
 export async function exportTradeToNotion(
   trade: Trade,
   apiKey: string,
   databaseId: string,
-  currency: string
+  _currency: string
 ): Promise<{ ok: boolean; error?: string }> {
   if (!apiKey || !databaseId) {
     return { ok: false, error: 'Missing Notion API key or database ID' }
   }
 
-  // Notion requires a CORS proxy or server-side call in production.
-  // We use the Notion API directly — works in Electron/desktop or if CORS is allowed.
-  const url = 'https://api.notion.com/v1/pages'
-
-  const properties: Record<string, unknown> = {
-    Name: {
-      title: richText(`${trade.symbol} ${trade.type.toUpperCase()} — ${trade.status.toUpperCase()}`),
-    },
-    Symbol: { rich_text: richText(trade.symbol) },
-    Type: notionSelect(trade.type.toUpperCase()),
-    Status: notionSelect(trade.status.toUpperCase()),
-    'Entry Price': notionNumber(trade.entry_price),
-    'Exit Price': notionNumber(trade.exit_price),
-    Quantity: notionNumber(trade.quantity),
-    PnL: notionNumber(trade.pnl),
-    'PnL %': notionNumber(trade.pnl_percent),
-    'Stop Loss': notionNumber(trade.stop_loss),
-    'Take Profit': notionNumber(trade.take_profit),
-    'R Multiple': notionNumber(trade.r_multiple),
-    'Risk:Reward': notionNumber(trade.risk_reward),
-    'Setup Quality': notionSelect(trade.setup_quality),
-    Strategy: { rich_text: richText(trade.strategy ?? '') },
-    Timeframe: notionSelect(trade.timeframe),
-    'Entry Date': { date: { start: trade.entry_date.slice(0, 10) } },
-    'Exit Date': { date: { start: trade.exit_date.slice(0, 10) } },
-    Notes: { rich_text: richText(trade.notes ?? '') },
-    Currency: { rich_text: richText(currency) },
-    'PnL Formatted': { rich_text: richText(formatCurrency(trade.pnl, currency)) },
+  // Validate required fields before sending
+  const missing: string[] = []
+  if (!trade.symbol)  missing.push('Pair')
+  if (!trade.type)    missing.push('Type')
+  if (!trade.status)  missing.push('Result')
+  if (missing.length > 0) {
+    return { ok: false, error: `Missing required fields: ${missing.join(', ')}` }
   }
 
-  // Screenshot URL (only works with public URLs, not base64)
+  // Map Result: win → "Win", loss → "Loss", breakeven → "Loss"
+  const resultValue = trade.status === 'win' ? 'Win' : 'Loss'
+
+  // Map Type: buy → "Buy", sell → "Sell"
+  const typeValue = trade.type === 'buy' ? 'Buy' : 'Sell'
+
+  // RR: prefer risk_reward (computed from SL/TP), fallback to r_multiple
+  const rrValue = trade.risk_reward ?? trade.r_multiple ?? null
+
+  // Properties — exact names from the Notion database
+  const properties: Record<string, unknown> = {
+    // Title (required by Notion for every page)
+    'Pair': {
+      title: richText(`${trade.symbol} — ${typeValue} — ${resultValue}`),
+    },
+    'Type': {
+      select: { name: typeValue },
+    },
+    'Result': {
+      select: { name: resultValue },
+    },
+    'Date': {
+      date: { start: trade.exit_date.slice(0, 10) },
+    },
+    'Gain': {
+      number: trade.pnl,
+    },
+    'Setup': {
+      rich_text: richText(
+        [trade.strategy, trade.timeframe, trade.setup_quality, trade.notes]
+          .filter(Boolean)
+          .join(' · ')
+          .slice(0, 2000) || '—'
+      ),
+    },
+  }
+
+  // RR only if we have a value
+  if (rrValue !== null) {
+    properties['RR'] = { number: Math.round(rrValue * 100) / 100 }
+  }
+
+  // Screenshot: only public URLs work as Notion external files
   const children: unknown[] = []
   if (trade.screenshot_url && trade.screenshot_url.startsWith('http')) {
+    properties['Screenshot'] = {
+      files: [
+        {
+          name: `${trade.symbol}-${trade.exit_date.slice(0, 10)}.png`,
+          type: 'external',
+          external: { url: trade.screenshot_url },
+        },
+      ],
+    }
+    // Also embed as image block in page body
     children.push({
       object: 'block',
       type: 'image',
       image: { type: 'external', external: { url: trade.screenshot_url } },
     })
+  } else if (trade.screenshot_url && trade.screenshot_url.startsWith('data:')) {
+    // base64 → can't upload to Notion directly, add a note
+    children.push({
+      object: 'block',
+      type: 'callout',
+      callout: {
+        rich_text: richText('📸 Screenshot saved locally — upload manually to this page.'),
+        icon: { emoji: '📸' },
+      },
+    })
   }
+
   if (trade.notes) {
     children.push({
       object: 'block',
@@ -191,7 +228,7 @@ export async function exportTradeToNotion(
   }
 
   try {
-    const res = await fetch(url, {
+    const res = await fetch('https://api.notion.com/v1/pages', {
       method: 'POST',
       headers: {
         Authorization: `Bearer ${apiKey}`,
@@ -207,10 +244,16 @@ export async function exportTradeToNotion(
 
     if (!res.ok) {
       const data = await res.json().catch(() => ({}))
-      return { ok: false, error: `Notion error ${res.status}: ${(data as { message?: string }).message ?? 'Unknown error'}` }
+      const msg = (data as { message?: string }).message ?? 'Unknown error'
+      return { ok: false, error: `Notion ${res.status}: ${msg}` }
     }
     return { ok: true }
   } catch (e) {
-    return { ok: false, error: e instanceof Error ? e.message : 'Network error — check CORS or use a proxy' }
+    return {
+      ok: false,
+      error: e instanceof Error
+        ? e.message
+        : 'Network error — enable CORS on your Notion integration or use a proxy',
+    }
   }
 }
