@@ -10,6 +10,7 @@ import { Backtest } from './pages/Backtest'
 import { Diary } from './pages/Diary'
 import { Calendar } from './pages/Calendar'
 import { Settings } from './pages/Settings'
+import { TradeEntry } from './pages/TradeEntry'
 
 function AppLayout({ children }: { children: React.ReactNode }) {
   return (
@@ -53,6 +54,7 @@ export function App() {
           <Route path="/backtest" element={<Backtest />} />
           <Route path="/diary" element={<Diary />} />
           <Route path="/calendar" element={<Calendar />} />
+          <Route path="/trade-entry" element={<TradeEntry />} />
           <Route path="/settings" element={<Settings />} />
           <Route path="*" element={<Navigate to="/dashboard" replace />} />
         </Routes>

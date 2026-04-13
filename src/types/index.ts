@@ -23,14 +23,19 @@ export type EmotionalState =
   | 'fomo'
   | 'disciplined'
 
+export type TradeSource = 'live' | 'backtest'
+export type TradeOrderType = 'manual' | 'automatic'
+export type TradeDirection = 'long' | 'short'
+export type TradeResult = 'tp' | 'sl' | 'be' | 'custom'
+
 export interface Trade {
   id: string
   user_id: string
   symbol: string
   type: TradeType
   entry_price: number
-  exit_price: number
-  quantity: number
+  exit_price?: number
+  quantity?: number
   stop_loss?: number
   take_profit?: number
   pnl: number
@@ -46,6 +51,13 @@ export interface Trade {
   exit_date: string
   created_at: string
   backtest_session_id?: string
+  // Extended trade entry fields
+  source?: TradeSource
+  prop_firm?: string
+  order_type?: TradeOrderType
+  direction?: TradeDirection
+  risk_percent?: number
+  trade_result?: TradeResult
 }
 
 export interface TradeFormData {

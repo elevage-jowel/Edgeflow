@@ -9,6 +9,7 @@ import {
   Settings,
   TrendingUp,
   LogOut,
+  PlusSquare,
 } from 'lucide-react'
 import { useStore } from '../../store/useStore'
 import { useI18n } from '../../i18n'
@@ -16,6 +17,7 @@ import { SyncBadge } from './SyncBadge'
 
 const navItems = [
   { to: '/dashboard', icon: LayoutDashboard, key: 'nav.dashboard' },
+  { to: '/trade-entry', icon: PlusSquare, key: 'nav.trade_entry' },
   { to: '/journal', icon: BookOpen, key: 'nav.journal' },
   { to: '/backtest', icon: FlaskConical, key: 'nav.backtest' },
   { to: '/diary', icon: NotebookPen, key: 'nav.diary' },
