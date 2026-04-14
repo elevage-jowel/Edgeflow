@@ -42,15 +42,14 @@ export function NotionIntegration() {
   const [dbId, setDbId] = useState('')
   const [dbUrl, setDbUrl] = useState<string | null>(null)
 
-  // Sync state when userProfile loads from Firestore (async)
+  // Sync state whenever userProfile loads or changes (Firebase is async)
   useEffect(() => {
-    if (saved) {
-      setToken(saved.integrationToken ?? '')
-      setPageId(saved.parentPageId ?? '')
-      setDbId(saved.databaseId ?? '')
-      setVerified(!!saved.integrationToken)
-    }
-  }, [saved?.integrationToken, saved?.databaseId, saved?.parentPageId])
+    const cfg = userProfile?.notionConfig
+    setToken(cfg?.integrationToken ?? '')
+    setPageId(cfg?.parentPageId ?? '')
+    setDbId(cfg?.databaseId ?? '')
+    setVerified(!!cfg?.integrationToken)
+  }, [userProfile])
 
   const [syncing, setSyncing] = useState(false)
   const [syncProgress, setSyncProgress] = useState<{ done: number; total: number } | null>(null)
