@@ -1,5 +1,5 @@
 'use client'
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useAuthStore } from '@/lib/stores/authStore'
 import { useTrades } from '@/lib/hooks/useTrades'
 import { doc, updateDoc } from 'firebase/firestore'
@@ -30,17 +30,27 @@ export function NotionIntegration() {
   const { allTrades: trades } = useTrades()
 
   const saved = userProfile?.notionConfig
-  const [token, setToken] = useState(saved?.integrationToken ?? '')
-  const [pageId, setPageId] = useState(saved?.parentPageId ?? '')
+  const [token, setToken] = useState('')
+  const [pageId, setPageId] = useState('')
   const [showToken, setShowToken] = useState(false)
 
   const [verifying, setVerifying] = useState(false)
   const [workspaceName, setWorkspaceName] = useState<string | null>(null)
-  const [verified, setVerified] = useState(!!saved?.integrationToken)
+  const [verified, setVerified] = useState(false)
 
   const [creating, setCreating] = useState(false)
-  const [dbId, setDbId] = useState(saved?.databaseId ?? '')
+  const [dbId, setDbId] = useState('')
   const [dbUrl, setDbUrl] = useState<string | null>(null)
+
+  // Sync state when userProfile loads from Firestore (async)
+  useEffect(() => {
+    if (saved) {
+      setToken(saved.integrationToken ?? '')
+      setPageId(saved.parentPageId ?? '')
+      setDbId(saved.databaseId ?? '')
+      setVerified(!!saved.integrationToken)
+    }
+  }, [saved?.integrationToken, saved?.databaseId, saved?.parentPageId])
 
   const [syncing, setSyncing] = useState(false)
   const [syncProgress, setSyncProgress] = useState<{ done: number; total: number } | null>(null)
@@ -127,23 +137,26 @@ export function NotionIntegration() {
     setSyncProgress({ done: 0, total })
     let synced = 0
     let errors = 0
-    for (let i = 0; i < trades.length; i++) {
-      try {
-        const res = await fetch('/api/notion/sync', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ token: token.trim(), databaseId: dbId, trade: trades[i] }),
-        })
-        if (res.ok) synced++ else errors++
-      } catch {
-        errors++
+    try {
+      for (let i = 0; i < trades.length; i++) {
+        try {
+          const res = await fetch('/api/notion/sync', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ token: token.trim(), databaseId: dbId, trade: trades[i] }),
+          })
+          if (res.ok) synced++ else errors++
+        } catch {
+          errors++
+        }
+        setSyncProgress({ done: i + 1, total })
       }
-      setSyncProgress({ done: i + 1, total })
+      await saveConfig({ lastSyncAt: new Date().toISOString() })
+      toast.success(`${synced} trade(s) synchronisé(s)${errors ? ` · ${errors} erreur(s)` : ''}`)
+    } finally {
+      setSyncing(false)
+      setSyncProgress(null)
     }
-    await saveConfig({ lastSyncAt: new Date().toISOString() })
-    toast.success(`${synced} trade(s) synchronisé(s)${errors ? ` · ${errors} erreur(s)` : ''}`)
-    setSyncing(false)
-    setSyncProgress(null)
   }
 
   // ── Disconnect ─────────────────────────────────────────────────────────────
