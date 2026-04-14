@@ -11,6 +11,24 @@ function headers(token: string) {
   }
 }
 
+// Extracts a clean 32-char Notion ID from a URL, UUID, or raw hex string
+export function extractNotionId(input: string): string | null {
+  const clean = input.trim()
+  // UUID format already: xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
+  const uuidMatch = clean.match(/([a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12})/i)
+  if (uuidMatch) return uuidMatch[1].replace(/-/g, '')
+  // Raw 32-char hex (possibly at end of URL path, before ? or #)
+  const rawMatch = clean.match(/([a-f0-9]{32})(?:[?#&]|$)/i)
+  if (rawMatch) return rawMatch[1]
+  return null
+}
+
+function toUUID(id: string): string {
+  const c = id.replace(/-/g, '')
+  if (c.length !== 32) return id
+  return `${c.slice(0,8)}-${c.slice(8,12)}-${c.slice(12,16)}-${c.slice(16,20)}-${c.slice(20)}`
+}
+
 // ─── Verify connection ────────────────────────────────────────────────────────
 
 export async function verifyNotionConnection(token: string): Promise<{ ok: boolean; workspaceName?: string; error?: string }> {
@@ -26,8 +44,10 @@ export async function verifyNotionConnection(token: string): Promise<{ ok: boole
 // ─── Create database ──────────────────────────────────────────────────────────
 
 export async function createTradesDatabase(token: string, parentPageId: string): Promise<{ databaseId: string; url: string }> {
+  const rawId = extractNotionId(parentPageId)
+  if (!rawId) throw new Error('ID de page Notion invalide. Colle l\'URL complète ou l\'ID de 32 caractères.')
   const body = {
-    parent: { type: 'page_id', page_id: parentPageId },
+    parent: { type: 'page_id', page_id: toUUID(rawId) },
     icon: { type: 'emoji', emoji: '📊' },
     title: [{ type: 'text', text: { content: 'Edgeflow — Positions' } }],
     properties: buildDatabaseProperties(),
@@ -99,7 +119,8 @@ export async function syncAllTrades(
 // ─── Internal helpers ─────────────────────────────────────────────────────────
 
 async function findPageByEdgeflowId(token: string, databaseId: string, tradeId: string): Promise<string | null> {
-  const res = await fetch(`${NOTION_API}/databases/${databaseId}/query`, {
+  const rawId = extractNotionId(databaseId)
+  const res = await fetch(`${NOTION_API}/databases/${rawId ? toUUID(rawId) : databaseId}/query`, {
     method: 'POST',
     headers: headers(token),
     body: JSON.stringify({

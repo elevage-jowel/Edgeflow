@@ -6,6 +6,7 @@ import { doc, updateDoc } from 'firebase/firestore'
 import { db } from '@/lib/firebase/config'
 import { col } from '@/lib/firebase/collections'
 import { NotionConfig } from '@/lib/types'
+import { extractNotionId } from '@/lib/services/notionService'
 import { Button } from '@/components/ui/Button'
 import toast from 'react-hot-toast'
 import {
@@ -260,16 +261,27 @@ export function NotionIntegration() {
         ) : (
           <>
             <div>
-              <label className={labelCls}>ID de la page parent Notion</label>
+              <label className={labelCls}>URL ou ID de la page parent Notion</label>
               <input
                 value={pageId}
                 onChange={e => setPageId(e.target.value)}
                 className={inputCls}
-                placeholder="xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+                placeholder="Colle l'URL Notion complète ou l'ID de 32 caractères"
               />
+              {pageId.trim() && (() => {
+                const extracted = extractNotionId(pageId)
+                return extracted ? (
+                  <p className="text-xs text-emerald-400 mt-1.5 flex items-center gap-1">
+                    <CheckCircle2 className="w-3 h-3" /> ID détecté : <span className="font-mono">{extracted}</span>
+                  </p>
+                ) : (
+                  <p className="text-xs text-red-400 mt-1.5">
+                    ID non reconnu — colle l&apos;URL complète de la page Notion
+                  </p>
+                )
+              })()}
               <p className="text-xs text-slate-500 mt-1.5">
-                Ouvre une page Notion, partage-la avec ton intégration, puis copie son ID depuis l&apos;URL
-                (la suite de caractères après le dernier &quot;/&quot;).
+                Crée une page vide dans Notion → partage-la avec ton intégration (···&nbsp;→&nbsp;Connexions) → colle son URL ici.
               </p>
             </div>
             <Button
@@ -278,7 +290,7 @@ export function NotionIntegration() {
               icon={Link2Off}
               onClick={handleCreateDatabase}
               loading={creating}
-              disabled={!pageId.trim()}
+              disabled={!extractNotionId(pageId)}
             >
               Créer la base de données
             </Button>
