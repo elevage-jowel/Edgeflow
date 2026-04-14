@@ -1,5 +1,6 @@
 'use client'
 import { useState, useCallback } from 'react'
+import { useRouter } from 'next/navigation'
 import { useDropzone } from 'react-dropzone'
 import Papa from 'papaparse'
 import { useTradeActions } from '@/lib/hooks/useTrades'
@@ -39,10 +40,13 @@ function parseRow(row: Record<string, string>, mapping: Record<string, string>, 
 
   if (!symbol || isNaN(entryPrice) || isNaN(quantity) || !entryDateStr) return null
 
+  const entryDateParsed = new Date(entryDateStr)
+  if (isNaN(entryDateParsed.getTime())) return null
+
   const exitPriceRaw = get('exitPrice')
   const exitPrice = exitPriceRaw ? parseFloat(exitPriceRaw) : undefined
   const netPnlRaw = get('netPnl')
-  const netPnl = netPnlRaw ? parseFloat(netPnlRaw) : exitPrice ? undefined : undefined
+  const netPnl = netPnlRaw ? parseFloat(netPnlRaw) : undefined
   const dirRaw = (get('direction') ?? 'long').toLowerCase()
   const direction: 'long' | 'short' = dirRaw.includes('short') || dirRaw === 's' || dirRaw === 'sell' ? 'short' : 'long'
   const assetClassRaw = (get('assetClass') ?? 'stocks').toLowerCase()
@@ -58,8 +62,8 @@ function parseRow(row: Record<string, string>, mapping: Record<string, string>, 
     direction,
     status: exitPrice ? 'closed' : 'open',
     outcome: computedNet !== undefined ? (computedNet > 0 ? 'win' : computedNet < 0 ? 'loss' : 'breakeven') : undefined,
-    entryDate: new Date(entryDateStr).toISOString(),
-    exitDate: get('exitDate') ? new Date(get('exitDate')!).toISOString() : undefined,
+    entryDate: entryDateParsed.toISOString(),
+    exitDate: (() => { const d = get('exitDate'); if (!d) return undefined; const p = new Date(d); return isNaN(p.getTime()) ? undefined : p.toISOString() })(),
     entryPrice,
     exitPrice,
     quantity,
@@ -75,6 +79,7 @@ function parseRow(row: Record<string, string>, mapping: Record<string, string>, 
 }
 
 export default function ImportClient() {
+  const router = useRouter()
   const { user } = useAuthStore()
   const { createTrade } = useTradeActions()
   const [step, setStep] = useState<Step>('upload')
@@ -135,17 +140,21 @@ export default function ImportClient() {
   const handleImport = async () => {
     setImporting(true)
     let count = 0
+    let errors = 0
     for (const t of parsed) {
       if (!t) continue
       try {
         await createTrade(t as any)
         count++
-      } catch {}
+      } catch {
+        errors++
+      }
     }
     setImportedCount(count)
     setStep('done')
     setImporting(false)
-    toast.success(`Imported ${count} trades!`)
+    if (errors > 0) toast.error(`${errors} trade(s) n'ont pas pu être importés`)
+    else toast.success(`${count} trade(s) importés avec succès !`)
   }
 
   const reset = () => {
@@ -320,7 +329,7 @@ export default function ImportClient() {
           <p className="text-slate-400 mb-6">{importedCount} trades have been added to your journal.</p>
           <div className="flex items-center justify-center gap-3">
             <Button variant="ghost" onClick={reset}>Import Another</Button>
-            <Button variant="primary" onClick={() => window.location.href = '/journal'}>View Journal</Button>
+            <Button variant="primary" onClick={() => router.push('/journal')}>Voir le journal</Button>
           </div>
         </div>
       )}

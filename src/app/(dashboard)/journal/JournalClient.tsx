@@ -46,12 +46,12 @@ export default function JournalClient() {
   }
 
   const handleDelete = async (id: string) => {
-    if (!confirm('Delete this trade?')) return
+    if (!confirm('Supprimer ce trade ?')) return
     try {
       await deleteTrade(id)
-      toast.success('Trade deleted')
+      toast.success('Trade supprimé')
     } catch {
-      toast.error('Failed to delete trade')
+      toast.error('Échec de la suppression')
     }
   }
 
@@ -82,14 +82,14 @@ export default function JournalClient() {
           <div className="w-px h-10 bg-surface-500 hidden sm:block" />
           <div className="hidden sm:block">
             <div className="text-2xl font-bold font-mono text-white">
-              {allTrades.length > 0 ? ((winCount / allTrades.filter(t => t.status !== 'open').length) * 100).toFixed(0) : 0}%
+              {(() => { const cl = allTrades.filter(t => t.status !== 'open').length; return cl > 0 ? ((winCount / cl) * 100).toFixed(0) : '—' })()}%
             </div>
             <div className="text-xs text-slate-500">Win Rate</div>
           </div>
         </div>
         <div className="flex items-center gap-2">
           <Button variant="ghost" icon={Download} onClick={() => window.print()} size="sm">Export PDF</Button>
-          <Button variant="primary" icon={Plus} onClick={() => setIsAddOpen(true)}>Add Trade</Button>
+          <Button variant="primary" icon={Plus} onClick={() => setIsAddOpen(true)}>Ajouter un trade</Button>
         </div>
       </div>
 
@@ -101,7 +101,7 @@ export default function JournalClient() {
             <input
               value={filters.search ?? ''}
               onChange={e => setFilters({ search: e.target.value })}
-              placeholder="Search symbol or notes..."
+              placeholder="Rechercher par symbole ou notes..."
               className="w-full pl-9 pr-3 py-2 bg-surface-700 border border-surface-500 rounded-lg text-sm text-white placeholder-slate-500 focus:outline-none focus:border-brand-500"
             />
           </div>
@@ -154,7 +154,7 @@ export default function JournalClient() {
             icon={BookOpen}
             title="No trades found"
             description={allTrades.length === 0 ? "Add your first trade to start tracking performance." : "No trades match your current filters."}
-            action={allTrades.length === 0 ? { label: 'Add Trade', onClick: () => setIsAddOpen(true) } : undefined}
+            action={allTrades.length === 0 ? { label: 'Ajouter un trade', onClick: () => setIsAddOpen(true) } : undefined}
           />
         ) : (
           <div className="overflow-x-auto">
@@ -251,12 +251,12 @@ export default function JournalClient() {
       </div>
 
       {/* Add trade modal */}
-      <Modal isOpen={isAddOpen} onClose={() => setIsAddOpen(false)} title="Add Trade" size="lg">
+      <Modal isOpen={isAddOpen} onClose={() => setIsAddOpen(false)} title="Ajouter un trade" size="lg">
         <TradeForm onClose={() => setIsAddOpen(false)} />
       </Modal>
 
       {/* Edit trade modal */}
-      <Modal isOpen={!!editTrade} onClose={() => setEditTrade(null)} title="Edit Trade" size="lg">
+      <Modal isOpen={!!editTrade} onClose={() => setEditTrade(null)} title="Modifier le trade" size="lg">
         {editTrade && <TradeForm trade={editTrade} onClose={() => setEditTrade(null)} />}
       </Modal>
 

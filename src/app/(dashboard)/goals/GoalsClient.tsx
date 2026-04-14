@@ -66,7 +66,7 @@ export default function GoalsClient() {
   const active = goals.filter(g => g.isActive && !g.isCompleted)
   const completed = goals.filter(g => g.isCompleted)
 
-  const getPct = (g: Goal) => Math.min(100, (g.currentValue / g.targetValue) * 100)
+  const getPct = (g: Goal) => g.targetValue === 0 ? 0 : Math.min(100, (g.currentValue / g.targetValue) * 100)
   const getProgressColor = (g: Goal): 'brand' | 'emerald' | 'amber' | 'red' => {
     const pct = getPct(g)
     if (pct >= 100) return 'emerald'

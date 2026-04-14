@@ -46,7 +46,9 @@ export default function CalendarClient() {
   const dailyData = useMemo(() => {
     const map = new Map<string, { pnl: number; trades: number }>()
     trades.filter(t => t.status === 'closed').forEach(t => {
-      const key = format(parseISO(t.exitDate ?? t.entryDate), 'yyyy-MM-dd')
+      const dateStr = t.exitDate ?? t.entryDate
+      if (!dateStr) return
+      const key = format(parseISO(dateStr), 'yyyy-MM-dd')
       const prev = map.get(key) ?? { pnl: 0, trades: 0 }
       map.set(key, { pnl: prev.pnl + (t.netPnl ?? 0), trades: prev.trades + 1 })
     })

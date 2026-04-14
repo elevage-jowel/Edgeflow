@@ -240,8 +240,8 @@ export default function DashboardClient() {
                           {trade.direction.toUpperCase()}
                         </Badge>
                       </td>
-                      <td className="px-4 py-3 text-sm text-slate-300 font-mono">${trade.entryPrice}</td>
-                      <td className="px-4 py-3 text-sm text-slate-300 font-mono">{trade.exitPrice ? `$${trade.exitPrice}` : '—'}</td>
+                      <td className="px-4 py-3 text-sm text-slate-300 font-mono">${trade.entryPrice.toFixed(2)}</td>
+                      <td className="px-4 py-3 text-sm text-slate-300 font-mono">{trade.exitPrice ? `$${trade.exitPrice.toFixed(2)}` : '—'}</td>
                       <td className="px-4 py-3">
                         <span className={cn('text-sm font-bold font-mono', getPnlColor(trade.netPnl ?? 0))}>
                           {trade.netPnl !== undefined ? formatPnl(trade.netPnl) : '—'}

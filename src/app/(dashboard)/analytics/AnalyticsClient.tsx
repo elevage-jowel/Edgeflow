@@ -280,15 +280,15 @@ export default function AnalyticsClient() {
             <h3 className="text-sm font-semibold text-emerald-400 mb-4">Distribution des gains</h3>
             {a.winDistribution.length > 0 ? (
               <div className="space-y-2">
-                {a.winDistribution.map(d => (
+                {(() => { const mx = Math.max(...a.winDistribution.map(x => x.count), 1); return a.winDistribution.map(d => (
                   <div key={d.range} className="flex items-center gap-3">
                     <span className="text-xs text-slate-400 w-28">{d.range}</span>
                     <div className="flex-1 bg-surface-600 rounded-full h-2">
-                      <div className="bg-emerald-500 h-2 rounded-full" style={{ width: `${(d.count / Math.max(...a.winDistribution.map(x => x.count))) * 100}%` }} />
+                      <div className="bg-emerald-500 h-2 rounded-full" style={{ width: `${(d.count / mx) * 100}%` }} />
                     </div>
                     <span className="text-xs text-slate-300 w-6 text-right font-mono">{d.count}</span>
                   </div>
-                ))}
+                )) })()}
               </div>
             ) : <div className="h-32 flex items-center justify-center text-slate-500 text-sm">Aucun gain pour l&apos;instant</div>}
           </div>

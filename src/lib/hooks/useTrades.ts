@@ -23,14 +23,13 @@ export function useTradesSubscription() {
     }
 
     // ── Normal Firestore subscription ────────────────────────────────────
-    if (!user) return
+    if (!user) { setLoading(false); return }
     setLoading(true)
     const q = query(collection(db, col.trades(user.uid)), orderBy('entryDate', 'desc'))
-    const unsub = onSnapshot(q, snap => {
-      const trades = snap.docs.map(d => ({ id: d.id, ...d.data() } as Trade))
-      setTrades(trades)
-      setLoading(false)
-    }, () => setLoading(false))
+    const unsub = onSnapshot(q,
+      snap => { setTrades(snap.docs.map(d => ({ id: d.id, ...d.data() } as Trade))); setLoading(false) },
+      err  => { console.error('Trades subscription error:', err); setLoading(false) }
+    )
     return unsub
   }, [user, setTrades, setLoading])
 }
@@ -43,9 +42,7 @@ export function useTrades() {
     if (filters.assetClass && filters.assetClass !== 'all' && t.assetClass !== filters.assetClass) return false
     if (filters.direction && filters.direction !== 'all' && t.direction !== filters.direction) return false
     if (filters.outcome && filters.outcome !== 'all') {
-      if (filters.outcome === 'win' && (t.netPnl ?? 0) <= 0) return false
-      if (filters.outcome === 'loss' && (t.netPnl ?? 0) >= 0) return false
-      if (filters.outcome === 'breakeven' && (t.netPnl ?? 0) !== 0) return false
+      if (filters.outcome !== t.outcome) return false
     }
     if (filters.strategy && t.strategy !== filters.strategy) return false
     if (filters.session && t.session !== filters.session) return false
