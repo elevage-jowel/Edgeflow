@@ -61,7 +61,12 @@ export function NotionIntegration() {
     if (!token.trim()) { toast.error('Saisis ton token Notion'); return }
     setVerifying(true)
     try {
-      const res = await fetch(`/api/notion/verify?token=${encodeURIComponent(token.trim())}`)
+      const controller = new AbortController()
+      const timeout = setTimeout(() => controller.abort(), 12000)
+      const res = await fetch(`/api/notion/verify?token=${encodeURIComponent(token.trim())}`, {
+        signal: controller.signal,
+      })
+      clearTimeout(timeout)
       const data = await res.json()
       if (data.ok) {
         setVerified(true)
@@ -72,8 +77,10 @@ export function NotionIntegration() {
         toast.error(data.error ?? 'Token invalide')
         setVerified(false)
       }
-    } catch {
-      toast.error('Impossible de contacter Notion')
+    } catch (err: unknown) {
+      const isTimeout = err instanceof Error && err.name === 'AbortError'
+      toast.error(isTimeout ? 'Délai dépassé — réessaie' : 'Impossible de contacter Notion')
+      setVerified(false)
     } finally {
       setVerifying(false)
     }
@@ -81,14 +88,18 @@ export function NotionIntegration() {
 
   // ── Create database ────────────────────────────────────────────────────────
   async function handleCreateDatabase() {
-    if (!pageId.trim()) { toast.error('Saisis l\'ID de la page parent'); return }
+    if (!pageId.trim()) { toast.error('Saisis l\'URL ou l\'ID de la page parent'); return }
     setCreating(true)
     try {
+      const controller = new AbortController()
+      const timeout = setTimeout(() => controller.abort(), 15000)
       const res = await fetch('/api/notion/setup', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ token: token.trim(), parentPageId: pageId.trim() }),
+        signal: controller.signal,
       })
+      clearTimeout(timeout)
       const data = await res.json()
       if (!res.ok) throw new Error(data.error)
       setDbId(data.databaseId)
@@ -100,8 +111,8 @@ export function NotionIntegration() {
       })
       toast.success('Base de données Notion créée !')
     } catch (err: unknown) {
-      const msg = err instanceof Error ? err.message : 'Erreur de création'
-      toast.error(msg)
+      const isTimeout = err instanceof Error && err.name === 'AbortError'
+      toast.error(isTimeout ? 'Délai dépassé — réessaie' : (err instanceof Error ? err.message : 'Erreur de création'))
     } finally {
       setCreating(false)
     }

@@ -32,13 +32,26 @@ function toUUID(id: string): string {
 // ─── Verify connection ────────────────────────────────────────────────────────
 
 export async function verifyNotionConnection(token: string): Promise<{ ok: boolean; workspaceName?: string; error?: string }> {
-  const res = await fetch(`${NOTION_API}/users/me`, { headers: headers(token) })
-  if (!res.ok) {
-    const body = await res.json().catch(() => ({}))
-    return { ok: false, error: body.message ?? `HTTP ${res.status}` }
+  try {
+    const controller = new AbortController()
+    const timeout = setTimeout(() => controller.abort(), 9000)
+    const res = await fetch(`${NOTION_API}/users/me`, {
+      headers: headers(token),
+      signal: controller.signal,
+    })
+    clearTimeout(timeout)
+    if (!res.ok) {
+      const body = await res.json().catch(() => ({}))
+      return { ok: false, error: body.message ?? `HTTP ${res.status}` }
+    }
+    const data = await res.json()
+    return { ok: true, workspaceName: data.bot?.workspace_name ?? 'Notion' }
+  } catch (err: unknown) {
+    if (err instanceof Error && err.name === 'AbortError') {
+      return { ok: false, error: 'Délai dépassé — vérifie ta connexion' }
+    }
+    return { ok: false, error: 'Erreur réseau' }
   }
-  const data = await res.json()
-  return { ok: true, workspaceName: data.bot?.workspace_name ?? 'Notion' }
 }
 
 // ─── Create database ──────────────────────────────────────────────────────────
