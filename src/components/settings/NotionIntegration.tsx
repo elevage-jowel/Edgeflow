@@ -118,29 +118,32 @@ export function NotionIntegration() {
     }
   }
 
-  // ── Sync all trades ────────────────────────────────────────────────────────
+  // ── Sync all trades — one API call per trade to avoid Vercel timeouts ────────
   async function handleSync() {
     if (!dbId) { toast.error('Crée d\'abord la base de données'); return }
     if (!trades?.length) { toast('Aucun trade à synchroniser', { icon: '📭' }); return }
     setSyncing(true)
-    setSyncProgress({ done: 0, total: trades.length })
-    try {
-      const res = await fetch('/api/notion/sync', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ token: token.trim(), databaseId: dbId, trades }),
-      })
-      const data = await res.json()
-      if (!res.ok) throw new Error(data.error)
-      await saveConfig({ lastSyncAt: new Date().toISOString() })
-      toast.success(`${data.synced} trade(s) synchronisé(s)${data.errors ? ` · ${data.errors} erreur(s)` : ''}`)
-    } catch (err: unknown) {
-      const msg = err instanceof Error ? err.message : 'Erreur de synchronisation'
-      toast.error(msg)
-    } finally {
-      setSyncing(false)
-      setSyncProgress(null)
+    const total = trades.length
+    setSyncProgress({ done: 0, total })
+    let synced = 0
+    let errors = 0
+    for (let i = 0; i < trades.length; i++) {
+      try {
+        const res = await fetch('/api/notion/sync', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ token: token.trim(), databaseId: dbId, trade: trades[i] }),
+        })
+        if (res.ok) synced++ else errors++
+      } catch {
+        errors++
+      }
+      setSyncProgress({ done: i + 1, total })
     }
+    await saveConfig({ lastSyncAt: new Date().toISOString() })
+    toast.success(`${synced} trade(s) synchronisé(s)${errors ? ` · ${errors} erreur(s)` : ''}`)
+    setSyncing(false)
+    setSyncProgress(null)
   }
 
   // ── Disconnect ─────────────────────────────────────────────────────────────
