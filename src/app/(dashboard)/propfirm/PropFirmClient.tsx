@@ -6,6 +6,8 @@ import { cn } from '@/lib/utils/cn'
 import { formatCurrency } from '@/lib/utils/formatters'
 import { Plus, Pencil, Trash2, AlertTriangle, Building2, X } from 'lucide-react'
 import { differenceInDays, parseISO } from 'date-fns'
+import { useTradeStore } from '@/lib/stores/tradeStore'
+import { Trade } from '@/lib/types'
 
 interface PropFirmAccount {
   id: string
@@ -71,22 +73,40 @@ function GaugeBar({ value, max, color }: { value: number; max: number; color: 'e
   )
 }
 
-function AccountCard({ account, onEdit, onDelete }: {
+function computeAccountPnl(account: PropFirmAccount, trades: Trade[]): number {
+  const firmLower = account.firmName.toLowerCase()
+  const matching = trades.filter(t => {
+    const tFirm = (t.propFirm ?? '').toLowerCase()
+    const nameMatch = tFirm.includes(firmLower) || firmLower.includes(tFirm)
+    if (!nameMatch || tFirm === '') return false
+    if (t.entryDate < account.startDate) return false
+    if (t.status !== 'closed') return false
+    return true
+  })
+  if (matching.length === 0) return 0
+  return matching.reduce((sum, t) => sum + (t.netPnl ?? 0), 0)
+}
+
+function AccountCard({ account, onEdit, onDelete, computedPnl }: {
   account: PropFirmAccount
   onEdit: (a: PropFirmAccount) => void
   onDelete: (id: string) => void
+  computedPnl: number
 }) {
+  const displayPnl = computedPnl !== 0 ? computedPnl : account.currentPnl
+  const isAutoComputed = computedPnl !== 0
+
   const targetDollar = (account.profitTarget / 100) * account.accountSize
   const maxDailyDollar = (account.maxDailyLoss / 100) * account.accountSize
   const maxTotalDollar = (account.maxTotalLoss / 100) * account.accountSize
 
   // Use absolute loss value for drawdown gauges
-  const lossAmount = account.currentPnl < 0 ? Math.abs(account.currentPnl) : 0
+  const lossAmount = displayPnl < 0 ? Math.abs(displayPnl) : 0
 
-  const profitPct = targetDollar === 0 ? 0 : Math.min(100, (account.currentPnl / targetDollar) * 100)
+  const profitPct = targetDollar === 0 ? 0 : Math.min(100, (displayPnl / targetDollar) * 100)
   const dailyStatus = getDrawdownStatus(lossAmount, maxDailyDollar)
   const totalStatus = getDrawdownStatus(lossAmount, maxTotalDollar)
-  const overallStatus =
+  const overallStatus: 'ok' | 'warning' | 'breached' =
     dailyStatus === 'breached' || totalStatus === 'breached' ? 'breached'
     : dailyStatus === 'warning' || totalStatus === 'warning' ? 'warning' : 'ok'
 
@@ -134,11 +154,19 @@ function AccountCard({ account, onEdit, onDelete }: {
       <div>
         <div className="flex items-center justify-between mb-1.5">
           <span className="text-xs text-slate-500">Profit Target ({account.profitTarget}%)</span>
-          <span className={cn('text-xs font-mono font-medium', account.currentPnl >= 0 ? 'text-emerald-400' : 'text-red-400')}>
-            {formatCurrency(account.currentPnl)} / {formatCurrency(targetDollar)}
-          </span>
+          <div className="flex items-center gap-1.5">
+            {isAutoComputed && (
+              <span className="inline-flex items-center gap-1 text-xs bg-emerald-500/15 text-emerald-400 border border-emerald-500/20 px-1.5 py-0.5 rounded-full font-medium">
+                <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+                Auto
+              </span>
+            )}
+            <span className={cn('text-xs font-mono font-medium', displayPnl >= 0 ? 'text-emerald-400' : 'text-red-400')}>
+              {formatCurrency(displayPnl)} / {formatCurrency(targetDollar)}
+            </span>
+          </div>
         </div>
-        <GaugeBar value={Math.max(0, account.currentPnl)} max={targetDollar} color="emerald" />
+        <GaugeBar value={Math.max(0, displayPnl)} max={targetDollar} color="emerald" />
         <div className="text-xs text-slate-600 mt-1 text-right">{profitPct.toFixed(1)}% of target</div>
       </div>
 
@@ -191,6 +219,7 @@ export default function PropFirmClient() {
   const [accounts, setAccounts] = useState<PropFirmAccount[]>([])
   const [isOpen, setIsOpen] = useState(false)
   const [editingId, setEditingId] = useState<string | null>(null)
+  const { trades } = useTradeStore()
 
   useEffect(() => {
     try {
@@ -272,7 +301,9 @@ export default function PropFirmClient() {
   const alerts = accounts.filter(a => {
     const maxDaily = (a.maxDailyLoss / 100) * a.accountSize
     const maxTotal = (a.maxTotalLoss / 100) * a.accountSize
-    const loss = a.currentPnl < 0 ? Math.abs(a.currentPnl) : 0
+    const computed = computeAccountPnl(a, trades)
+    const pnl = computed !== 0 ? computed : a.currentPnl
+    const loss = pnl < 0 ? Math.abs(pnl) : 0
     return (maxDaily > 0 && loss / maxDaily >= 0.8) || (maxTotal > 0 && loss / maxTotal >= 0.8)
   })
 
@@ -297,7 +328,9 @@ export default function PropFirmClient() {
               {alerts.map(a => {
                 const maxDaily = (a.maxDailyLoss / 100) * a.accountSize
                 const maxTotal = (a.maxTotalLoss / 100) * a.accountSize
-                const loss = a.currentPnl < 0 ? Math.abs(a.currentPnl) : 0
+                const computed = computeAccountPnl(a, trades)
+                const pnl = computed !== 0 ? computed : a.currentPnl
+                const loss = pnl < 0 ? Math.abs(pnl) : 0
                 const dailyPct = maxDaily > 0 ? ((loss / maxDaily) * 100).toFixed(0) : '0'
                 const totalPct = maxTotal > 0 ? ((loss / maxTotal) * 100).toFixed(0) : '0'
                 return (
@@ -326,7 +359,7 @@ export default function PropFirmClient() {
       ) : (
         <div className="grid gap-5 lg:grid-cols-2">
           {accounts.map(a => (
-            <AccountCard key={a.id} account={a} onEdit={openEdit} onDelete={handleDelete} />
+            <AccountCard key={a.id} account={a} onEdit={openEdit} onDelete={handleDelete} computedPnl={computeAccountPnl(a, trades)} />
           ))}
         </div>
       )}

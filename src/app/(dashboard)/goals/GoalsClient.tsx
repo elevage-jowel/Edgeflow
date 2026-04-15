@@ -1,7 +1,7 @@
 'use client'
 import { useState } from 'react'
 import { useGoals } from '@/lib/hooks/useGoals'
-import { Goal } from '@/lib/types'
+import { Goal, Trade } from '@/lib/types'
 import { Button } from '@/components/ui/Button'
 import { Modal } from '@/components/ui/Modal'
 import { ProgressBar } from '@/components/ui/ProgressBar'
@@ -14,6 +14,7 @@ import { z } from 'zod'
 import { zodResolver } from '@hookform/resolvers/zod'
 import toast from 'react-hot-toast'
 import { Plus, Target, Trash2, CheckCircle2, Clock } from 'lucide-react'
+import { useTradeStore } from '@/lib/stores/tradeStore'
 
 const schema = z.object({
   title: z.string().min(1, 'Title required'),
@@ -38,8 +39,71 @@ const goalTypeLabels: Record<string, string> = {
   screenshot_rate: 'Taux de screenshots',
 }
 
+function computeGoalValue(goal: Goal, trades: Trade[]): number {
+  const inRange = trades.filter(t => {
+    if (t.entryDate < goal.startDate || t.entryDate > goal.endDate) return false
+    return true
+  })
+  const closed = inRange.filter(t => t.status === 'closed')
+
+  switch (goal.type) {
+    case 'monthly_pnl':
+      return closed.reduce((sum, t) => sum + (t.netPnl ?? 0), 0)
+
+    case 'win_rate': {
+      if (closed.length === 0) return 0
+      const wins = closed.filter(t => (t.netPnl ?? 0) > 0).length
+      return (wins / closed.length) * 100
+    }
+
+    case 'max_drawdown': {
+      if (closed.length === 0) return 0
+      const sorted = [...closed].sort((a, b) => a.entryDate.localeCompare(b.entryDate))
+      let equity = 0
+      let peak = 0
+      let maxDD = 0
+      for (const t of sorted) {
+        equity += (t.netPnl ?? 0)
+        if (equity > peak) peak = equity
+        const dd = peak - equity
+        if (dd > maxDD) maxDD = dd
+      }
+      return maxDD
+    }
+
+    case 'trade_count':
+      return closed.length
+
+    case 'risk_reward': {
+      const withR = closed.filter(t => t.rMultiple !== undefined)
+      if (withR.length === 0) return 0
+      return withR.reduce((sum, t) => sum + (t.rMultiple ?? 0), 0) / withR.length
+    }
+
+    case 'daily_loss_limit': {
+      const dailyMap: Record<string, number> = {}
+      for (const t of closed) {
+        const day = t.entryDate.slice(0, 10)
+        dailyMap[day] = (dailyMap[day] ?? 0) + (t.netPnl ?? 0)
+      }
+      const losses = Object.values(dailyMap).filter(v => v < 0).map(v => Math.abs(v))
+      return losses.length === 0 ? 0 : Math.max(...losses)
+    }
+
+    case 'screenshot_rate': {
+      if (inRange.length === 0) return 0
+      const withScreenshots = inRange.filter(t => t.screenshotUrls && t.screenshotUrls.length > 0)
+      return (withScreenshots.length / inRange.length) * 100
+    }
+
+    default:
+      return 0
+  }
+}
+
 export default function GoalsClient() {
   const { goals, isLoading, createGoal, deleteGoal } = useGoals()
+  const { trades } = useTradeStore()
   const [isOpen, setIsOpen] = useState(false)
 
   const { register, handleSubmit, formState: { errors, isSubmitting }, reset } = useForm<FormData>({
@@ -66,7 +130,11 @@ export default function GoalsClient() {
   const active = goals.filter(g => g.isActive && !g.isCompleted)
   const completed = goals.filter(g => g.isCompleted)
 
-  const getPct = (g: Goal) => g.targetValue === 0 ? 0 : Math.min(100, (g.currentValue / g.targetValue) * 100)
+  const getLiveValue = (g: Goal) => computeGoalValue(g, trades)
+  const getPct = (g: Goal) => {
+    const live = getLiveValue(g)
+    return g.targetValue === 0 ? 0 : Math.min(100, (live / g.targetValue) * 100)
+  }
   const getProgressColor = (g: Goal): 'brand' | 'emerald' | 'amber' | 'red' => {
     const pct = getPct(g)
     if (pct >= 100) return 'emerald'
@@ -115,15 +183,23 @@ export default function GoalsClient() {
                     </div>
 
                     <div className="mb-3">
-                      <div className="flex items-center justify-between mb-2">
+                      <div className="flex items-center justify-between mb-1">
                         <span className="text-xs text-slate-500">{goalTypeLabels[goal.type]}</span>
-                        <span className="text-xs font-mono text-slate-300">
-                          {goal.unit === 'USD' ? formatCurrency(goal.currentValue) : `${goal.currentValue}${goal.unit}`}
+                        <span className="inline-flex items-center gap-1 text-xs bg-brand-500/15 text-brand-400 border border-brand-500/20 px-1.5 py-0.5 rounded-full font-medium">
+                          <span className="w-1.5 h-1.5 rounded-full bg-brand-400 animate-pulse" />
+                          Live
+                        </span>
+                      </div>
+                      <div className="flex items-center justify-between mb-2">
+                        <span className={cn('text-sm font-bold font-mono', getLiveValue(goal) >= 0 && goal.type !== 'max_drawdown' && goal.type !== 'daily_loss_limit' ? 'text-emerald-400' : getLiveValue(goal) < 0 ? 'text-red-400' : 'text-slate-200')}>
+                          {goal.unit === 'USD' ? formatCurrency(getLiveValue(goal)) : `${getLiveValue(goal).toFixed(goal.type === 'win_rate' || goal.type === 'screenshot_rate' ? 1 : goal.type === 'risk_reward' ? 2 : 0)}${goal.unit}`}
+                        </span>
+                        <span className="text-xs font-mono text-slate-500">
                           {' / '}
                           {goal.unit === 'USD' ? formatCurrency(goal.targetValue) : `${goal.targetValue}${goal.unit}`}
                         </span>
                       </div>
-                      <ProgressBar value={goal.currentValue} max={goal.targetValue} color={getProgressColor(goal)} showLabel />
+                      <ProgressBar value={getLiveValue(goal)} max={goal.targetValue} color={getProgressColor(goal)} showLabel />
                     </div>
 
                     <div className="flex items-center justify-between text-xs text-slate-500">

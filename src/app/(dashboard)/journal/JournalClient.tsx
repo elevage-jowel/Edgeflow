@@ -15,7 +15,7 @@ import { cn } from '@/lib/utils/cn'
 import toast from 'react-hot-toast'
 import {
   Plus, Search, SlidersHorizontal, ChevronUp, ChevronDown,
-  BookOpen, Pencil, Trash2, Eye, Filter, Download, Send
+  BookOpen, Pencil, Trash2, Eye, Filter, Download, Send, Copy
 } from 'lucide-react'
 
 type SortField = 'entryDate' | 'symbol' | 'netPnl' | 'rMultiple'
@@ -33,6 +33,7 @@ export default function JournalClient() {
   const [sortDir, setSortDir] = useState<SortDir>('desc')
   const [showFilters, setShowFilters] = useState(false)
   const [syncingId, setSyncingId] = useState<string | null>(null)
+  const [duplicateTrade, setDuplicateTrade] = useState<Trade | null>(null)
 
   const syncToNotion = async (trade: Trade) => {
     const cfg = userProfile?.notionConfig
@@ -161,6 +162,20 @@ export default function JournalClient() {
             <option value="loss">Losers</option>
             <option value="breakeven">Breakeven</option>
           </select>
+          <input
+            type="date"
+            value={filters.dateFrom ?? ''}
+            onChange={e => setFilters({ dateFrom: e.target.value || undefined })}
+            className="px-3 py-2 bg-surface-700 border border-surface-500 rounded-lg text-sm text-slate-300 focus:outline-none focus:border-brand-500"
+            title="Date de début"
+          />
+          <input
+            type="date"
+            value={filters.dateTo ?? ''}
+            onChange={e => setFilters({ dateTo: e.target.value || undefined })}
+            className="px-3 py-2 bg-surface-700 border border-surface-500 rounded-lg text-sm text-slate-300 focus:outline-none focus:border-brand-500"
+            title="Date de fin"
+          />
           <button onClick={resetFilters} className="text-xs text-slate-500 hover:text-slate-300 transition-colors">Reset</button>
           <div className="ml-auto text-xs text-slate-500">{sorted.length} trade{sorted.length !== 1 ? 's' : ''}</div>
         </div>
@@ -262,6 +277,9 @@ export default function JournalClient() {
                         <button onClick={() => syncToNotion(trade)} disabled={syncingId === trade.id} className="w-7 h-7 rounded-lg text-slate-400 hover:text-violet-400 hover:bg-violet-500/10 flex items-center justify-center transition-all disabled:opacity-40" title="Exporter vers Notion">
                           <Send className="w-3.5 h-3.5" />
                         </button>
+                        <button onClick={() => setDuplicateTrade(trade)} className="w-7 h-7 rounded-lg text-slate-400 hover:text-amber-300 hover:bg-amber-500/10 flex items-center justify-center transition-all" title="Dupliquer">
+                          <Copy className="w-3.5 h-3.5" />
+                        </button>
                         <button onClick={() => setEditTrade(trade)} className="w-7 h-7 rounded-lg text-slate-400 hover:text-brand-300 hover:bg-brand-500/10 flex items-center justify-center transition-all" title="Modifier">
                           <Pencil className="w-3.5 h-3.5" />
                         </button>
@@ -291,6 +309,11 @@ export default function JournalClient() {
       {/* View trade detail */}
       <Modal isOpen={!!viewTrade} onClose={() => setViewTrade(null)} size="2xl" noHeader>
         {viewTrade && <TradeDetailPanel trade={viewTrade} onEdit={() => { setEditTrade(viewTrade); setViewTrade(null) }} />}
+      </Modal>
+
+      {/* Duplicate trade modal */}
+      <Modal isOpen={!!duplicateTrade} onClose={() => setDuplicateTrade(null)} title="Dupliquer le trade" size="lg">
+        {duplicateTrade && <TradeForm trade={{ ...duplicateTrade, id: '', entryDate: new Date().toISOString(), exitDate: undefined, exitPrice: undefined, netPnl: undefined, grossPnl: undefined, rMultiple: undefined, status: 'open' }} onClose={() => setDuplicateTrade(null)} />}
       </Modal>
     </div>
   )
