@@ -289,7 +289,7 @@ export default function JournalClient() {
       </Modal>
 
       {/* View trade detail */}
-      <Modal isOpen={!!viewTrade} onClose={() => setViewTrade(null)} title={viewTrade ? `${viewTrade.symbol} — ${viewTrade.direction.toUpperCase()}` : 'Trade Detail'} size="xl">
+      <Modal isOpen={!!viewTrade} onClose={() => setViewTrade(null)} size="2xl" noHeader>
         {viewTrade && <TradeDetailPanel trade={viewTrade} onEdit={() => { setEditTrade(viewTrade); setViewTrade(null) }} />}
       </Modal>
     </div>

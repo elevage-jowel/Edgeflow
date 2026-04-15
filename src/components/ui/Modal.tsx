@@ -8,8 +8,9 @@ interface ModalProps {
   onClose: () => void
   title?: string
   children: React.ReactNode
-  size?: 'sm' | 'md' | 'lg' | 'xl'
+  size?: 'sm' | 'md' | 'lg' | 'xl' | '2xl'
   className?: string
+  noHeader?: boolean
 }
 
 const sizes = {
@@ -17,9 +18,10 @@ const sizes = {
   md: 'max-w-lg',
   lg: 'max-w-2xl',
   xl: 'max-w-4xl',
+  '2xl': 'max-w-6xl',
 }
 
-export function Modal({ isOpen, onClose, title, children, size = 'md', className }: ModalProps) {
+export function Modal({ isOpen, onClose, title, children, size = 'md', className, noHeader }: ModalProps) {
   useEffect(() => {
     if (isOpen) {
       document.body.style.overflow = 'hidden'
@@ -45,7 +47,7 @@ export function Modal({ isOpen, onClose, title, children, size = 'md', className
         sizes[size],
         className
       )}>
-        {title && (
+        {!noHeader && title && (
           <div className="flex items-center justify-between px-6 py-4 border-b border-surface-500">
             <h3 className="text-base font-semibold text-white">{title}</h3>
             <button onClick={onClose} className="w-8 h-8 rounded-lg text-slate-400 hover:text-white hover:bg-surface-700 flex items-center justify-center transition-all">
@@ -53,7 +55,12 @@ export function Modal({ isOpen, onClose, title, children, size = 'md', className
             </button>
           </div>
         )}
-        <div className="overflow-y-auto max-h-[80vh]">{children}</div>
+        {noHeader && (
+          <button onClick={onClose} className="absolute top-3 right-3 z-10 w-8 h-8 rounded-lg bg-black/40 text-slate-400 hover:text-white hover:bg-black/60 flex items-center justify-center transition-all">
+            <X className="w-4 h-4" />
+          </button>
+        )}
+        <div className={cn('overflow-y-auto', noHeader ? 'max-h-[90vh]' : 'max-h-[80vh]')}>{children}</div>
       </div>
     </div>
   )
