@@ -13,7 +13,7 @@ import { cn } from '@/lib/utils/cn'
 import { formatCurrency, formatWinRate, formatR, formatPnl } from '@/lib/utils/formatters'
 
 const ranges: TimeRange[] = ['1W', '1M', '3M', '6M', 'YTD', '1Y', 'ALL']
-const tabs = ['Vue d\'ensemble', 'Par symbole', 'Par setup', 'Par jour', 'Par heure', 'Par session', 'Par émotion', 'Distribution']
+const tabs = ['Vue d\'ensemble', 'Par symbole', 'Par setup', 'Par grade', 'Par jour', 'Par heure', 'Par session', 'Par émotion', 'Distribution']
 
 interface MetricItemProps { label: string; value: string; sub?: string; color?: string }
 function MetricItem({ label, value, sub, color }: MetricItemProps) {
@@ -291,6 +291,120 @@ export default function AnalyticsClient() {
                 ))}
               </tbody>
             </table>
+          )}
+        </div>
+      )}
+
+      {tab === 'Par grade' && (
+        <div className="space-y-4">
+          {a.byGrade.length === 0 ? (
+            <div className="bg-surface-800 border border-surface-500 rounded-2xl p-12 text-center text-slate-500">
+              Aucune donnée de grade — note tes setups A+/A/B/C/D lors de la saisie
+            </div>
+          ) : (
+            <>
+              {/* Grade cards */}
+              <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
+                {['A+', 'A', 'B', 'C', 'D'].map(g => {
+                  const entry = a.byGrade.find(x => x.grade === g)
+                  const gradeCls: Record<string, string> = {
+                    'A+': 'border-emerald-500/40 bg-emerald-500/5 text-emerald-400',
+                    'A':  'border-emerald-500/25 bg-emerald-500/5 text-emerald-300',
+                    'B':  'border-brand-500/30 bg-brand-500/5 text-brand-300',
+                    'C':  'border-amber-500/30 bg-amber-500/5 text-amber-300',
+                    'D':  'border-red-500/30 bg-red-500/5 text-red-400',
+                  }
+                  return (
+                    <div key={g} className={cn('rounded-2xl border p-4', gradeCls[g] ?? 'border-surface-500 bg-surface-800 text-slate-400')}>
+                      <div className="text-2xl font-black font-mono mb-2">{g}</div>
+                      {entry ? (
+                        <>
+                          <div className="text-lg font-bold font-mono mb-0.5">{entry.trades}</div>
+                          <div className="text-xs opacity-70 mb-2">trades</div>
+                          <div className={cn('text-sm font-bold font-mono', entry.pnl >= 0 ? 'text-emerald-400' : 'text-red-400')}>{formatPnl(entry.pnl)}</div>
+                          <div className="text-xs opacity-60 mt-1">{entry.winRate.toFixed(0)}% WR · {formatR(entry.avgR)} avg R</div>
+                        </>
+                      ) : (
+                        <div className="text-xs opacity-40 mt-2">Aucun trade</div>
+                      )}
+                    </div>
+                  )
+                })}
+              </div>
+
+              {/* Grade comparison table */}
+              <div className="bg-surface-800 border border-surface-500 rounded-2xl overflow-hidden">
+                <table className="w-full">
+                  <thead>
+                    <tr className="border-b border-surface-500">
+                      {['Grade', 'Trades', 'Taux de réussite', 'Net P&L', 'P&L moyen', 'R moyen'].map(h => (
+                        <th key={h} className="px-5 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">{h}</th>
+                      ))}
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-surface-600">
+                    {a.byGrade.map(g => {
+                      const gradeBadge: Record<string, string> = {
+                        'A+': 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/30',
+                        'A':  'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20',
+                        'B':  'bg-brand-500/15 text-brand-300 border border-brand-500/20',
+                        'C':  'bg-amber-500/15 text-amber-300 border border-amber-500/20',
+                        'D':  'bg-red-500/15 text-red-400 border border-red-500/20',
+                      }
+                      return (
+                        <tr key={g.grade} className="hover:bg-surface-700/40 transition-colors">
+                          <td className="px-5 py-3">
+                            <span className={cn('inline-flex items-center justify-center w-8 h-6 rounded text-xs font-black', gradeBadge[g.grade] ?? 'bg-surface-700 text-slate-400')}>{g.grade}</span>
+                          </td>
+                          <td className="px-5 py-3 text-sm text-slate-300 font-mono">{g.trades}</td>
+                          <td className="px-5 py-3 text-sm font-mono">
+                            <span className={g.winRate >= 50 ? 'text-emerald-400' : 'text-red-400'}>{g.winRate.toFixed(0)}%</span>
+                          </td>
+                          <td className="px-5 py-3 text-sm font-bold font-mono">
+                            <span className={g.pnl >= 0 ? 'text-emerald-400' : 'text-red-400'}>{formatPnl(g.pnl)}</span>
+                          </td>
+                          <td className="px-5 py-3 text-sm font-mono">
+                            <span className={g.avgPnl >= 0 ? 'text-emerald-400' : 'text-red-400'}>{formatCurrency(g.avgPnl)}</span>
+                          </td>
+                          <td className="px-5 py-3 text-sm font-mono">
+                            <span className={g.avgR >= 0 ? 'text-emerald-400' : 'text-red-400'}>{formatR(g.avgR)}</span>
+                          </td>
+                        </tr>
+                      )
+                    })}
+                  </tbody>
+                </table>
+              </div>
+
+              {/* Insight: best grade */}
+              {(() => {
+                const best = a.byGrade.filter(g => ['A+', 'A', 'B', 'C', 'D'].includes(g.grade) && g.trades >= 3).sort((x, y) => y.avgR - x.avgR)[0]
+                const worst = a.byGrade.filter(g => ['A+', 'A', 'B', 'C', 'D'].includes(g.grade) && g.trades >= 3).sort((x, y) => x.avgR - y.avgR)[0]
+                if (!best) return null
+                return (
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div className="bg-emerald-500/8 border border-emerald-500/20 rounded-2xl p-4 flex items-center gap-4">
+                      <div className="text-3xl font-black text-emerald-400">{best.grade}</div>
+                      <div>
+                        <div className="text-xs text-emerald-400 font-medium mb-0.5">Meilleur grade (R moyen)</div>
+                        <div className="text-sm text-white">{formatR(best.avgR)} · {best.winRate.toFixed(0)}% WR · {best.trades} trades</div>
+                        <div className="text-xs text-slate-400 mt-0.5">Prioritise ces setups</div>
+                      </div>
+                    </div>
+                    {worst && worst.grade !== best.grade && worst.avgR < 0 && (
+                      <div className="bg-red-500/8 border border-red-500/20 rounded-2xl p-4 flex items-center gap-4">
+                        <div className="text-3xl font-black text-red-400">{worst.grade}</div>
+                        <div>
+                          <div className="text-xs text-red-400 font-medium mb-0.5">Grade le plus coûteux</div>
+                          <div className="text-sm text-white">{formatR(worst.avgR)} · {worst.winRate.toFixed(0)}% WR · {worst.trades} trades</div>
+                          <div className="text-xs text-slate-400 mt-0.5">Évite ou améliore ces setups</div>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                )
+              })()}
+            </>
           )}
         </div>
       )}

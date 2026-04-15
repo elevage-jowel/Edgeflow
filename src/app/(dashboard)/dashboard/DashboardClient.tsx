@@ -1,8 +1,9 @@
 'use client'
-import { useState } from 'react'
+import { useState, useMemo } from 'react'
 import { useTradeStore } from '@/lib/stores/tradeStore'
 import { useAnalytics, TimeRange } from '@/lib/hooks/useAnalytics'
 import { useAuthStore } from '@/lib/stores/authStore'
+import { startOfWeek, endOfWeek, format, parseISO, subWeeks } from 'date-fns'
 import { StatCard } from '@/components/ui/StatCard'
 import { EquityCurveChart } from '@/components/charts/EquityCurveChart'
 import { PnLBarChart } from '@/components/charts/PnLBarChart'
@@ -31,6 +32,38 @@ export default function DashboardClient() {
 
   const recentTrades = trades.filter(t => t.status !== 'open').slice(0, 8)
   const openTrades = trades.filter(t => t.status === 'open')
+
+  // Weekly summary (current week Mon-Sun)
+  const weeklyStats = useMemo(() => {
+    const now = new Date()
+    const weekStart = startOfWeek(now, { weekStartsOn: 1 })
+    const weekEnd = endOfWeek(now, { weekStartsOn: 1 })
+    const prevStart = startOfWeek(subWeeks(now, 1), { weekStartsOn: 1 })
+    const prevEnd = endOfWeek(subWeeks(now, 1), { weekStartsOn: 1 })
+
+    const inRange = (t: typeof trades[0], s: Date, e: Date) => {
+      try {
+        const d = parseISO(t.exitDate ?? t.entryDate)
+        return d >= s && d <= e && t.status === 'closed'
+      } catch { return false }
+    }
+
+    const curr = trades.filter(t => inRange(t, weekStart, weekEnd))
+    const prev = trades.filter(t => inRange(t, prevStart, prevEnd))
+
+    const stats = (ts: typeof trades) => {
+      const pnl = ts.reduce((s, t) => s + (t.netPnl ?? 0), 0)
+      const wins = ts.filter(t => (t.netPnl ?? 0) > 0).length
+      return { pnl, trades: ts.length, winRate: ts.length > 0 ? (wins / ts.length) * 100 : 0 }
+    }
+
+    return {
+      curr: stats(curr),
+      prev: stats(prev),
+      weekStart: format(weekStart, 'MMM d'),
+      weekEnd: format(weekEnd, 'MMM d'),
+    }
+  }, [trades])
 
   return (
     <div className="space-y-6 max-w-screen-2xl">
@@ -195,6 +228,55 @@ export default function DashboardClient() {
           ) : (
             <div className="h-40 flex items-center justify-center text-slate-500 text-sm">Aucune donnée</div>
           )}
+        </div>
+      </div>
+
+      {/* Weekly summary */}
+      <div className="bg-surface-800 border border-surface-500 rounded-2xl p-5">
+        <div className="flex items-center justify-between mb-4">
+          <div>
+            <h3 className="text-sm font-semibold text-white">Semaine en cours</h3>
+            <p className="text-xs text-slate-500 mt-0.5">{weeklyStats.weekStart} → {weeklyStats.weekEnd}</p>
+          </div>
+          {weeklyStats.prev.trades > 0 && (
+            <div className="text-right">
+              <div className="text-xs text-slate-500 mb-0.5">Semaine précédente</div>
+              <div className={cn('text-sm font-bold font-mono', weeklyStats.prev.pnl >= 0 ? 'text-emerald-400/60' : 'text-red-400/60')}>
+                {formatPnl(weeklyStats.prev.pnl)}
+              </div>
+            </div>
+          )}
+        </div>
+        <div className="grid grid-cols-3 gap-4">
+          {[
+            {
+              label: 'P&L hebdo',
+              value: weeklyStats.curr.trades > 0 ? formatPnl(weeklyStats.curr.pnl) : '—',
+              color: weeklyStats.curr.pnl >= 0 ? 'text-emerald-400' : 'text-red-400',
+              sub: weeklyStats.prev.trades > 0 ? (() => {
+                const diff = weeklyStats.curr.pnl - weeklyStats.prev.pnl
+                return `${diff >= 0 ? '+' : ''}${formatCurrency(diff)} vs sem. préc.`
+              })() : undefined,
+            },
+            {
+              label: 'Trades',
+              value: String(weeklyStats.curr.trades),
+              color: 'text-white',
+              sub: weeklyStats.prev.trades > 0 ? `${weeklyStats.prev.trades} la sem. préc.` : undefined,
+            },
+            {
+              label: 'Taux de réussite',
+              value: weeklyStats.curr.trades > 0 ? `${weeklyStats.curr.winRate.toFixed(0)}%` : '—',
+              color: weeklyStats.curr.winRate >= 50 ? 'text-emerald-400' : weeklyStats.curr.winRate > 0 ? 'text-red-400' : 'text-slate-400',
+              sub: weeklyStats.prev.trades > 0 ? `${weeklyStats.prev.winRate.toFixed(0)}% la sem. préc.` : undefined,
+            },
+          ].map(({ label, value, color, sub }) => (
+            <div key={label} className="bg-surface-700/50 rounded-xl p-4 text-center">
+              <div className={cn('text-xl font-bold font-mono', color)}>{value}</div>
+              <div className="text-xs text-slate-500 mt-0.5">{label}</div>
+              {sub && <div className="text-[10px] text-slate-600 mt-1">{sub}</div>}
+            </div>
+          ))}
         </div>
       </div>
 

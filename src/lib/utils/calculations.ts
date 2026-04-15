@@ -225,6 +225,38 @@ export function computeAnalytics(trades: Trade[]): AnalyticsData {
     .map(([emotion, v]) => ({ emotion, pnl: v.pnl, trades: v.trades, winRate: v.trades > 0 ? (v.wins / v.trades) * 100 : 0, avgPnl: v.trades > 0 ? v.pnl / v.trades : 0 }))
     .sort((a, b) => b.pnl - a.pnl)
 
+  // By setup grade (A+, A, B, C, D)
+  const gradeOrder = ['A+', 'A', 'B', 'C', 'D']
+  const gradeMap = new Map<string, { pnl: number; trades: number; wins: number; rTotal: number; rCount: number }>()
+  for (const t of closed) {
+    const grade = t.setupGrade ?? 'Unknown'
+    const prev = gradeMap.get(grade) ?? { pnl: 0, trades: 0, wins: 0, rTotal: 0, rCount: 0 }
+    gradeMap.set(grade, {
+      pnl: prev.pnl + (t.netPnl ?? 0),
+      trades: prev.trades + 1,
+      wins: prev.wins + ((t.netPnl ?? 0) > 0 ? 1 : 0),
+      rTotal: prev.rTotal + (t.rMultiple ?? 0),
+      rCount: prev.rCount + (t.rMultiple !== undefined ? 1 : 0),
+    })
+  }
+  const byGrade = Array.from(gradeMap.entries())
+    .map(([grade, v]) => ({
+      grade,
+      pnl: v.pnl,
+      trades: v.trades,
+      winRate: v.trades > 0 ? (v.wins / v.trades) * 100 : 0,
+      avgR: v.rCount > 0 ? v.rTotal / v.rCount : 0,
+      avgPnl: v.trades > 0 ? v.pnl / v.trades : 0,
+    }))
+    .sort((a, b) => {
+      const ai = gradeOrder.indexOf(a.grade)
+      const bi = gradeOrder.indexOf(b.grade)
+      if (ai === -1 && bi === -1) return 0
+      if (ai === -1) return 1
+      if (bi === -1) return -1
+      return ai - bi
+    })
+
   // Best/worst day
   const bestDay = dailyPnlGrouped.length > 0 ? dailyPnlGrouped.reduce((b, d) => d.pnl > b.pnl ? d : b, dailyPnlGrouped[0]) : null
   const worstDay = dailyPnlGrouped.length > 0 ? dailyPnlGrouped.reduce((w, d) => d.pnl < w.pnl ? d : w, dailyPnlGrouped[0]) : null
@@ -289,5 +321,6 @@ export function computeAnalytics(trades: Trade[]): AnalyticsData {
     bySetup,
     byEmotion,
     byDayHour,
+    byGrade,
   }
 }

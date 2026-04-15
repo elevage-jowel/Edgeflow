@@ -346,6 +346,7 @@ export interface TradeFilters {
   dateTo?: string
   minPnl?: number
   maxPnl?: number
+  setupGrade?: string
 }
 
 export interface AnalyticsData {
@@ -393,4 +394,5 @@ export interface AnalyticsData {
   bySetup: { setup: string; pnl: number; trades: number; winRate: number; avgR: number }[]
   byEmotion: { emotion: string; pnl: number; trades: number; winRate: number; avgPnl: number }[]
   byDayHour: { day: number; hour: number; pnl: number; trades: number; winRate: number }[]
+  byGrade: { grade: string; pnl: number; trades: number; winRate: number; avgR: number; avgPnl: number }[]
 }

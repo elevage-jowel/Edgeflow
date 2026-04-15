@@ -48,6 +48,7 @@ export function useTrades() {
     if (filters.session && t.session !== filters.session) return false
     if (filters.dateFrom && t.entryDate < filters.dateFrom) return false
     if (filters.dateTo && t.entryDate > filters.dateTo) return false
+    if (filters.setupGrade && filters.setupGrade !== 'all' && t.setupGrade !== filters.setupGrade) return false
     return true
   })
 

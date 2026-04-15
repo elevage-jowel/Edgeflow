@@ -162,6 +162,14 @@ export default function JournalClient() {
             <option value="loss">Losers</option>
             <option value="breakeven">Breakeven</option>
           </select>
+          <select
+            value={filters.setupGrade ?? 'all'}
+            onChange={e => setFilters({ setupGrade: e.target.value === 'all' ? undefined : e.target.value })}
+            className="px-3 py-2 bg-surface-700 border border-surface-500 rounded-lg text-sm text-slate-300 focus:outline-none focus:border-brand-500"
+          >
+            <option value="all">Tous grades</option>
+            {['A+', 'A', 'B', 'C', 'D'].map(g => <option key={g} value={g}>{g}</option>)}
+          </select>
           <input
             type="date"
             value={filters.dateFrom ?? ''}
