@@ -608,10 +608,64 @@ export function TradeForm({ trade, onClose }: TradeFormProps) {
         </div>
 
         <div>
-          <label className={lbl}>Note rapide</label>
+          <label className={lbl}>Pourquoi ce trade ?</label>
           <textarea {...register('notes')} rows={mode === 'quick' ? 2 : 3}
-            placeholder="Pourquoi ce trade ? Ce que tu as vu sur le graphique…"
+            placeholder="Contexte, setup, timing… Qu'est-ce que tu as vu sur le graphique ?"
             className={`${inp} resize-none`} />
+        </div>
+
+        {/* ── Psychology (visible in both modes) ───────────────────────────────── */}
+        {divider}
+        <div className="space-y-4">
+          <div>
+            <label className={lbl}>Émotion avant le trade</label>
+            <EmotionPicker value={emotionBefore} onChange={v => setValue('emotionBefore', v)} />
+          </div>
+          <div>
+            <label className={lbl}>Émotion après le trade</label>
+            <EmotionPicker value={emotionAfter} onChange={v => setValue('emotionAfter', v)} />
+          </div>
+          {mode === 'quick' && (
+            <div>
+              <label className={lbl}>Score de confiance (1–10)</label>
+              <ConfidenceBar
+                value={confidenceScore ? Number(confidenceScore) : undefined}
+                onChange={v => setValue('confidenceScore', v)}
+              />
+            </div>
+          )}
+        </div>
+
+        {/* ── Screenshots (always visible) ──────────────────────────────────────── */}
+        {divider}
+        <div>
+          <label className={lbl}>Screenshots</label>
+          <div className="space-y-2">
+            {screenshots.length > 0 && (
+              <div className="flex flex-wrap gap-2">
+                {screenshots.map((url, i) => (
+                  <div key={i} className="relative group">
+                    <a href={url} target="_blank" rel="noopener noreferrer">
+                      {/* eslint-disable-next-line @next/next/no-img-element */}
+                      <img src={url} alt={`Screenshot ${i + 1}`} className="h-20 w-28 object-cover rounded-lg border border-surface-500 hover:border-brand-500 transition-all" />
+                    </a>
+                    <button
+                      type="button"
+                      onClick={() => removeScreenshot(url)}
+                      className="absolute -top-1.5 -right-1.5 w-5 h-5 bg-red-500 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
+                    >
+                      <X className="w-3 h-3 text-white" />
+                    </button>
+                  </div>
+                ))}
+              </div>
+            )}
+            <label className={cn('flex items-center gap-2 px-3 py-2 rounded-lg border border-dashed border-surface-400 text-slate-400 hover:text-white hover:border-brand-500 cursor-pointer transition-all text-xs w-fit', uploadingScreenshot && 'opacity-50 cursor-not-allowed')}>
+              {uploadingScreenshot ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <ImagePlus className="w-3.5 h-3.5" />}
+              {uploadingScreenshot ? 'Uploading...' : 'Ajouter un screenshot'}
+              <input type="file" accept="image/*" className="hidden" onChange={handleScreenshotUpload} disabled={uploadingScreenshot} />
+            </label>
+          </div>
         </div>
 
         {/* ════════════════════════════════════════════════════════════════════════
@@ -739,19 +793,11 @@ export function TradeForm({ trade, onClose }: TradeFormProps) {
 
             {divider}
 
-            {/* Section — Psychology */}
+            {/* Section — Psychology (advanced extras) */}
             <div>
-              <SectionHeader title="🧠 Psychologie" open={sections.psychology} onToggle={() => toggleSection('psychology')} />
+              <SectionHeader title="🧠 Psychologie avancée" open={sections.psychology} onToggle={() => toggleSection('psychology')} />
               {sections.psychology && (
                 <div className="space-y-4 pt-2">
-                  <div>
-                    <label className={lbl}>Émotion avant le trade</label>
-                    <EmotionPicker value={emotionBefore} onChange={v => setValue('emotionBefore', v)} />
-                  </div>
-                  <div>
-                    <label className={lbl}>Émotion après le trade</label>
-                    <EmotionPicker value={emotionAfter} onChange={v => setValue('emotionAfter', v)} />
-                  </div>
                   <div>
                     <label className={lbl}>Score de confiance (1–10)</label>
                     <ConfidenceBar
@@ -826,36 +872,6 @@ export function TradeForm({ trade, onClose }: TradeFormProps) {
                     <div>
                       <label className={lbl}>Qualité d&apos;exécution</label>
                       <StarRating value={executionRating ? Number(executionRating) : undefined} onChange={v => setValue('executionRating', v)} />
-                    </div>
-                  </div>
-                  {/* Screenshots */}
-                  <div>
-                    <label className={lbl}>Screenshots</label>
-                    <div className="space-y-2">
-                      {screenshots.length > 0 && (
-                        <div className="flex flex-wrap gap-2">
-                          {screenshots.map((url, i) => (
-                            <div key={i} className="relative group">
-                              <a href={url} target="_blank" rel="noopener noreferrer">
-                                {/* eslint-disable-next-line @next/next/no-img-element */}
-                                <img src={url} alt={`Screenshot ${i + 1}`} className="h-20 w-28 object-cover rounded-lg border border-surface-500 hover:border-brand-500 transition-all" />
-                              </a>
-                              <button
-                                type="button"
-                                onClick={() => removeScreenshot(url)}
-                                className="absolute -top-1.5 -right-1.5 w-5 h-5 bg-red-500 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
-                              >
-                                <X className="w-3 h-3 text-white" />
-                              </button>
-                            </div>
-                          ))}
-                        </div>
-                      )}
-                      <label className={cn('flex items-center gap-2 px-3 py-2 rounded-lg border border-dashed border-surface-400 text-slate-400 hover:text-white hover:border-brand-500 cursor-pointer transition-all text-xs w-fit', uploadingScreenshot && 'opacity-50 cursor-not-allowed')}>
-                        {uploadingScreenshot ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <ImagePlus className="w-3.5 h-3.5" />}
-                        {uploadingScreenshot ? 'Uploading...' : 'Add screenshot'}
-                        <input type="file" accept="image/*" className="hidden" onChange={handleScreenshotUpload} disabled={uploadingScreenshot} />
-                      </label>
                     </div>
                   </div>
                 </div>
