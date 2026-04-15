@@ -144,7 +144,7 @@ export function NotionIntegration() {
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ token: token.trim(), databaseId: dbId, trade: trades[i] }),
           })
-          if (res.ok) synced++ else errors++
+          if (res.ok) { synced++ } else { errors++ }
         } catch {
           errors++
         }

@@ -2,6 +2,7 @@
 import { useState } from 'react'
 import { useTrades, useTradeActions } from '@/lib/hooks/useTrades'
 import { useTradeStore } from '@/lib/stores/tradeStore'
+import { useAuthStore } from '@/lib/stores/authStore'
 import { Trade } from '@/lib/types'
 import { Badge } from '@/components/ui/Badge'
 import { Button } from '@/components/ui/Button'
@@ -14,7 +15,7 @@ import { cn } from '@/lib/utils/cn'
 import toast from 'react-hot-toast'
 import {
   Plus, Search, SlidersHorizontal, ChevronUp, ChevronDown,
-  BookOpen, Pencil, Trash2, Eye, Filter, Download
+  BookOpen, Pencil, Trash2, Eye, Filter, Download, Send
 } from 'lucide-react'
 
 type SortField = 'entryDate' | 'symbol' | 'netPnl' | 'rMultiple'
@@ -24,12 +25,36 @@ export default function JournalClient() {
   const { trades, allTrades, isLoading } = useTrades()
   const { filters, setFilters, resetFilters } = useTradeStore()
   const { deleteTrade } = useTradeActions()
+  const { userProfile } = useAuthStore()
   const [isAddOpen, setIsAddOpen] = useState(false)
   const [editTrade, setEditTrade] = useState<Trade | null>(null)
   const [viewTrade, setViewTrade] = useState<Trade | null>(null)
   const [sortField, setSortField] = useState<SortField>('entryDate')
   const [sortDir, setSortDir] = useState<SortDir>('desc')
   const [showFilters, setShowFilters] = useState(false)
+  const [syncingId, setSyncingId] = useState<string | null>(null)
+
+  const syncToNotion = async (trade: Trade) => {
+    const cfg = userProfile?.notionConfig
+    if (!cfg?.integrationToken || !cfg?.databaseId) {
+      toast.error('Configure Notion dans les Paramètres d\'abord')
+      return
+    }
+    setSyncingId(trade.id)
+    try {
+      const res = await fetch('/api/notion/sync', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ token: cfg.integrationToken, databaseId: cfg.databaseId, trade }),
+      })
+      if (!res.ok) throw new Error((await res.json()).error ?? 'Erreur')
+      toast.success(`${trade.symbol} exporté vers Notion ✓`)
+    } catch (e: any) {
+      toast.error(e.message ?? 'Échec de l\'export Notion')
+    } finally {
+      setSyncingId(null)
+    }
+  }
 
   const sorted = [...trades].sort((a, b) => {
     let cmp = 0
@@ -231,13 +256,16 @@ export default function JournalClient() {
                     </td>
                     <td className="px-4 py-3">
                       <div className="flex items-center justify-end gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                        <button onClick={() => setViewTrade(trade)} className="w-7 h-7 rounded-lg text-slate-400 hover:text-white hover:bg-surface-600 flex items-center justify-center transition-all" title="View">
+                        <button onClick={() => setViewTrade(trade)} className="w-7 h-7 rounded-lg text-slate-400 hover:text-white hover:bg-surface-600 flex items-center justify-center transition-all" title="Voir">
                           <Eye className="w-3.5 h-3.5" />
                         </button>
-                        <button onClick={() => setEditTrade(trade)} className="w-7 h-7 rounded-lg text-slate-400 hover:text-brand-300 hover:bg-brand-500/10 flex items-center justify-center transition-all" title="Edit">
+                        <button onClick={() => syncToNotion(trade)} disabled={syncingId === trade.id} className="w-7 h-7 rounded-lg text-slate-400 hover:text-violet-400 hover:bg-violet-500/10 flex items-center justify-center transition-all disabled:opacity-40" title="Exporter vers Notion">
+                          <Send className="w-3.5 h-3.5" />
+                        </button>
+                        <button onClick={() => setEditTrade(trade)} className="w-7 h-7 rounded-lg text-slate-400 hover:text-brand-300 hover:bg-brand-500/10 flex items-center justify-center transition-all" title="Modifier">
                           <Pencil className="w-3.5 h-3.5" />
                         </button>
-                        <button onClick={() => handleDelete(trade.id)} className="w-7 h-7 rounded-lg text-slate-400 hover:text-red-400 hover:bg-red-500/10 flex items-center justify-center transition-all" title="Delete">
+                        <button onClick={() => handleDelete(trade.id)} className="w-7 h-7 rounded-lg text-slate-400 hover:text-red-400 hover:bg-red-500/10 flex items-center justify-center transition-all" title="Supprimer">
                           <Trash2 className="w-3.5 h-3.5" />
                         </button>
                       </div>

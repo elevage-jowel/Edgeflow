@@ -59,7 +59,11 @@ const tradeSchema = z.object({
   stopLoss: z.coerce.number().optional().or(z.literal('')),
   takeProfit: z.coerce.number().optional().or(z.literal('')),
   strategy: z.string().optional(),
+  setupGrade: z.enum(['A+', 'A', 'B', 'C', 'D']).optional(),
   marketCondition: z.string().optional(),
+  emotionBefore: z.string().optional(),
+  emotionAfter: z.string().optional(),
+  tradingViewUrl: z.string().url('URL invalide').optional().or(z.literal('')),
   notes: z.string().optional(),
 })
 type TradeFormData = z.infer<typeof tradeSchema>
@@ -95,7 +99,10 @@ export default function BacktestClient() {
   }, [user])
 
   const { register, handleSubmit, formState: { isSubmitting }, reset } = useForm<FormData>({ resolver: zodResolver(schema) })
-  const { register: rt, handleSubmit: ht, formState: { isSubmitting: ist }, reset: resetTradeForm } = useForm<TradeFormData>({ resolver: zodResolver(tradeSchema) })
+  const { register: rt, handleSubmit: ht, formState: { isSubmitting: ist }, reset: resetTradeForm, setValue: setTradeValue, watch: watchTrade } = useForm<TradeFormData>({ resolver: zodResolver(tradeSchema) })
+  const btSetupGrade = watchTrade('setupGrade')
+  const btEmotionBefore = watchTrade('emotionBefore')
+  const btEmotionAfter = watchTrade('emotionAfter')
 
   const onSubmit = async (data: FormData) => {
     const uid = DEMO_MODE ? DEMO_UID : user?.uid
@@ -156,7 +163,11 @@ export default function BacktestClient() {
         takeProfit: tp,
         riskRewardRatio: rr,
         strategy: data.strategy || undefined,
+        setupGrade: data.setupGrade || undefined,
         marketCondition: data.marketCondition || undefined,
+        emotionBefore: data.emotionBefore || undefined,
+        emotionAfter: data.emotionAfter || undefined,
+        tradingViewUrl: data.tradingViewUrl || undefined,
         notes: data.notes || '',
         tags: [],
         screenshotUrls: [],
@@ -483,13 +494,54 @@ export default function BacktestClient() {
           </div>
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <label className={lbl}>Strategy (for plan matching)</label>
+              <label className={lbl}>Strategy</label>
               <input {...rt('strategy')} placeholder="Breakout, ICT, SMC..." className={inputCls} />
             </div>
             <div>
-              <label className={lbl}>Market Condition</label>
-              <input {...rt('marketCondition')} placeholder="Trending Up, Ranging..." className={inputCls} />
+              <label className={lbl}>Grade</label>
+              <div className="flex gap-1">
+                {(['A+', 'A', 'B', 'C', 'D'] as const).map(g => (
+                  <button key={g} type="button"
+                    onClick={() => setTradeValue('setupGrade', g === btSetupGrade ? undefined : g)}
+                    className={cn(
+                      'flex-1 h-9 rounded-lg text-xs font-bold border transition-all',
+                      btSetupGrade === g
+                        ? g === 'A+' ? 'bg-emerald-500/20 border-emerald-500 text-emerald-400'
+                        : g === 'A'  ? 'bg-green-500/20 border-green-500 text-green-400'
+                        : g === 'B'  ? 'bg-brand-500/20 border-brand-500 text-brand-400'
+                        : g === 'C'  ? 'bg-amber-500/20 border-amber-500 text-amber-400'
+                        : 'bg-red-500/20 border-red-500 text-red-400'
+                        : 'border-surface-500 text-slate-400 hover:border-slate-400'
+                    )}>{g}</button>
+                ))}
+              </div>
             </div>
+          </div>
+          <div>
+            <label className={lbl}>Émotion avant</label>
+            <div className="grid grid-cols-6 gap-1">
+              {[{v:'calm',e:'😌'},{v:'focused',e:'🎯'},{v:'confident',e:'💪'},{v:'hesitant',e:'🤔'},{v:'fearful',e:'😰'},{v:'greedy',e:'🤑'},{v:'frustrated',e:'😤'},{v:'tired',e:'😴'},{v:'fomo',e:'😱'},{v:'revenge',e:'😡'},{v:'overconfident',e:'🦁'},{v:'distracted',e:'💭'}].map(({v,e}) => (
+                <button key={v} type="button" title={v}
+                  onClick={() => setTradeValue('emotionBefore', btEmotionBefore === v ? '' : v)}
+                  className={cn('py-1.5 rounded-lg border text-base text-center transition-all', btEmotionBefore === v ? 'border-brand-500/60 bg-brand-500/15' : 'border-surface-500 bg-surface-700/50 hover:border-surface-400')}
+                >{e}</button>
+              ))}
+            </div>
+          </div>
+          <div>
+            <label className={lbl}>Émotion après</label>
+            <div className="grid grid-cols-6 gap-1">
+              {[{v:'calm',e:'😌'},{v:'focused',e:'🎯'},{v:'confident',e:'💪'},{v:'hesitant',e:'🤔'},{v:'fearful',e:'😰'},{v:'greedy',e:'🤑'},{v:'frustrated',e:'😤'},{v:'tired',e:'😴'},{v:'fomo',e:'😱'},{v:'revenge',e:'😡'},{v:'overconfident',e:'🦁'},{v:'distracted',e:'💭'}].map(({v,e}) => (
+                <button key={v} type="button" title={v}
+                  onClick={() => setTradeValue('emotionAfter', btEmotionAfter === v ? '' : v)}
+                  className={cn('py-1.5 rounded-lg border text-base text-center transition-all', btEmotionAfter === v ? 'border-brand-500/60 bg-brand-500/15' : 'border-surface-500 bg-surface-700/50 hover:border-surface-400')}
+                >{e}</button>
+              ))}
+            </div>
+          </div>
+          <div>
+            <label className={lbl}>Lien TradingView</label>
+            <input {...rt('tradingViewUrl')} type="url" placeholder="https://www.tradingview.com/chart/..." className={inputCls} />
           </div>
           <div>
             <label className={lbl}>Notes</label>

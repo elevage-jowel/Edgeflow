@@ -1,9 +1,12 @@
+import { useState } from 'react'
 import { Trade } from '@/lib/types'
 import { Badge } from '@/components/ui/Badge'
 import { Button } from '@/components/ui/Button'
 import { formatCurrency, formatPnl, formatR, formatDate, getPnlColor } from '@/lib/utils/formatters'
 import { cn } from '@/lib/utils/cn'
-import { Pencil, Star } from 'lucide-react'
+import { Pencil, Star, ExternalLink, Send } from 'lucide-react'
+import { useAuthStore } from '@/lib/stores/authStore'
+import toast from 'react-hot-toast'
 
 interface TradeDetailPanelProps {
   trade: Trade
@@ -31,6 +34,31 @@ function Row({ label, value, className }: { label: string; value: React.ReactNod
 }
 
 export function TradeDetailPanel({ trade, onEdit }: TradeDetailPanelProps) {
+  const { userProfile } = useAuthStore()
+  const [syncing, setSyncing] = useState(false)
+
+  const syncToNotion = async () => {
+    const cfg = userProfile?.notionConfig
+    if (!cfg?.integrationToken || !cfg?.databaseId) {
+      toast.error('Configure Notion dans les Paramètres d\'abord')
+      return
+    }
+    setSyncing(true)
+    try {
+      const res = await fetch('/api/notion/sync', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ token: cfg.integrationToken, databaseId: cfg.databaseId, trade }),
+      })
+      if (!res.ok) throw new Error((await res.json()).error ?? 'Erreur')
+      toast.success('Trade exporté vers Notion ✓')
+    } catch (e: any) {
+      toast.error(e.message ?? 'Échec de l\'export Notion')
+    } finally {
+      setSyncing(false)
+    }
+  }
+
   return (
     <div className="p-6">
       {/* Header */}
@@ -45,7 +73,10 @@ export function TradeDetailPanel({ trade, onEdit }: TradeDetailPanelProps) {
             </div>
           </div>
         </div>
-        <Button variant="outline" icon={Pencil} size="sm" onClick={onEdit}>Edit</Button>
+        <div className="flex items-center gap-2">
+          <Button variant="ghost" icon={Send} size="sm" onClick={syncToNotion} loading={syncing}>Notion</Button>
+          <Button variant="outline" icon={Pencil} size="sm" onClick={onEdit}>Edit</Button>
+        </div>
       </div>
 
       {/* P&L summary */}
@@ -81,6 +112,14 @@ export function TradeDetailPanel({ trade, onEdit }: TradeDetailPanelProps) {
         <Row label="Take Profit" value={trade.takeProfit ? <span className="font-mono text-emerald-400">${trade.takeProfit}</span> : '—'} />
         <Row label="Strategy" value={trade.strategy ?? '—'} />
         <Row label="Session" value={trade.session ?? '—'} />
+        {trade.tradingViewUrl && (
+          <Row label="TradingView" value={
+            <a href={trade.tradingViewUrl} target="_blank" rel="noopener noreferrer"
+              className="flex items-center gap-1 text-brand-400 hover:text-brand-300 transition-colors">
+              <ExternalLink className="w-3.5 h-3.5" /> Voir le graphique
+            </a>
+          } />
+        )}
         <Row label="Setup Rating" value={<RatingStars value={trade.setupRating} />} />
         {trade.setupGrade && (
           <Row label="Grade" value={

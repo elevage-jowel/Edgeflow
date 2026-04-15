@@ -61,6 +61,7 @@ export interface Trade {
 
   playbookId?: string
   strategy?: string
+  tradingViewUrl?: string
   tags: string[]
   notes: string
   screenshotUrls: string[]
