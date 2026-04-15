@@ -170,6 +170,20 @@ export function computeAnalytics(trades: Trade[]): AnalyticsData {
   }
   const byHour = Array.from(hourMap.entries()).map(([hour, v]) => ({ hour, pnl: v.pnl, trades: v.trades, winRate: v.trades > 0 ? (v.wins / v.trades) * 100 : 0 })).sort((a, b) => a.hour - b.hour)
 
+  // Day × hour heatmap
+  const dayHourMap = new Map<string, { pnl: number; trades: number; wins: number }>()
+  for (const t of closed) {
+    const dow = getDay(parseISO(t.entryDate)) // 0=Sun..6=Sat
+    const h = getHours(parseISO(t.entryDate))
+    const key = `${dow}:${h}`
+    const prev = dayHourMap.get(key) ?? { pnl: 0, trades: 0, wins: 0 }
+    dayHourMap.set(key, { pnl: prev.pnl + (t.netPnl ?? 0), trades: prev.trades + 1, wins: prev.wins + ((t.netPnl ?? 0) > 0 ? 1 : 0) })
+  }
+  const byDayHour = Array.from(dayHourMap.entries()).map(([key, v]) => {
+    const [day, hour] = key.split(':').map(Number)
+    return { day, hour, pnl: v.pnl, trades: v.trades, winRate: v.trades > 0 ? (v.wins / v.trades) * 100 : 0 }
+  })
+
   // By session
   const sessionMap = new Map<string, { pnl: number; trades: number; wins: number }>()
   for (const t of closed) {
@@ -274,5 +288,6 @@ export function computeAnalytics(trades: Trade[]): AnalyticsData {
     lossDistribution: buildDist(losses, false),
     bySetup,
     byEmotion,
+    byDayHour,
   }
 }

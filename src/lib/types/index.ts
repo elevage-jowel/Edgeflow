@@ -392,4 +392,5 @@ export interface AnalyticsData {
   lossDistribution: { range: string; count: number }[]
   bySetup: { setup: string; pnl: number; trades: number; winRate: number; avgR: number }[]
   byEmotion: { emotion: string; pnl: number; trades: number; winRate: number; avgPnl: number }[]
+  byDayHour: { day: number; hour: number; pnl: number; trades: number; winRate: number }[]
 }

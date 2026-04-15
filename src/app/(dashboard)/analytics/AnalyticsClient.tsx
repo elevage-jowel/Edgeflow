@@ -8,11 +8,12 @@ import { DayOfWeekChart } from '@/components/charts/DayOfWeekChart'
 import { MonthlyPnLChart } from '@/components/charts/MonthlyPnLChart'
 import { WinRateDonut } from '@/components/charts/WinRateDonut'
 import { EmotionPnLChart } from '@/components/charts/EmotionPnLChart'
+import { HeatmapChart } from '@/components/charts/HeatmapChart'
 import { cn } from '@/lib/utils/cn'
 import { formatCurrency, formatWinRate, formatR, formatPnl } from '@/lib/utils/formatters'
 
 const ranges: TimeRange[] = ['1W', '1M', '3M', '6M', 'YTD', '1Y', 'ALL']
-const tabs = ['Vue d\'ensemble', 'Par symbole', 'Par setup', 'Par jour', 'Par session', 'Par émotion', 'Distribution']
+const tabs = ['Vue d\'ensemble', 'Par symbole', 'Par setup', 'Par jour', 'Par heure', 'Par session', 'Par émotion', 'Distribution']
 
 interface MetricItemProps { label: string; value: string; sub?: string; color?: string }
 function MetricItem({ label, value, sub, color }: MetricItemProps) {
@@ -29,6 +30,7 @@ export default function AnalyticsClient() {
   const { trades } = useTradeStore()
   const [range, setRange] = useState<TimeRange>('3M')
   const [tab, setTab] = useState('Vue d\'ensemble')
+  const [heatMode, setHeatMode] = useState<'pnl' | 'winRate' | 'trades'>('pnl')
   const a = useAnalytics(trades, range)
 
   return (
@@ -161,6 +163,72 @@ export default function AnalyticsClient() {
               </tbody>
             </table>
           </div>
+        </div>
+      )}
+
+      {tab === 'Par heure' && (
+        <div className="space-y-4">
+          <div className="flex items-center justify-between">
+            <div>
+              <h3 className="text-sm font-semibold text-white">Heatmap jour × heure</h3>
+              <p className="text-xs text-slate-500 mt-0.5">Visualise tes meilleures plages horaires par jour de la semaine</p>
+            </div>
+            <div className="flex gap-1 bg-surface-700 border border-surface-500 rounded-lg p-0.5">
+              {(['pnl', 'winRate', 'trades'] as const).map(m => (
+                <button key={m} onClick={() => setHeatMode(m)} className={cn('px-3 py-1 rounded text-xs font-medium transition-all', heatMode === m ? 'bg-surface-500 text-white' : 'text-slate-400 hover:text-white')}>
+                  {m === 'pnl' ? 'P&L' : m === 'winRate' ? 'Win Rate' : 'Trades'}
+                </button>
+              ))}
+            </div>
+          </div>
+          <div className="bg-surface-800 border border-surface-500 rounded-2xl p-5">
+            {a.byDayHour.length === 0 ? (
+              <div className="h-40 flex items-center justify-center text-slate-500 text-sm">Aucune donnée — ajoute des trades pour voir la heatmap</div>
+            ) : (
+              <HeatmapChart data={a.byDayHour} mode={heatMode} />
+            )}
+          </div>
+
+          {/* Best/worst hour summary */}
+          {a.bestHour !== null && (
+            <div className="grid grid-cols-2 gap-4">
+              <div className="bg-emerald-500/10 border border-emerald-500/20 rounded-2xl p-4">
+                <div className="text-xs text-emerald-400 font-medium mb-1">Meilleure heure</div>
+                <div className="text-2xl font-bold font-mono text-emerald-400">{a.bestHour}h00</div>
+                <div className="text-xs text-slate-500 mt-1">Heure avec le meilleur P&L cumulé</div>
+              </div>
+              <div className="bg-red-500/10 border border-red-500/20 rounded-2xl p-4">
+                <div className="text-xs text-red-400 font-medium mb-1">Pire heure</div>
+                <div className="text-2xl font-bold font-mono text-red-400">{a.worstHour}h00</div>
+                <div className="text-xs text-slate-500 mt-1">Heure avec le pire P&L cumulé</div>
+              </div>
+            </div>
+          )}
+
+          {/* Hour table */}
+          {a.byHour.length > 0 && (
+            <div className="bg-surface-800 border border-surface-500 rounded-2xl overflow-hidden">
+              <table className="w-full">
+                <thead>
+                  <tr className="border-b border-surface-500">
+                    {['Heure', 'Trades', 'Taux de réussite', 'Net P&L'].map(h => (
+                      <th key={h} className="px-5 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">{h}</th>
+                    ))}
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-surface-600">
+                  {a.byHour.map(h => (
+                    <tr key={h.hour} className="hover:bg-surface-700/40">
+                      <td className="px-5 py-3 text-sm font-medium text-white font-mono">{String(h.hour).padStart(2, '0')}h00</td>
+                      <td className="px-5 py-3 text-sm text-slate-300 font-mono">{h.trades}</td>
+                      <td className="px-5 py-3 text-sm font-mono"><span className={h.winRate >= 50 ? 'text-emerald-400' : 'text-red-400'}>{h.winRate.toFixed(0)}%</span></td>
+                      <td className="px-5 py-3 text-sm font-bold font-mono"><span className={h.pnl >= 0 ? 'text-emerald-400' : 'text-red-400'}>{formatPnl(h.pnl)}</span></td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
         </div>
       )}
 
