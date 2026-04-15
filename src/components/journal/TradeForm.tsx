@@ -19,6 +19,16 @@ import { DEMO_MODE } from '@/lib/demo'
 
 // ─── Static options ───────────────────────────────────────────────────────────
 
+const SYMBOLS_BY_CLASS: Record<string, string[]> = {
+  forex:       ['EURUSD','GBPUSD','USDJPY','USDCHF','AUDUSD','NZDUSD','USDCAD','EURGBP','EURJPY','GBPJPY','EURAUD','GBPAUD','CADJPY','CHFJPY','AUDCAD','AUDCHF','AUDNZD','EURCAD','EURNZD'],
+  commodities: ['XAUUSD','XAGUSD','USOIL','UKOIL','NATGAS','COPPER','PLATINUM','PALLADIUM'],
+  indices:     ['NAS100','US30','SPX500','UK100','GER40','JPN225','AUS200','HK50','FRA40','ESP35'],
+  crypto:      ['BTCUSD','ETHUSD','BNBUSD','SOLUSD','XRPUSD','ADAUSD','DOTUSD','LINKUSD','MATICUSD','AVAXUSD'],
+  stocks:      ['AAPL','TSLA','NVDA','AMZN','MSFT','META','GOOGL','SPY','QQQ','AMD','NFLX','BABA','UBER','COIN'],
+  futures:     ['ES','NQ','YM','RTY','CL','GC','SI','ZB','ZN','ZC','ZS','ZW','HG','NG'],
+  options:     ['AAPL','SPY','QQQ','TSLA','NVDA','AMZN','MSFT'],
+}
+
 const SETUPS = [
   'Liquidity Sweep', 'Breakout', 'Retest', 'Reversal', 'Trend Continuation',
   'Range Reaction', 'News Trade', 'SMT Divergence', 'ICT Model', 'VWAP Rejection',
@@ -512,7 +522,18 @@ export function TradeForm({ trade, onClose }: TradeFormProps) {
         <div className="grid grid-cols-2 gap-3">
           <div>
             <label className={lbl}>Instrument *</label>
-            <input {...register('symbol')} placeholder="EUR/USD, XAUUSD, NAS100…" className={`${inp} uppercase`} />
+            <input
+              {...register('symbol')}
+              list="symbol-suggestions"
+              placeholder="EURUSD, XAUUSD, NAS100…"
+              autoComplete="off"
+              className={`${inp} uppercase`}
+            />
+            <datalist id="symbol-suggestions">
+              {(SYMBOLS_BY_CLASS[watch('assetClass') ?? 'forex'] ?? []).map(s => (
+                <option key={s} value={s} />
+              ))}
+            </datalist>
             {errors.symbol && <p className={err}>{errors.symbol.message}</p>}
           </div>
           <div>
