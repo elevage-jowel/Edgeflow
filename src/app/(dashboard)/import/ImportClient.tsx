@@ -10,23 +10,159 @@ import { Button } from '@/components/ui/Button'
 import { Badge } from '@/components/ui/Badge'
 import { cn } from '@/lib/utils/cn'
 import toast from 'react-hot-toast'
-import { Upload, FileText, ArrowRight, CheckCircle2, AlertTriangle, X } from 'lucide-react'
+import { Upload, FileText, ArrowRight, CheckCircle2, AlertTriangle, X, ChevronDown } from 'lucide-react'
 
 type Step = 'upload' | 'mapping' | 'preview' | 'done'
 
 const EDGEFLOW_FIELDS = [
-  { key: 'symbol', label: 'Symbol', required: true },
-  { key: 'entryDate', label: 'Entry Date', required: true },
-  { key: 'entryPrice', label: 'Entry Price', required: true },
-  { key: 'exitDate', label: 'Exit Date', required: false },
-  { key: 'exitPrice', label: 'Exit Price', required: false },
-  { key: 'quantity', label: 'Quantity', required: true },
-  { key: 'direction', label: 'Direction (long/short)', required: false },
-  { key: 'assetClass', label: 'Asset Class', required: false },
-  { key: 'netPnl', label: 'Net P&L', required: false },
-  { key: 'commission', label: 'Commission', required: false },
-  { key: 'notes', label: 'Notes', required: false },
+  { key: 'symbol',    label: 'Symbole',              required: true  },
+  { key: 'entryDate', label: 'Date d\'entrée',        required: true  },
+  { key: 'entryPrice',label: 'Prix d\'entrée',        required: true  },
+  { key: 'exitDate',  label: 'Date de sortie',        required: false },
+  { key: 'exitPrice', label: 'Prix de sortie',        required: false },
+  { key: 'quantity',  label: 'Quantité',              required: true  },
+  { key: 'direction', label: 'Direction (long/short)',required: false },
+  { key: 'assetClass',label: 'Classe d\'actif',       required: false },
+  { key: 'netPnl',    label: 'Net P&L',               required: false },
+  { key: 'commission',label: 'Commission',            required: false },
+  { key: 'notes',     label: 'Notes',                 required: false },
 ]
+
+// ── Broker presets ────────────────────────────────────────────────────────────
+interface BrokerPreset {
+  id: string
+  name: string
+  mapping: Record<string, string>
+}
+
+const BROKER_PRESETS: BrokerPreset[] = [
+  {
+    id: 'tradovate',
+    name: 'Tradovate',
+    mapping: {
+      symbol:     'Symbol',
+      entryDate:  'Buy Fill Time',
+      entryPrice: 'Avg Buy Price',
+      exitDate:   'Sell Fill Time',
+      exitPrice:  'Avg Sell Price',
+      quantity:   'Qty',
+      netPnl:     'P&L',
+      commission: 'Comm',
+    },
+  },
+  {
+    id: 'mt4',
+    name: 'MetaTrader 4/5',
+    mapping: {
+      symbol:     'Symbol',
+      entryDate:  'Open Time',
+      entryPrice: 'Open Price',
+      exitDate:   'Close Time',
+      exitPrice:  'Close Price',
+      quantity:   'Volume',
+      direction:  'Type',
+      netPnl:     'Profit',
+      commission: 'Commission',
+    },
+  },
+  {
+    id: 'ibkr',
+    name: 'Interactive Brokers',
+    mapping: {
+      symbol:     'Symbol',
+      entryDate:  'Date/Time',
+      entryPrice: 'T. Price',
+      quantity:   'Quantity',
+      netPnl:     'Realized P/L',
+      commission: 'Comm/Fee',
+    },
+  },
+  {
+    id: 'thinkorswim',
+    name: 'ThinkorSwim / Schwab',
+    mapping: {
+      symbol:     'Symbol',
+      entryDate:  'Date',
+      entryPrice: 'Price',
+      quantity:   'Qty',
+      direction:  'Side',
+      netPnl:     'P/L Open',
+      commission: 'Commissions',
+    },
+  },
+  {
+    id: 'ninjatrader',
+    name: 'NinjaTrader',
+    mapping: {
+      symbol:     'Instrument',
+      entryDate:  'Entry time',
+      entryPrice: 'Entry price',
+      exitDate:   'Exit time',
+      exitPrice:  'Exit price',
+      quantity:   'Qty',
+      direction:  'Market pos.',
+      netPnl:     'Profit',
+      commission: 'Commission',
+    },
+  },
+  {
+    id: 'rithmic',
+    name: 'Rithmic / R Trader',
+    mapping: {
+      symbol:     'Symbol',
+      entryDate:  'Entry Time',
+      entryPrice: 'Entry Price',
+      exitDate:   'Close Time',
+      exitPrice:  'Close Price',
+      quantity:   'Qty',
+      direction:  'Side',
+      netPnl:     'PnL',
+      commission: 'Commission',
+    },
+  },
+  {
+    id: 'tradezero',
+    name: 'TradeZero',
+    mapping: {
+      symbol:     'Symbol',
+      entryDate:  'Trade Date',
+      entryPrice: 'Price',
+      quantity:   'Quantity',
+      direction:  'Side',
+      netPnl:     'Net Amount',
+      commission: 'Commission',
+    },
+  },
+  {
+    id: 'custom',
+    name: 'CSV personnalisé',
+    mapping: {},
+  },
+]
+
+const SYNONYMS: Record<string, string[]> = {
+  symbol:     ['symbol', 'ticker', 'instrument', 'contract'],
+  entryDate:  ['entrydate', 'open date', 'opendate', 'entry date', 'buy fill time', 'open time', 'date/time', 'date', 'entry time'],
+  entryPrice: ['entryprice', 'entry price', 'open price', 'openprice', 'avg price', 'avg buy price', 't. price', 'price', 'entry price'],
+  exitDate:   ['exitdate', 'close date', 'closedate', 'exit date', 'sell fill time', 'close time', 'exit time'],
+  exitPrice:  ['exitprice', 'exit price', 'close price', 'closeprice', 'avg sell price', 'exit price'],
+  quantity:   ['quantity', 'qty', 'size', 'shares', 'contracts', 'lots', 'volume'],
+  direction:  ['direction', 'side', 'type', 'action', 'market pos.'],
+  netPnl:     ['netpnl', 'net p&l', 'pnl', 'profit/loss', 'profit', 'p/l', 'realized p/l', 'p&l', 'p/l open'],
+  commission: ['commission', 'fee', 'fees', 'cost', 'comm', 'comm/fee', 'commissions'],
+  notes:      ['notes', 'comment', 'description'],
+}
+
+function autoMap(fields: string[]): Record<string, string> {
+  const auto: Record<string, string> = {}
+  const lf = fields.map(f => f.toLowerCase())
+  EDGEFLOW_FIELDS.forEach(ef => {
+    const syns = SYNONYMS[ef.key] ?? []
+    const idx = lf.findIndex(l => syns.map(s => s.replace(/\s+/g, '')).includes(l.replace(/\s+/g, '')))
+    if (idx >= 0) auto[ef.key] = fields[idx]
+  })
+  return auto
+}
 
 function parseRow(row: Record<string, string>, mapping: Record<string, string>, userId: string): Partial<Trade> | null {
   const get = (field: string) => {
@@ -63,7 +199,12 @@ function parseRow(row: Record<string, string>, mapping: Record<string, string>, 
     status: exitPrice ? 'closed' : 'open',
     outcome: computedNet !== undefined ? (computedNet > 0 ? 'win' : computedNet < 0 ? 'loss' : 'breakeven') : undefined,
     entryDate: entryDateParsed.toISOString(),
-    exitDate: (() => { const d = get('exitDate'); if (!d) return undefined; const p = new Date(d); return isNaN(p.getTime()) ? undefined : p.toISOString() })(),
+    exitDate: (() => {
+      const d = get('exitDate')
+      if (!d) return undefined
+      const p = new Date(d)
+      return isNaN(p.getTime()) ? undefined : p.toISOString()
+    })(),
     entryPrice,
     exitPrice,
     quantity,
@@ -90,6 +231,27 @@ export default function ImportClient() {
   const [parsed, setParsed] = useState<(Partial<Trade> | null)[]>([])
   const [importing, setImporting] = useState(false)
   const [importedCount, setImportedCount] = useState(0)
+  const [selectedPreset, setSelectedPreset] = useState<string>('custom')
+
+  const applyPreset = (presetId: string, fields: string[]) => {
+    setSelectedPreset(presetId)
+    const preset = BROKER_PRESETS.find(p => p.id === presetId)
+    if (!preset) return
+    if (presetId === 'custom') {
+      setMapping(autoMap(fields))
+      return
+    }
+    // Match preset columns against actual CSV headers (case-insensitive)
+    const lf = fields.map(f => f.toLowerCase())
+    const newMapping: Record<string, string> = {}
+    EDGEFLOW_FIELDS.forEach(ef => {
+      const presetCol = preset.mapping[ef.key]
+      if (!presetCol) return
+      const idx = lf.indexOf(presetCol.toLowerCase())
+      if (idx >= 0) newMapping[ef.key] = fields[idx]
+    })
+    setMapping(newMapping)
+  }
 
   const onDrop = useCallback((accepted: File[]) => {
     const f = accepted[0]
@@ -99,36 +261,20 @@ export default function ImportClient() {
       header: true,
       skipEmptyLines: true,
       complete: ({ data, meta }) => {
-        setHeaders(meta.fields ?? [])
-        setRows(data as Record<string, string>[])
-        // Auto-map common column names
-        const auto: Record<string, string> = {}
         const fields = meta.fields ?? []
-        const lf = fields.map(f => f.toLowerCase())
-        EDGEFLOW_FIELDS.forEach(ef => {
-          const synonyms: Record<string, string[]> = {
-            symbol: ['symbol', 'ticker', 'instrument'],
-            entryDate: ['entrydate', 'open date', 'opendate', 'entry date', 'date'],
-            entryPrice: ['entryprice', 'entry price', 'open price', 'openprice', 'avg price'],
-            exitDate: ['exitdate', 'close date', 'closedate', 'exit date'],
-            exitPrice: ['exitprice', 'exit price', 'close price', 'closeprice'],
-            quantity: ['quantity', 'qty', 'size', 'shares', 'contracts', 'lots'],
-            direction: ['direction', 'side', 'type', 'action'],
-            netPnl: ['netpnl', 'net p&l', 'pnl', 'profit/loss', 'profit', 'p/l', 'realized p/l'],
-            commission: ['commission', 'fee', 'fees', 'cost'],
-            notes: ['notes', 'comment', 'description'],
-          }
-          const syns = synonyms[ef.key] ?? []
-          const idx = lf.findIndex(l => syns.map(s => s.replace(/\s+/g, '')).includes(l.replace(/\s+/g, '')))
-          if (idx >= 0) auto[ef.key] = fields[idx]
-        })
-        setMapping(auto)
+        setHeaders(fields)
+        setRows(data as Record<string, string>[])
+        setMapping(autoMap(fields))
         setStep('mapping')
       },
     })
   }, [])
 
-  const { getRootProps, getInputProps, isDragActive } = useDropzone({ onDrop, accept: { 'text/csv': ['.csv'], 'application/vnd.ms-excel': ['.csv'] }, maxFiles: 1 })
+  const { getRootProps, getInputProps, isDragActive } = useDropzone({
+    onDrop,
+    accept: { 'text/csv': ['.csv'], 'application/vnd.ms-excel': ['.csv'] },
+    maxFiles: 1,
+  })
 
   const handlePreview = () => {
     if (!user) return
@@ -165,26 +311,28 @@ export default function ImportClient() {
     setMapping({})
     setParsed([])
     setImportedCount(0)
+    setSelectedPreset('custom')
   }
 
   const validCount = parsed.filter(Boolean).length
   const errorCount = parsed.filter(p => p === null).length
 
-  const steps = ['Upload', 'Mapping', 'Preview', 'Complete']
+  const STEPS = ['Fichier', 'Colonnes', 'Aperçu', 'Terminé']
   const stepIndex = { upload: 0, mapping: 1, preview: 2, done: 3 }[step]
 
   return (
     <div className="max-w-3xl space-y-6">
       <div>
-        <h2 className="text-lg font-bold text-white">Import Trades</h2>
-        <p className="text-sm text-slate-500">Upload a CSV from any broker or prop firm</p>
+        <h2 className="text-lg font-bold text-white">Importer des trades</h2>
+        <p className="text-sm text-slate-500">Importe un CSV depuis n'importe quel courtier ou prop firm</p>
       </div>
 
       {/* Step indicator */}
       <div className="flex items-center gap-2">
-        {steps.map((s, i) => (
+        {STEPS.map((s, i) => (
           <div key={s} className="flex items-center gap-2">
-            <div className={cn('w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold border-2 transition-all',
+            <div className={cn(
+              'w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold border-2 transition-all',
               i < stepIndex ? 'bg-brand-600 border-brand-600 text-white' :
               i === stepIndex ? 'border-brand-500 text-brand-400' :
               'border-surface-500 text-slate-600'
@@ -192,42 +340,77 @@ export default function ImportClient() {
               {i < stepIndex ? <CheckCircle2 className="w-4 h-4" /> : i + 1}
             </div>
             <span className={cn('text-xs font-medium', i === stepIndex ? 'text-white' : 'text-slate-500')}>{s}</span>
-            {i < steps.length - 1 && <div className="w-8 h-px bg-surface-500" />}
+            {i < STEPS.length - 1 && <div className="w-8 h-px bg-surface-500" />}
           </div>
         ))}
       </div>
 
+      {/* Step 1 — Upload */}
       {step === 'upload' && (
-        <div {...getRootProps()} className={cn(
-          'border-2 border-dashed rounded-2xl p-12 text-center cursor-pointer transition-all',
-          isDragActive ? 'border-brand-500 bg-brand-500/10' : 'border-surface-400 hover:border-brand-500/50 hover:bg-surface-800'
-        )}>
-          <input {...getInputProps()} />
-          <div className="w-16 h-16 rounded-2xl bg-surface-700 flex items-center justify-center mx-auto mb-4">
-            <Upload className="w-8 h-8 text-brand-400" />
+        <>
+          <div {...getRootProps()} className={cn(
+            'border-2 border-dashed rounded-2xl p-12 text-center cursor-pointer transition-all',
+            isDragActive ? 'border-brand-500 bg-brand-500/10' : 'border-surface-400 hover:border-brand-500/50 hover:bg-surface-800'
+          )}>
+            <input {...getInputProps()} />
+            <div className="w-16 h-16 rounded-2xl bg-surface-700 flex items-center justify-center mx-auto mb-4">
+              <Upload className="w-8 h-8 text-brand-400" />
+            </div>
+            <h3 className="text-base font-semibold text-white mb-2">
+              {isDragActive ? 'Dépose ici !' : 'Dépose ton fichier CSV'}
+            </h3>
+            <p className="text-sm text-slate-500 mb-4">Tradovate, MT4/MT5, IBKR, ThinkorSwim, NinjaTrader et tout CSV personnalisé</p>
+            <Button variant="outline" size="sm">Parcourir les fichiers</Button>
           </div>
-          <h3 className="text-base font-semibold text-white mb-2">{isDragActive ? 'Drop it here' : 'Drop your CSV file'}</h3>
-          <p className="text-sm text-slate-500 mb-4">Supports TD Ameritrade, IBKR, Webull, Tradovate and custom CSV formats</p>
-          <Button variant="outline" size="sm">Browse Files</Button>
-        </div>
+
+          {/* Broker chips */}
+          <div className="bg-surface-800 border border-surface-500 rounded-xl p-4">
+            <div className="text-xs font-medium text-slate-500 mb-3 uppercase tracking-wide">Courtiers supportés</div>
+            <div className="flex flex-wrap gap-2">
+              {BROKER_PRESETS.map(p => (
+                <Badge key={p.id} variant="default">{p.name}</Badge>
+              ))}
+            </div>
+          </div>
+        </>
       )}
 
+      {/* Step 2 — Mapping */}
       {step === 'mapping' && (
         <div className="bg-surface-800 border border-surface-500 rounded-2xl p-6 space-y-5">
-          <div className="flex items-center gap-3 mb-4">
-            <FileText className="w-5 h-5 text-brand-400" />
-            <div>
-              <div className="text-sm font-semibold text-white">{file?.name}</div>
-              <div className="text-xs text-slate-500">{rows.length} rows detected</div>
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <FileText className="w-5 h-5 text-brand-400" />
+              <div>
+                <div className="text-sm font-semibold text-white">{file?.name}</div>
+                <div className="text-xs text-slate-500">{rows.length} lignes détectées</div>
+              </div>
+            </div>
+
+            {/* Preset selector */}
+            <div className="relative">
+              <label className="text-xs text-slate-500 block mb-1">Preset courtier</label>
+              <div className="relative">
+                <select
+                  value={selectedPreset}
+                  onChange={e => applyPreset(e.target.value, headers)}
+                  className="appearance-none pl-3 pr-8 py-2 bg-surface-700 border border-surface-500 rounded-lg text-sm text-white focus:outline-none focus:border-brand-500 cursor-pointer"
+                >
+                  {BROKER_PRESETS.map(p => (
+                    <option key={p.id} value={p.id}>{p.name}</option>
+                  ))}
+                </select>
+                <ChevronDown className="absolute right-2 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 pointer-events-none" />
+              </div>
             </div>
           </div>
 
-          <p className="text-sm text-slate-400">Map your CSV columns to EdgeFlow fields:</p>
+          <p className="text-sm text-slate-400">Associe les colonnes de ton CSV aux champs Edgeflow :</p>
 
           <div className="space-y-3">
             {EDGEFLOW_FIELDS.map(field => (
               <div key={field.key} className="flex items-center gap-4">
-                <div className="w-48 shrink-0">
+                <div className="w-52 shrink-0">
                   <span className="text-sm text-slate-300">{field.label}</span>
                   {field.required && <span className="text-red-400 ml-1">*</span>}
                 </div>
@@ -236,31 +419,35 @@ export default function ImportClient() {
                   onChange={e => setMapping(prev => ({ ...prev, [field.key]: e.target.value }))}
                   className="flex-1 px-3 py-2 bg-surface-700 border border-surface-500 rounded-lg text-sm text-white focus:outline-none focus:border-brand-500"
                 >
-                  <option value="">— Skip —</option>
+                  <option value="">— Ignorer —</option>
                   {headers.map(h => <option key={h} value={h}>{h}</option>)}
                 </select>
+                {mapping[field.key] && (
+                  <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0" />
+                )}
               </div>
             ))}
           </div>
 
           <div className="flex justify-end gap-3 pt-2">
-            <Button variant="ghost" onClick={reset}>Back</Button>
-            <Button variant="primary" iconRight={ArrowRight} onClick={handlePreview}>Preview Import</Button>
+            <Button variant="ghost" onClick={reset}>Retour</Button>
+            <Button variant="primary" iconRight={ArrowRight} onClick={handlePreview}>Aperçu de l'import</Button>
           </div>
         </div>
       )}
 
+      {/* Step 3 — Preview */}
       {step === 'preview' && (
         <div className="space-y-4">
           <div className="flex items-center gap-4">
             <div className="flex items-center gap-2 bg-emerald-500/10 border border-emerald-500/20 rounded-xl px-4 py-2">
               <CheckCircle2 className="w-4 h-4 text-emerald-400" />
-              <span className="text-sm text-emerald-400">{validCount} valid trades</span>
+              <span className="text-sm text-emerald-400">{validCount} trade{validCount > 1 ? 's' : ''} valide{validCount > 1 ? 's' : ''}</span>
             </div>
             {errorCount > 0 && (
               <div className="flex items-center gap-2 bg-red-500/10 border border-red-500/20 rounded-xl px-4 py-2">
                 <AlertTriangle className="w-4 h-4 text-red-400" />
-                <span className="text-sm text-red-400">{errorCount} invalid rows</span>
+                <span className="text-sm text-red-400">{errorCount} ligne{errorCount > 1 ? 's' : ''} invalide{errorCount > 1 ? 's' : ''}</span>
               </div>
             )}
           </div>
@@ -270,7 +457,7 @@ export default function ImportClient() {
               <table className="w-full min-w-max">
                 <thead className="sticky top-0 bg-surface-800">
                   <tr className="border-b border-surface-500">
-                    {['#', 'Symbol', 'Entry Date', 'Entry', 'Exit', 'Qty', 'P&L', 'Status'].map(h => (
+                    {['#', 'Symbole', 'Date entrée', 'Entrée', 'Sortie', 'Qté', 'P&L', 'Statut'].map(h => (
                       <th key={h} className="px-4 py-3 text-left text-xs font-medium text-slate-500">{h}</th>
                     ))}
                   </tr>
@@ -280,8 +467,10 @@ export default function ImportClient() {
                     <tr key={i} className={cn('transition-colors', t === null ? 'bg-red-500/5' : 'hover:bg-surface-700/40')}>
                       <td className="px-4 py-2.5 text-xs text-slate-500">{i + 1}</td>
                       {t === null ? (
-                        <td colSpan={7} className="px-4 py-2.5 text-xs text-red-400 flex items-center gap-2">
-                          <X className="w-3.5 h-3.5" /> Invalid row — missing required fields
+                        <td colSpan={7} className="px-4 py-2.5">
+                          <div className="flex items-center gap-2 text-xs text-red-400">
+                            <X className="w-3.5 h-3.5" /> Ligne invalide — champs requis manquants
+                          </div>
                         </td>
                       ) : (
                         <>
@@ -312,36 +501,25 @@ export default function ImportClient() {
           </div>
 
           <div className="flex justify-end gap-3">
-            <Button variant="ghost" onClick={() => setStep('mapping')}>Back</Button>
+            <Button variant="ghost" onClick={() => setStep('mapping')}>Retour</Button>
             <Button variant="primary" loading={importing} onClick={handleImport} disabled={validCount === 0}>
-              Import {validCount} Trades
+              Importer {validCount} trade{validCount > 1 ? 's' : ''}
             </Button>
           </div>
         </div>
       )}
 
+      {/* Step 4 — Done */}
       {step === 'done' && (
         <div className="bg-surface-800 border border-surface-500 rounded-2xl p-12 text-center">
           <div className="w-16 h-16 bg-emerald-500/10 rounded-full flex items-center justify-center mx-auto mb-4">
             <CheckCircle2 className="w-8 h-8 text-emerald-400" />
           </div>
-          <h3 className="text-xl font-bold text-white mb-2">Import Complete!</h3>
-          <p className="text-slate-400 mb-6">{importedCount} trades have been added to your journal.</p>
+          <h3 className="text-xl font-bold text-white mb-2">Import terminé !</h3>
+          <p className="text-slate-400 mb-6">{importedCount} trade{importedCount > 1 ? 's ont été ajoutés' : ' a été ajouté'} à ton journal.</p>
           <div className="flex items-center justify-center gap-3">
-            <Button variant="ghost" onClick={reset}>Import Another</Button>
+            <Button variant="ghost" onClick={reset}>Importer un autre fichier</Button>
             <Button variant="primary" onClick={() => router.push('/journal')}>Voir le journal</Button>
-          </div>
-        </div>
-      )}
-
-      {/* Supported formats */}
-      {step === 'upload' && (
-        <div className="bg-surface-800 border border-surface-500 rounded-xl p-4">
-          <div className="text-xs font-medium text-slate-500 mb-3">Supported Formats</div>
-          <div className="flex flex-wrap gap-2">
-            {['TD Ameritrade', 'Interactive Brokers', 'Webull', 'Tradovate', 'TradeStation', 'Schwab', 'Generic CSV'].map(f => (
-              <Badge key={f} variant="default">{f}</Badge>
-            ))}
           </div>
         </div>
       )}
