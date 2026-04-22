@@ -2,6 +2,9 @@
 import { AuthGuard } from '@/components/layout/AuthGuard'
 import { Sidebar } from '@/components/layout/Sidebar'
 import { TopBar } from '@/components/layout/TopBar'
+import { KeyboardShortcuts } from '@/components/layout/KeyboardShortcuts'
+import { CommandPalette } from '@/components/ui/CommandPalette'
+import { PageTransition } from '@/components/layout/PageTransition'
 import { useUIStore } from '@/lib/stores/uiStore'
 import { useTradesSubscription } from '@/lib/hooks/useTrades'
 
@@ -31,10 +34,14 @@ function DashboardContent({ children }: { children: React.ReactNode }) {
         <TopBar />
         <main className="flex-1 overflow-y-auto">
           <div className="p-6">
-            {children}
+            <PageTransition>{children}</PageTransition>
           </div>
         </main>
       </div>
+
+      {/* Global overlays */}
+      <CommandPalette />
+      <KeyboardShortcuts />
     </div>
   )
 }

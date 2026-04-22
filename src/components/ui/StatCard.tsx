@@ -1,3 +1,5 @@
+'use client'
+import { motion } from 'framer-motion'
 import { cn } from '@/lib/utils/cn'
 import { LucideIcon } from 'lucide-react'
 
@@ -11,18 +13,24 @@ interface StatCardProps {
   valueColor?: string
   className?: string
   loading?: boolean
+  index?: number
 }
 
-export function StatCard({ title, value, sub, trend, icon: Icon, iconColor = 'text-brand-400', valueColor, className, loading }: StatCardProps) {
+export function StatCard({ title, value, sub, trend, icon: Icon, iconColor = 'text-brand-400', valueColor, className, loading, index = 0 }: StatCardProps) {
   return (
-    <div className={cn(
-      'bg-surface-800 border border-surface-500 rounded-2xl p-5 hover:border-surface-400 transition-all',
-      className
-    )}>
+    <motion.div
+      initial={{ opacity: 0, y: 12 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.25, delay: index * 0.05, ease: 'easeOut' }}
+      className={cn(
+        'bg-surface-800 border border-surface-500 rounded-2xl p-5 hover:border-surface-400 transition-colors',
+        className
+      )}
+    >
       <div className="flex items-start justify-between mb-3">
         <span className="text-xs font-medium text-slate-500 uppercase tracking-wider">{title}</span>
         {Icon && (
-          <div className={cn('w-8 h-8 rounded-lg flex items-center justify-center bg-surface-700', iconColor?.includes('emerald') ? 'bg-emerald-500/10' : iconColor?.includes('red') ? 'bg-red-500/10' : 'bg-brand-500/10')}>
+          <div className={cn('w-8 h-8 rounded-lg flex items-center justify-center', iconColor?.includes('emerald') ? 'bg-emerald-500/10' : iconColor?.includes('red') ? 'bg-red-500/10' : 'bg-brand-500/10')}>
             <Icon className={cn('w-4 h-4', iconColor)} />
           </div>
         )}
@@ -47,6 +55,6 @@ export function StatCard({ title, value, sub, trend, icon: Icon, iconColor = 'te
           )}
         </>
       )}
-    </div>
+    </motion.div>
   )
 }

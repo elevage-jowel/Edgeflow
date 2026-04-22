@@ -1,7 +1,7 @@
 'use client'
 import { useState, useRef, useEffect } from 'react'
 import { usePathname, useRouter } from 'next/navigation'
-import { Menu, LogOut, User, Settings, ChevronDown } from 'lucide-react'
+import { Menu, LogOut, User, Settings, ChevronDown, Search } from 'lucide-react'
 import { useAuthStore } from '@/lib/stores/authStore'
 import { signOut } from '@/lib/firebase/auth'
 import { useUIStore } from '@/lib/stores/uiStore'
@@ -33,7 +33,7 @@ export function TopBar() {
   const pathname = usePathname()
   const router = useRouter()
   const { user, userProfile } = useAuthStore()
-  const { setMobileSidebar } = useUIStore()
+  const { setMobileSidebar, setCmdPalette } = useUIStore()
   const [menuOpen, setMenuOpen] = useState(false)
   const menuRef = useRef<HTMLDivElement>(null)
 
@@ -79,7 +79,17 @@ export function TopBar() {
       </div>
 
       {/* Right section */}
-      <div className="flex items-center gap-1.5">
+      <div className="flex items-center gap-2">
+        {/* Cmd+K search trigger */}
+        <button
+          onClick={() => setCmdPalette(true)}
+          className="hidden sm:flex items-center gap-2 px-3 py-1.5 rounded-lg bg-surface-700/60 border border-surface-500/60 hover:border-surface-400 text-slate-500 hover:text-slate-300 text-xs transition-all"
+        >
+          <Search className="w-3.5 h-3.5" />
+          <span className="hidden md:block">Rechercher</span>
+          <kbd className="font-mono text-[10px] bg-surface-600 border border-surface-500 rounded px-1">⌘K</kbd>
+        </button>
+
         {/* Profile menu */}
         <div className="relative" ref={menuRef}>
           <button
