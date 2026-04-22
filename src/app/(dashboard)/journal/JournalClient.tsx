@@ -96,21 +96,21 @@ export default function JournalClient() {
         <div className="flex items-center gap-6">
           <div>
             <div className="text-2xl font-bold font-mono text-white">{allTrades.length}</div>
-            <div className="text-xs text-slate-500">Total Trades</div>
+            <div className="text-xs text-slate-500">Total trades</div>
           </div>
           <div className="w-px h-10 bg-surface-500" />
           <div>
             <div className={cn('text-2xl font-bold font-mono', totalPnl >= 0 ? 'text-emerald-400' : 'text-red-400')}>
               {formatPnl(totalPnl)}
             </div>
-            <div className="text-xs text-slate-500">Total P&L</div>
+            <div className="text-xs text-slate-500">Net P&L</div>
           </div>
           <div className="w-px h-10 bg-surface-500 hidden sm:block" />
           <div className="hidden sm:block">
             <div className="text-2xl font-bold font-mono text-white">
               {(() => { const cl = allTrades.filter(t => t.status !== 'open').length; return cl > 0 ? ((winCount / cl) * 100).toFixed(0) : '—' })()}%
             </div>
-            <div className="text-xs text-slate-500">Win Rate</div>
+            <div className="text-xs text-slate-500">Taux de réussite</div>
           </div>
         </div>
         <div className="flex items-center gap-2">

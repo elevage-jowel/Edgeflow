@@ -121,10 +121,10 @@ export default function BacktestClient() {
         await setDoc(doc(db, col.backtest(uid, id)), bt)
         setBacktests(prev => [bt, ...prev])
       }
-      toast.success('Backtest session created')
+      toast.success('Session de backtest créée')
       setIsOpen(false)
       reset()
-    } catch { toast.error('Failed to create session') }
+    } catch { toast.error('Erreur lors de la création de la session') }
   }
 
   const onAddTrade = async (data: TradeFormData) => {
@@ -200,16 +200,16 @@ export default function BacktestClient() {
         runVerification(newTrade, matchingPlan, 'backtest').catch(() => {})
       }
 
-      toast.success('Trade added')
+      toast.success('Trade ajouté')
       setIsTradeOpen(false)
       resetTradeForm()
-    } catch (e: any) { toast.error(e.message ?? 'Failed') }
+    } catch (e: any) { toast.error(e.message ?? 'Erreur lors de l\'ajout du trade') }
   }
 
   // ─── Delete backtest ──────────────────────────────────────────────────────
 
   const deleteBacktest = async (bt: Backtest) => {
-    if (!confirm(`Delete "${bt.name}"?`)) return
+    if (!confirm(`Supprimer "${bt.name}" ?`)) return
     const uid = DEMO_MODE ? DEMO_UID : user?.uid
     if (!uid) return
     try {
@@ -222,8 +222,8 @@ export default function BacktestClient() {
         setBacktests(prev => prev.filter(b => b.id !== bt.id))
       }
       if (selected?.id === bt.id) setSelected(null)
-      toast.success('Session deleted')
-    } catch { toast.error('Failed to delete') }
+      toast.success('Session supprimée')
+    } catch { toast.error('Erreur lors de la suppression') }
   }
 
   // ─── Analytics ────────────────────────────────────────────────────────────
@@ -250,10 +250,10 @@ export default function BacktestClient() {
     <div className="space-y-6 max-w-5xl">
       <div className="flex items-center justify-between">
         <div>
-          <h2 className="text-lg font-bold text-white">Backtesting</h2>
-          <p className="text-sm text-slate-500">Log and analyze manual backtest sessions — auto-verified against your setup plans</p>
+          <h2 className="text-lg font-bold text-white">Backtest</h2>
+          <p className="text-sm text-slate-500">Enregistre et analyse tes sessions de backtest — vérifiées automatiquement contre tes plans de setup</p>
         </div>
-        <Button variant="primary" icon={Plus} onClick={() => setIsOpen(true)}>New Session</Button>
+        <Button variant="primary" icon={Plus} onClick={() => setIsOpen(true)}>Nouvelle session</Button>
       </div>
 
       {isLoading ? (
@@ -261,7 +261,7 @@ export default function BacktestClient() {
           {Array.from({ length: 4 }).map((_, i) => <div key={i} className="h-32 bg-surface-800 rounded-2xl animate-pulse" />)}
         </div>
       ) : backtests.length === 0 ? (
-        <EmptyState icon={FlaskConical} title="No backtest sessions yet" description="Create a session to test your strategies on historical data with automatic plan verification." action={{ label: 'New Session', onClick: () => setIsOpen(true) }} />
+        <EmptyState icon={FlaskConical} title="Aucune session de backtest" description="Crée une session pour tester tes stratégies sur des données historiques avec vérification automatique." action={{ label: 'Nouvelle session', onClick: () => setIsOpen(true) }} />
       ) : (
         <div className="grid gap-4 sm:grid-cols-2">
           {backtests.map(bt => (
@@ -305,15 +305,15 @@ export default function BacktestClient() {
       )}
 
       {/* Create session modal */}
-      <Modal isOpen={isOpen} onClose={() => setIsOpen(false)} title="New Backtest Session" size="md">
+      <Modal isOpen={isOpen} onClose={() => setIsOpen(false)} title="Nouvelle session de backtest" size="md">
         <form onSubmit={handleSubmit(onSubmit)} className="p-6 space-y-4">
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <label className={lbl}>Session Name *</label>
+              <label className={lbl}>Nom de la session *</label>
               <input {...register('name')} placeholder="NVDA Momentum Jan" className={inputCls} />
             </div>
             <div>
-              <label className={lbl}>Strategy *</label>
+              <label className={lbl}>Stratégie *</label>
               <input {...register('strategy')} placeholder="Breakout, ICT, SMC..." className={inputCls} />
             </div>
           </div>
@@ -323,16 +323,16 @@ export default function BacktestClient() {
           </div>
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <label className={lbl}>Start Date *</label>
+              <label className={lbl}>Date de début *</label>
               <input {...register('startDate')} type="date" className={inputCls} />
             </div>
             <div>
-              <label className={lbl}>End Date *</label>
+              <label className={lbl}>Date de fin *</label>
               <input {...register('endDate')} type="date" className={inputCls} />
             </div>
           </div>
           <div>
-            <label className={lbl}>Initial Capital ($) *</label>
+            <label className={lbl}>Capital initial ($) *</label>
             <input {...register('initialCapital')} type="number" placeholder="10000" className={inputCls} />
           </div>
           <div>
@@ -340,8 +340,8 @@ export default function BacktestClient() {
             <textarea {...register('notes')} rows={2} className={`${inputCls} resize-none`} />
           </div>
           <div className="flex justify-end gap-3 pt-2">
-            <Button type="button" variant="ghost" onClick={() => setIsOpen(false)}>Cancel</Button>
-            <Button type="submit" variant="primary" loading={isSubmitting}>Create Session</Button>
+            <Button type="button" variant="ghost" onClick={() => setIsOpen(false)}>Annuler</Button>
+            <Button type="submit" variant="primary" loading={isSubmitting}>Créer la session</Button>
           </div>
         </form>
       </Modal>
@@ -354,10 +354,10 @@ export default function BacktestClient() {
             {analytics ? (
               <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
                 {[
-                  { label: 'Total P&L', value: formatPnl(analytics.totalPnl), color: analytics.totalPnl >= 0 ? 'text-emerald-400' : 'text-red-400' },
-                  { label: 'Win Rate', value: `${(analytics.winRate * 100).toFixed(1)}%`, color: analytics.winRate >= 0.5 ? 'text-emerald-400' : 'text-amber-400' },
+                  { label: 'Net P&L', value: formatPnl(analytics.totalPnl), color: analytics.totalPnl >= 0 ? 'text-emerald-400' : 'text-red-400' },
+                  { label: 'Taux de réussite', value: `${(analytics.winRate * 100).toFixed(1)}%`, color: analytics.winRate >= 0.5 ? 'text-emerald-400' : 'text-amber-400' },
                   { label: 'Profit Factor', value: analytics.profitFactor > 0 ? analytics.profitFactor.toFixed(2) : '—', color: analytics.profitFactor >= 1.5 ? 'text-emerald-400' : 'text-amber-400' },
-                  { label: 'Avg R', value: analytics.avgR !== 0 ? `${analytics.avgR >= 0 ? '+' : ''}${analytics.avgR.toFixed(2)}R` : '—', color: analytics.avgR >= 0 ? 'text-emerald-400' : 'text-red-400' },
+                  { label: 'R moyen', value: analytics.avgR !== 0 ? `${analytics.avgR >= 0 ? '+' : ''}${analytics.avgR.toFixed(2)}R` : '—', color: analytics.avgR >= 0 ? 'text-emerald-400' : 'text-red-400' },
                 ].map(({ label, value, color }) => (
                   <div key={label} className="bg-surface-700/50 rounded-xl p-3 text-center">
                     <div className={cn('text-sm font-bold font-mono', color)}>{value}</div>
@@ -367,7 +367,7 @@ export default function BacktestClient() {
               </div>
             ) : (
               <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-                {['Total P&L', 'Win Rate', 'Profit Factor', 'Avg R'].map(label => (
+                {['Net P&L', 'Taux de réussite', 'Profit Factor', 'R moyen'].map(label => (
                   <div key={label} className="bg-surface-700/50 rounded-xl p-3 text-center">
                     <div className="text-sm font-bold text-slate-500">—</div>
                     <div className="text-xs text-slate-600">{label}</div>
@@ -384,22 +384,22 @@ export default function BacktestClient() {
             <div>
               <div className="flex items-center justify-between mb-3">
                 <h4 className="text-sm font-semibold text-white">Trades ({selected.trades.length})</h4>
-                <Button variant="secondary" size="sm" icon={Plus} onClick={() => setIsTradeOpen(true)}>Add Trade</Button>
+                <Button variant="secondary" size="sm" icon={Plus} onClick={() => setIsTradeOpen(true)}>Ajouter un trade</Button>
               </div>
 
               {selected.trades.length === 0 ? (
                 <div className="text-center py-8 text-slate-500 text-sm border border-surface-600 rounded-xl border-dashed">
-                  No trades yet. Add your first backtest trade to start scoring.
+                  Aucun trade. Ajoute ton premier trade de backtest pour commencer le scoring.
                 </div>
               ) : (
                 <div className="overflow-x-auto rounded-xl border border-surface-600">
                   <table className="w-full text-xs">
                     <thead>
                       <tr className="border-b border-surface-600 text-slate-500">
-                        <th className="text-left px-3 py-2 font-medium">Symbol</th>
-                        <th className="text-left px-3 py-2 font-medium">Dir</th>
-                        <th className="text-left px-3 py-2 font-medium">Entry</th>
-                        <th className="text-left px-3 py-2 font-medium">Exit</th>
+                        <th className="text-left px-3 py-2 font-medium">Symbole</th>
+                        <th className="text-left px-3 py-2 font-medium">Dir.</th>
+                        <th className="text-left px-3 py-2 font-medium">Entrée</th>
+                        <th className="text-left px-3 py-2 font-medium">Sortie</th>
                         <th className="text-right px-3 py-2 font-medium">P&L</th>
                         <th className="text-right px-3 py-2 font-medium">R</th>
                       </tr>
@@ -433,7 +433,7 @@ export default function BacktestClient() {
             {pendingVerification && (
               <div>
                 <h4 className="text-sm font-semibold text-white mb-3 flex items-center gap-2">
-                  <Zap className="w-4 h-4 text-amber-400" /> Last Trade Verification
+                  <Zap className="w-4 h-4 text-amber-400" /> Vérification du dernier trade
                 </h4>
                 <ScoreCard verification={pendingVerification} />
               </div>
@@ -443,11 +443,11 @@ export default function BacktestClient() {
       </Modal>
 
       {/* Add trade modal */}
-      <Modal isOpen={isTradeOpen} onClose={() => setIsTradeOpen(false)} title="Add Backtest Trade" size="md">
+      <Modal isOpen={isTradeOpen} onClose={() => setIsTradeOpen(false)} title="Ajouter un trade backtest" size="md">
         <form onSubmit={ht(onAddTrade)} className="p-6 space-y-4">
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <label className={lbl}>Symbol *</label>
+              <label className={lbl}>Symbole *</label>
               <input {...rt('symbol')} placeholder="EURUSD" className={inputCls} />
             </div>
             <div>
@@ -460,25 +460,25 @@ export default function BacktestClient() {
           </div>
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <label className={lbl}>Entry Date *</label>
+              <label className={lbl}>Date d'entrée *</label>
               <input {...rt('entryDate')} type="date" className={inputCls} />
             </div>
             <div>
-              <label className={lbl}>Exit Date *</label>
+              <label className={lbl}>Date de sortie *</label>
               <input {...rt('exitDate')} type="date" className={inputCls} />
             </div>
           </div>
           <div className="grid grid-cols-3 gap-3">
             <div>
-              <label className={lbl}>Entry Price *</label>
+              <label className={lbl}>Prix d'entrée *</label>
               <input {...rt('entryPrice')} type="number" step="any" placeholder="1.0950" className={inputCls} />
             </div>
             <div>
-              <label className={lbl}>Exit Price *</label>
+              <label className={lbl}>Prix de sortie *</label>
               <input {...rt('exitPrice')} type="number" step="any" placeholder="1.1050" className={inputCls} />
             </div>
             <div>
-              <label className={lbl}>Quantity *</label>
+              <label className={lbl}>Quantité *</label>
               <input {...rt('quantity')} type="number" step="any" placeholder="1" className={inputCls} />
             </div>
           </div>
@@ -494,7 +494,7 @@ export default function BacktestClient() {
           </div>
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <label className={lbl}>Strategy</label>
+              <label className={lbl}>Stratégie</label>
               <input {...rt('strategy')} placeholder="Breakout, ICT, SMC..." className={inputCls} />
             </div>
             <div>
@@ -548,8 +548,8 @@ export default function BacktestClient() {
             <textarea {...rt('notes')} rows={2} className={`${inputCls} resize-none`} />
           </div>
           <div className="flex justify-end gap-3 pt-2">
-            <Button type="button" variant="ghost" onClick={() => setIsTradeOpen(false)}>Cancel</Button>
-            <Button type="submit" variant="primary" loading={ist}>Add & Verify</Button>
+            <Button type="button" variant="ghost" onClick={() => setIsTradeOpen(false)}>Annuler</Button>
+            <Button type="submit" variant="primary" loading={ist}>Ajouter & Vérifier</Button>
           </div>
         </form>
       </Modal>
