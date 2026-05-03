@@ -108,7 +108,7 @@ export default function SignupClient() {
               </div>
               <div>
                 <div className="text-xs font-semibold text-white">Marcus K.</div>
-                <div className="text-xs text-slate-500">Prop Trader — 6 ans d'expérience</div>
+                <div className="text-xs text-slate-500">Prop Trader — 6 ans d&apos;expérience</div>
               </div>
             </div>
           </div>
@@ -200,7 +200,7 @@ export default function SignupClient() {
           </form>
 
           <p className="text-center text-xs text-slate-600 mt-4">
-            En créant un compte tu acceptes nos conditions d'utilisation.
+            En créant un compte tu acceptes nos conditions d&apos;utilisation.
           </p>
 
           <p className="text-center text-sm text-slate-500 mt-3">

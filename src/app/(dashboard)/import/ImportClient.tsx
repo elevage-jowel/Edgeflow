@@ -324,7 +324,7 @@ export default function ImportClient() {
     <div className="max-w-3xl space-y-6">
       <div>
         <h2 className="text-lg font-bold text-white">Importer des trades</h2>
-        <p className="text-sm text-slate-500">Importe un CSV depuis n'importe quel courtier ou prop firm</p>
+        <p className="text-sm text-slate-500">Importe un CSV depuis n&apos;importe quel courtier ou prop firm</p>
       </div>
 
       {/* Step indicator */}
@@ -431,7 +431,7 @@ export default function ImportClient() {
 
           <div className="flex justify-end gap-3 pt-2">
             <Button variant="ghost" onClick={reset}>Retour</Button>
-            <Button variant="primary" iconRight={ArrowRight} onClick={handlePreview}>Aperçu de l'import</Button>
+            <Button variant="primary" iconRight={ArrowRight} onClick={handlePreview}>Aperçu de l&apos;import</Button>
           </div>
         </div>
       )}

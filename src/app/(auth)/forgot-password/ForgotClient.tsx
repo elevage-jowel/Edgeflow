@@ -49,7 +49,7 @@ export default function ForgotClient() {
               <ArrowLeft className="w-4 h-4" /> Retour à la connexion
             </Link>
             <h2 className="text-2xl font-bold text-white mb-2">Réinitialiser le mot de passe</h2>
-            <p className="text-slate-400 mb-8">Saisis ton email et on t'envoie un lien de réinitialisation.</p>
+            <p className="text-slate-400 mb-8">Saisis ton email et on t&apos;envoie un lien de réinitialisation.</p>
             <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
               <div>
                 <label className="text-xs font-semibold text-slate-400 mb-1.5 block uppercase tracking-wide">Email</label>

@@ -198,7 +198,7 @@ function AccountCard({ account, onEdit, onDelete, computedPnl, dailyPnl }: {
           </div>
         </div>
         <GaugeBar value={Math.max(0, displayPnl)} max={targetDollar} color="emerald" />
-        <div className="text-xs text-slate-600 mt-1 text-right">{profitPct.toFixed(1)}% de l'objectif</div>
+        <div className="text-xs text-slate-600 mt-1 text-right">{profitPct.toFixed(1)}% de l&apos;objectif</div>
       </div>
 
       {/* Daily Loss — based on today's closed trades */}
@@ -219,7 +219,7 @@ function AccountCard({ account, onEdit, onDelete, computedPnl, dailyPnl }: {
         />
         {dailyPnl > 0 && (
           <div className="text-xs text-emerald-500 mt-1 text-right">
-            +{formatCurrency(dailyPnl)} aujourd'hui
+            +{formatCurrency(dailyPnl)} aujourd&apos;hui
           </div>
         )}
       </div>
@@ -468,7 +468,7 @@ export default function PropFirmClient() {
           <div className="w-14 h-14 rounded-2xl bg-surface-700 flex items-center justify-center mb-4">
             <Building2 className="w-7 h-7 text-slate-500" />
           </div>
-          <h3 className="text-base font-semibold text-white mb-1">Aucun compte pour l'instant</h3>
+          <h3 className="text-base font-semibold text-white mb-1">Aucun compte pour l&apos;instant</h3>
           <p className="text-sm text-slate-500 mb-5 max-w-xs">
             Ajoute ton premier compte prop firm pour suivre tes challenges, limites de drawdown et progresser vers le financement.
           </p>

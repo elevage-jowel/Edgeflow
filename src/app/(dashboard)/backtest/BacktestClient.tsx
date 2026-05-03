@@ -460,7 +460,7 @@ export default function BacktestClient() {
           </div>
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <label className={lbl}>Date d'entrée *</label>
+              <label className={lbl}>Date d&apos;entrée *</label>
               <input {...rt('entryDate')} type="date" className={inputCls} />
             </div>
             <div>
@@ -470,7 +470,7 @@ export default function BacktestClient() {
           </div>
           <div className="grid grid-cols-3 gap-3">
             <div>
-              <label className={lbl}>Prix d'entrée *</label>
+              <label className={lbl}>Prix d&apos;entrée *</label>
               <input {...rt('entryPrice')} type="number" step="any" placeholder="1.0950" className={inputCls} />
             </div>
             <div>
