@@ -19,6 +19,7 @@ const pageInfo: Record<string, { title: string; sub: string }> = {
   '/import':     { title: 'Importer',          sub: 'Importe des trades depuis CSV ou courtier' },
   '/planner':    { title: 'Planificateur',     sub: 'Prépare ta journée de trading'     },
   '/propfirm':   { title: 'Prop Firm',         sub: 'Suivi de tes comptes prop firm'    },
+  '/notes':      { title: 'Notes',             sub: 'Journal de trading avec stats intégrées' },
   '/settings':   { title: 'Paramètres',        sub: 'Compte, Notion, préférences'       },
 }
 

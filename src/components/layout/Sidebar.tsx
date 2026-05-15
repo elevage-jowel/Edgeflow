@@ -7,7 +7,7 @@ import { useAuthStore } from '@/lib/stores/authStore'
 import {
   LayoutDashboard, BookOpen, BarChart2, Target, BookMarked,
   FlaskConical, Calendar, Settings, ChevronLeft, ChevronRight,
-  Upload, X, ClipboardList, Building2, LogOut
+  Upload, X, ClipboardList, Building2, LogOut, NotebookPen,
 } from 'lucide-react'
 import { Logo } from '@/components/ui/Logo'
 import { signOut } from '@/lib/firebase/auth'
@@ -21,6 +21,7 @@ const navGroups = [
       { href: '/journal',   icon: BookOpen,         label: 'Journal'         },
       { href: '/planner',   icon: ClipboardList,    label: 'Planificateur'   },
       { href: '/calendar',  icon: Calendar,         label: 'Calendrier'      },
+      { href: '/notes',     icon: NotebookPen,      label: 'Notes'           },
     ],
   },
   {
