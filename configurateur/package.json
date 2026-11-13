@@ -1,0 +1,49 @@
+{
+  "name": "configurateur-tracteurs",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Configurateur et devis en ligne pour concessionnaire Herco Machinery / Farmtrac",
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "lint": "next lint",
+    "typecheck": "tsc --noEmit",
+    "test": "node --import tsx --test src/lib/*.test.ts",
+    "db:generate": "drizzle-kit generate",
+    "db:migrate": "tsx scripts/migrate.ts",
+    "catalogue:import": "tsx scripts/import-catalogue.ts",
+    "medias:rapatrier": "tsx scripts/rapatrier-medias.ts"
+  },
+  "dependencies": {
+    "@fontsource-variable/archivo": "^5.2.8",
+    "@fontsource-variable/inter": "^5.2.8",
+    "@google/model-viewer": "^4.1.0",
+    "@react-pdf/renderer": "4.3.0",
+    "drizzle-orm": "0.44.5",
+    "exceljs": "4.4.0",
+    "nanoid": "5.1.5",
+    "next": "14.2.35",
+    "nodemailer": "6.10.1",
+    "papaparse": "5.5.3",
+    "postgres": "3.4.7",
+    "react": "18.3.1",
+    "react-dom": "18.3.1",
+    "server-only": "^0.0.1",
+    "undici": "^6.21.3",
+    "zod": "3.25.76"
+  },
+  "devDependencies": {
+    "@types/node": "22.15.3",
+    "@types/nodemailer": "6.4.17",
+    "@types/papaparse": "5.3.16",
+    "@types/react": "18.3.20",
+    "@types/react-dom": "18.3.7",
+    "dotenv": "16.5.0",
+    "drizzle-kit": "0.31.4",
+    "eslint": "8.57.1",
+    "eslint-config-next": "14.2.35",
+    "tsx": "4.20.3",
+    "typescript": "5.8.3"
+  }
+}
