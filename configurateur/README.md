@@ -12,7 +12,12 @@ par e-mail ; Forestar reçoit la demande et la traite dans l'administration.
 - Vue 360° (séquences de photos) et 3D (GLB), lien de partage, espace « mes devis »
 - Admin : demandes, statuts, édition du devis, remise, envoi définitif, export CSV, import Excel du catalogue
 
-## Démarrage rapide
+## Tester en local
+
+Mac : double-clic sur `demarrer.command` · Windows : `demarrer.bat` · ou `npm install && npm run local`.
+Seul Node.js est requis ; site sur http://localhost:3000, admin sur /admin (mot de passe `admin`).
+
+## Démarrage avec votre propre base
 
 ```bash
 npm install

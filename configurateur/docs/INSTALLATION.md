@@ -6,7 +6,17 @@
 - Une base PostgreSQL 14+ (Supabase, Neon, ou installée sur votre serveur)
 - Un compte e-mail SMTP pour l'envoi des devis (Brevo, Resend, OVH, Microsoft 365…)
 
-## 2. Installation locale (pour tester)
+## 2. Tester sur votre ordinateur (le plus simple)
+
+Seul **Node.js** est nécessaire (version LTS sur https://nodejs.org). La base de données est fournie automatiquement.
+
+- **Mac** : double-cliquez sur `demarrer.command` (la première fois : clic droit → *Ouvrir*, pour passer l'avertissement de sécurité).
+- **Windows** : double-cliquez sur `demarrer.bat`.
+- **Ou dans un terminal** : `npm install` puis `npm run local`.
+
+Le navigateur s'ouvre sur http://localhost:3000/fr. L'administration est sur http://localhost:3000/admin, avec le mot de passe `admin` (modifiable dans `.env`). Les e-mails ne partent pas : ils s'affichent dans la fenêtre du terminal. Pour arrêter, fermez la fenêtre. Vos essais sont conservés dans le dossier `.local/`, que vous pouvez supprimer pour repartir de zéro.
+
+## 2 bis. Installation locale avec votre propre PostgreSQL
 
 ```bash
 cd configurateur
