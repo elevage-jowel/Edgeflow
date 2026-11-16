@@ -70,6 +70,26 @@ def full(u): return u if u.startswith('http') else H + u
 def big(u): return full(u)  # seules les tailles publiées par Herco existent (600x600)
 
 products, options = [], []
+NL = json.load(open(W + '/herco-nl.json')) if os.path.exists(W + '/herco-nl.json') else {}
+NL_VAR = {vid: name for page in NL.values() for vid, name in page['variants'].items()}
+OPT_NL = [
+    ('Pneus agraires larges', 'Brede landbouwbanden'), ('Pneus agraires (monte de série)', 'Landbouwbanden (standaard)'), ('Pneus agraires', 'Landbouwbanden'),
+    ('Pneus industriels étroits', 'Smalle industriebanden'), ('Pneus industriels', 'Industriebanden'), ('Pneus gazon étroits', 'Smalle gazonbanden'),
+    ('Pneus gazon Garden Galaxy Pro', 'Gazonbanden Garden Galaxy Pro'), ('Pneus gazon Galaxy', 'Gazonbanden Galaxy'), ('Pneus gazon', 'Gazonbanden'),
+    ('Pneus radiaux', 'Radiaalbanden'), ('Pneus 8x18', 'Banden 8x18'),
+    ('Arceau de sécurité rabattable (de série)', 'Opklapbare veiligheidsbeugel (standaard)'), ('Arceau de sécurité (ROPS)', 'Veiligheidsbeugel (ROPS)'),
+    ('Cabine Farmtrac chauffée avec radio', 'Farmtrac cabine met verwarming en radio'), ('Cabine (de série)', 'Cabine (standaard)'), ('Cabine', 'Cabine'),
+    ('2 distributeurs hydrauliques double effet', '2 dubbelwerkende hydraulische ventielen'), ('Set de contrepoids 4 × 30 kg', 'Set contragewichten 4 × 30 kg'),
+    ('Relevage avant', 'Fronthefinrichting'), ('Chargeur frontal Farmtrac', 'Farmtrac frontlader'), ('Godet standard 1 200 mm', 'Standaardbak 1.200 mm'),
+    ('Godet pélican 4 en 1, 1 200 mm', '4-in-1 pelikaanbak 1.200 mm'), ('Fourches à palettes 500 kg', 'Palletvork 500 kg'),
+    ('3e fonction hydraulique sur chargeur', '3e hydraulische functie op de lader'),
+]
+def opt_nl(fr):
+    for a_, b_ in OPT_NL:
+        if fr.startswith(a_): return b_ + fr[len(a_):]
+    return ''
+def nl_page(url):
+    return NL.get(url) or {}
 def P(**kw):
     row = {c: '' for c in P_COLS}; row.update({k: ('' if v is None else v) for k, v in kw.items()}); row['actif'] = row['actif'] or 'oui'
     products.append(row)
@@ -131,6 +151,8 @@ for item in ft:
     P(reference=ref, type='tracteur', marque='Farmtrac', categorie=cat,
       nom_fr=re.sub(r'^Farmtrac ', '', item['name']).replace('éléctrique', 'électrique'),
       description_fr=item['description'], points_forts_fr='\n'.join(usps),
+      nom_nl=re.sub(r'^Farmtrac ', '', nl_page(item['url']).get('name', '')), description_nl=nl_page(item['url']).get('description', ''),
+      points_forts_nl='\n'.join(nl_page(item['url']).get('usps', [])),
       prix_ht=price(base['prices_ht'][0]) if base.get('prices_ht') else '', disponibilite='sur_commande',
       puissance_ch=fmt_num(hp), transmission=spec(tb, 'Transmission') or '', poids_kg=fmt_num(num(spec(tb, 'Poids (kg)'))),
       prise_de_force=pto or '', capacite_relevage_kg=fmt_num(lift), largeur_cm=fmt_num(width), usages=';'.join(dict.fromkeys(usages)),
@@ -159,6 +181,10 @@ for item in ft:
     elif re.search(r'barre de sécurité|arceau|rops', txt):
         O(reference=f'{ref}-ARCEAU', groupe='poste', nom_fr='Arceau de sécurité rabattable (de série)', prix_ht='0,00', tracteurs=ref, par_defaut=ref, visuel='arceau', source=item['url'], ordre=1)
 
+# Catégorie d'attelage relevée dans les brochures Farmtrac (catalogue Agri, fiches FT26 / FT26 HST / FT26 PRO / 6050).
+FT_HITCH = {'FT6050': 'Cat. I/II', 'FT6075E': 'Cat. II', 'FT6075E-N': 'Cat. I/II', 'FT26-HST': 'Cat. 1N', 'FT26-MT': 'Cat. 1N', 'FT26PRO-HST': 'Cat. 1N', 'FT26PRO-MT': 'Cat. 1N'}
+for row in products:
+    if row['reference'] in FT_HITCH: row['attelage'] = FT_HITCH[row['reference']]
 compacts = [r for n, r in REFS.items() if r.startswith(('FT20', 'FT22', 'FT26'))]
 ft26 = [r for r in compacts if r.startswith('FT26')]
 opt_items = {i['name']: i for i in ft if i['category'] == 'options'}
@@ -195,14 +221,18 @@ tools = [(0, 'FT-GODET-1200', 'Godet standard 1 200 mm'), (1, 'FT-PELICAN-1200',
          (2, 'FT-FOURCHE-PALETTE', 'Fourches à palettes 500 kg'), (3, 'FT-3E-FONCTION', '3e fonction hydraulique sur chargeur')]
 for vi, ref, label in tools:
     it, v = ovar('Farmtrac chargeur frontale - options', vi)
-    O(reference=ref, groupe='outil', nom_fr=label, description_fr=v['name'], prix_ht=price(v['prices_ht'][0]) if v.get('prices_ht') else '',
+    O(reference=ref, groupe='outil', nom_fr=label, description_fr=v['name'], prix_ht=price(v['prices_ht'][0]) if v.get('prices_ht') else '', photo=big(v['images'][0]) if v.get('images') else '',
       tracteurs=';'.join(compacts), necessite_une_de=compact_loaders, source=it['url'], ordre=vi)
 
 # ───────────────────────── Iseki (iseki.fr) ─────────────────────────
+# Iseki ne publie qu'en français : descriptions traduites en néerlandais (fichier iseki-nl.json).
+ISEKI_NL = json.load(open(W + '/iseki-nl.json')) if os.path.exists(W + '/iseki-nl.json') else {}
 others = json.load(open(W + '/others.json'))
 def iseki_images(url):
     fn = W + '/iseki/p-' + url.rstrip('/').split('/')[-1] + '.html'
     t = open(fn, encoding='utf-8', errors='replace').read()
+    gallery = list(dict.fromkeys(re.findall(r'data-thumb="(https://www\.iseki\.fr/wp-content/uploads/[^"]+)"', t)))
+    if gallery: return gallery[:8]  # galerie officielle de la fiche produit
     code = re.search(r'/produit/[^/]*?(tm\d{4}|txg\w*?\d+|th\d{4}|tle?\d{4}|tg\d{4})', url, re.I)
     urls = re.findall(r'(https://www\.iseki\.fr/wp-content/uploads/[^"\s\']+\.(?:png|jpg|jpeg|webp))', t)
     keep = []
@@ -244,7 +274,11 @@ for o in [x for x in others if x['brand'] == 'Iseki']:
     if o['price_from']: note += f" Prix public France indiqué « à partir de {price(o['price_from'])} € HT » : non repris, à fixer pour la Belgique."
     if not usages: note += ''
     else: note += ' Usages déduits des pneus disponibles.'
-    P(reference=ref, type='tracteur', marque='Iseki', categorie={'tm':'compact-18-30','txg':'compact-18-30','th':'compact-30-50','tl':'compact-30-50','tg6':'plus-50'}[re.search(r'serie-(\w+)$', o['series']).group(1)], nom_fr=name, description_fr=o['paragraphs'][0] if o['paragraphs'] else '',
+    desc_fr = o['paragraphs'][0] if o['paragraphs'] else ''
+    desc_nl = next((v for k, v in ISEKI_NL.items() if desc_fr.startswith(k)), '')
+    if desc_nl and 'TG6687HMWJCYE permet' in desc_fr:
+        desc_nl += ' Het nieuwe model TG6687HMWJCYE biedt meer vermogen en een comfortabele cabine met airco.'
+    P(nom_nl=name, description_nl=desc_nl, reference=ref, type='tracteur', marque='Iseki', categorie={'tm':'compact-18-30','txg':'compact-18-30','th':'compact-30-50','tl':'compact-30-50','tg6':'plus-50'}[re.search(r'serie-(\w+)$', o['series']).group(1)], nom_fr=name, description_fr=o['paragraphs'][0] if o['paragraphs'] else '',
       prix_ht='', disponibilite='sur_commande', puissance_ch=fmt_num(hp), transmission=s.get('Type de boîte de vitesse', ''),
       poids_kg=fmt_num(num(s.get('POM – Poids en Ordre de Marche') or s.get('POM Arceau/Cabine'))), attelage=re.sub(r'(?i)type crochet\s*', '', (s.get('Relevage AR') or '')).replace('catégorie', 'Cat.').replace('Catégorie', 'Cat.').replace('cat.', 'Cat.'),
       prise_de_force=(s.get('Vitesses') or '').replace(' tr/min', ''), capacite_relevage_kg=fmt_num(num(s.get('Capacité de relevage') or s.get('Capacité de relevage maxi'))),
@@ -257,19 +291,73 @@ for o in [x for x in others if x['brand'] == 'Iseki']:
           visuel=kind, pneu_avant=av, pneu_arriere=ar, source=o['url'], ordre=i,
           description_fr='Prix à compléter (non publié).' if i else 'Monte de base indiquée en premier sur la fiche.')
 
-# ───────────────────────── Solis (solisbelgium.be) ─────────────────────────
+# ───────────────────────── Solis (solisbelgium.be + brochure 12/2025) ─────────────────────────
+SOLIS_NL = json.load(open(W + '/solis-nl.json')) if os.path.exists(W + '/solis-nl.json') else {}
+SOLIS_BROCHURE = 'https://www.solisbelgium.be/images/tracteurs/pdf/flyer_SOLIS_20_PAGES_12-2025_.pdf'
+COMPACT_TIRES = [('agraire', 'Pneus agraires', '', ''), ('industriel', 'Pneus industriels', '', ''), ('gazon', 'Pneus gazon', '', ''), ('galaxy', 'Pneus gazon Galaxy', '', '')]
+def tires_from(std, opts):
+    return [('agraire', 'Pneus agraires (monte de série)', std[0], std[1])] + list(opts)
+S60_OPTS = [('agraire', 'Pneus agraires 9.5x24 / 16.9x28', '9.5x24', '16.9x28'), ('agraire', 'Pneus radiaux 250/85R24 / 420/85R28', '250/85R24', '420/85R28'),
+            ('agraire', 'Pneus radiaux 280/85R24 / 420/85R28', '280/85R24', '420/85R28'), ('agraire', 'Pneus radiaux 320/70R24 / 480/70R28', '320/70R24', '480/70R28'),
+            ('industriel', 'Pneus industriels 10-16.5 / 14.9-24', '10-16.5', '14.9-24'), ('industriel', 'Pneus industriels 12.5/80-18 / 18.4-24', '12.5/80-18', '18.4-24')]
+NARROW_OPTS = [('agraire', 'Pneus radiaux 210/95R18 / 360/70R28', '210/95R18', '360/70R28'), ('agraire', 'Pneus radiaux 280/70R18 / 360/70R28', '280/70R18', '360/70R28'),
+               ('agraire', 'Pneus radiaux 260/70R16 / 360/70R24', '260/70R16', '360/70R24'), ('agraire', 'Pneus radiaux 280/70R18 / 420/70R24', '280/70R18', '420/70R24'),
+               ('agraire', 'Pneus radiaux 280/70R18 / 380/85R24', '280/70R18', '380/85R24'), ('agraire', 'Pneus 8x18 / 13.6x24', '8x18', '13.6x24')]
+S75_OPTS = [('agraire', 'Pneus agraires 12.4x24 / 18.4x30', '12.4x24', '18.4x30'), ('agraire', 'Pneus radiaux 280/85R24 / 420/85R30', '280/85R24', '420/85R30'),
+            ('agraire', 'Pneus radiaux 320/85R24 / 460/85R30', '320/85R24', '460/85R30'), ('agraire', 'Pneus radiaux 320/70R24 / 480/70R30', '320/70R24', '480/70R30'),
+            ('agraire', 'Pneus radiaux 360/85R24 / 460/85R30', '360/85R24', '460/85R30')]
+S90_OPTS = [('agraire', 'Pneus agraires 13.6x24 / 16.9x34', '13.6x24', '16.9x34'), ('agraire', 'Pneus radiaux 320/85R24 / 460/85R30', '320/85R24', '460/85R30'),
+            ('agraire', 'Pneus radiaux 320/70R24 / 480/70R30', '320/70R24', '480/70R30'), ('agraire', 'Pneus radiaux 360/85R24 / 460/85R30', '360/85R24', '460/85R30'),
+            ('agraire', 'Pneus radiaux 420/65R24 / 540/65R34', '420/65R24', '540/65R34')]
+COMPACT_USES = 'prairie;maraichage;pelouse;cour'
+# clé = suffixe de la référence ; (ch, transmission, relevage kg, attelage, PDF, poids kg, largeur cm, pneus, poste, usages, fiche)
+SOLIS_SPECS = {
+    '16': (16, '6 AV + 2 AR, sliding mesh', 500, 'Cat. 1N', '540 / 1000', 970, 94.5, COMPACT_TIRES, 'arceau', COMPACT_USES, 'Moteur: ITL 3 cylindres, 979 cm³ | Vitesse max.: 15,1 km/h | Débit hydraulique: 12 l/min | Réservoir: 26 l | Empattement: 1420 mm'),
+    '20-FL': (20, '6 AV + 2 AR, sliding mesh', 600, 'Cat. 1N', '540 / 1000', 970, 94.5, COMPACT_TIRES, 'arceau', COMPACT_USES, 'Moteur: 3 cylindres Mitsubishi, 953 cm³ | Vitesse max.: 15,1 km/h | Débit hydraulique: 13,3 l/min | Réservoir: 26 l | Empattement: 1420 mm'),
+    '22': (22, '6 AV + 2 AR, sliding mesh', 600, 'Cat. 1N', '540 / 1000', 1070, 107.5, COMPACT_TIRES, 'arceau', COMPACT_USES, 'Moteur: ITL GTV BB, 1130 cm³ | Vitesse max.: 17 km/h | Débit hydraulique: 13,7 l/min | Réservoir: 26 l | Empattement: 1560 mm'),
+    '26-XL-PLUS': (26, '6 AV + 2 AR, sliding mesh', 600, 'Cat. 1N', '540 / 1000', 1070, 107.5, COMPACT_TIRES, 'arceau', COMPACT_USES, 'Moteur: 3 cylindres Mitsubishi, 1319 cm³ | Vitesse max.: 16,2 km/h | Débit hydraulique: 13,5 l/min | Réservoir: 28 l | Poids avec cabine: 1265 kg | Empattement: 1560 mm'),
+    '26-HST': (26, 'Hydrostatique 2 gammes', 600, 'Cat. 1N', '540 (ventrale 2100)', 1235, 121.5, COMPACT_TIRES, 'arceau', COMPACT_USES, 'Moteur: 3 cylindres Mitsubishi, 1319 cm³ | Vitesse max.: 21 km/h | Débit hydraulique: 16,5 l/min | Réservoir: 22 l | Empattement: 1570 mm'),
+    '26-HST-CAB': (26, 'Hydrostatique 2 gammes', 600, 'Cat. 1N', '540 (ventrale 2100)', None, 121.5, COMPACT_TIRES, 'cabine', COMPACT_USES, 'Moteur: 3 cylindres Mitsubishi, 1319 cm³ | Vitesse max.: 21 km/h | Débit hydraulique: 16,5 l/min | Réservoir: 22 l | Empattement: 1570 mm'),
+    '26-SHUTTLE-9-9': (26, '9 AV + 9 AR, inverseur synchronisé', 600, 'Cat. 1N', '540 / 540E', 1250, 121.5, COMPACT_TIRES, 'arceau', COMPACT_USES, 'Moteur: 3 cylindres Mitsubishi, 1319 cm³ | Vitesse max.: 21,5 km/h | Débit hydraulique: 17,8 l/min | Réservoir: 20 l | Empattement: 1570 mm'),
+    '50-STAGE-V': (50, '12 AV + 12 AR, inverseur synchronisé', 2500, 'Cat. II', '540 / 540E', 2870, 188, tires_from(('9.5x20', '13.6x28'), [('agraire', 'Pneus radiaux 250/85R20 / 340/85R28', '250/85R20', '340/85R28')]), 'arceau-cabine', 'prairie;maraichage', 'Moteur: 3 cylindres 3065 cm³ CRDi Stage V | Puissance: 37,3 kW | Couple: 215 Nm | Débit hydraulique: 45 l/min | Distributeurs: 2 DE (3 en option) | Vitesse max.: 30 km/h | Réservoir: 72 l'),
+    '60-STAGE-V': (58, '12 AV + 12 AR, inverseur synchronisé', 2500, 'Cat. II', '540 / 540E', 2780, 195, tires_from(('9.5x24', '14.9x28'), S60_OPTS), 'arceau-cabine', 'prairie;maraichage', 'Moteur: 3 cylindres 3065 cm³ CRDi Stage V | Puissance: 43,2 kW | Couple: 250 Nm | Débit hydraulique: 45 l/min | Distributeurs: 2 DE (3 en option) | Vitesse max.: 30 km/h | Poids cabine: 3340 à 3560 kg'),
+    '75-STAGE-V': (75, '12 AV + 12 AR, inverseur synchronisé', 2500, 'Cat. II', '540 / 540E', 3550, 205, tires_from(('11.2x24', '16.9x30'), S75_OPTS), 'arceau-cabine', 'prairie;maraichage', 'Moteur: 4 cylindres 4087 cm³ CRDi Stage V | Puissance: 55,9 kW | Couple: 340 Nm | Relevage en option: 3000 kg | Débit hydraulique: 65 l/min | Vitesse max.: 35 km/h | Poids cabine: 3825 à 4245 kg'),
+    '90-STAGE-V': (90, '12 AV + 12 AR, inverseur synchronisé', 3000, 'Cat. II', '540 / 540E', 4035, 205, tires_from(('12.4x24', '18.4x30'), S90_OPTS), 'arceau-cabine', 'prairie;maraichage', 'Moteur: 4 cylindres 4087 cm³ CRDi Stage V (AdBlue) | Puissance: 67,3 kW | Couple: 375 Nm | Relevage en option: 3500 kg | Débit hydraulique: 65 l/min | Vitesse max.: 35 km/h'),
+    '75-NARROW': (73.5, '12 AV + 12 AR, inverseur synchronisé', 2500, 'Cat. II', '540 / 540E', 3295, 141, tires_from(('8.00-18', '14.9-24'), NARROW_OPTS), 'arceau-cabine', 'maraichage', 'Moteur: 4 cylindres 4088 cm³ Stage V | Puissance: 54,8 kW | Couple: 340 Nm | Débit hydraulique: 45 l/min | Vitesse max.: 30 km/h | Usage: vergers et vignes'),
+    '90-NARROW': (90, '12 AV + 12 AR, Carraro synchronisé', 2500, 'Cat. II', None, 3295, 141, tires_from(('8.00-18', '14.9-24'), NARROW_OPTS), 'arceau-cabine', 'maraichage', 'Moteur: 4 cylindres 4087 cm³ Stage V | Couple: 375 Nm | Débit hydraulique: 45 l/min (65 en option) | Vitesse max.: 29 km/h | Rayon de braquage: 4,75 m | Usage: vergers et vignes'),
+}
 for o in [x for x in others if x['brand'] == 'Solis']:
     ord_ += 10
     txt = ' '.join(o['paragraphs'])
     m = re.search(r'(\d{2,3})\s*(?:CV|ch\b|chevaux)', txt)
     hp = float(m.group(1)) if m else None
-    cat = 'compact-18-30' if hp and hp <= 30 else 'compact-30-50' if hp and hp <= 50 else 'plus-50' if hp else 'compact-18-30'
     paras = [p for p in o['paragraphs'] if not p.lower().startswith(o['name'].lower()[:8]) or len(p) > 40]
-    P(reference='SOLIS-' + slug(o['name']).upper(), type='tracteur', marque='Solis', categorie=cat, nom_fr=re.sub(r'^Solis\s+', '', o['name']),
+    ref = 'SOLIS-' + slug(o['name']).upper()
+    sspec = SOLIS_SPECS.get(ref.replace('SOLIS-SOLIS-', ''))
+    extra = dict(brochure=o['pdfs'][0] if o['pdfs'] else '')
+    note = f"Texte et photos relevés sur solisbelgium.be le {DATE}."
+    if sspec:
+        hp, trans, lift, hitch, pto, kg, wcm, tires, poste, usages, specs = sspec
+        extra = dict(transmission=trans, capacite_relevage_kg=fmt_num(lift), attelage=hitch, prise_de_force=pto or '', poids_kg=fmt_num(kg),
+                     largeur_cm=fmt_num(wcm), usages=usages, caracteristiques=specs, brochure=SOLIS_BROCHURE)
+        note += ' Caractéristiques, pneus et versions tirés de la brochure Solis 12/2025.'
+        for i, (kind, label, av, ar) in enumerate(tires):
+            O(reference=f'{ref}-PN-{i+1}', groupe='pneus', nom_fr=label, prix_ht='0,00' if i == 0 else '', tracteurs=ref, par_defaut=ref if i == 0 else '',
+              visuel=kind, pneu_avant=av, pneu_arriere=ar, source=SOLIS_BROCHURE, ordre=i, description_fr='' if i == 0 else 'Option : prix à confirmer.')
+        if poste in ('arceau', 'arceau-cabine'):
+            O(reference=f'{ref}-ARCEAU', groupe='poste', nom_fr='Arceau de sécurité (ROPS)', prix_ht='0,00', tracteurs=ref, par_defaut=ref, visuel='arceau', source=SOLIS_BROCHURE, ordre=1)
+        if poste == 'arceau-cabine':
+            O(reference=f'{ref}-CABINE', groupe='poste', nom_fr='Cabine', description_fr='Version cabine : prix à confirmer.', prix_ht='', tracteurs=ref, visuel='cabine', source=SOLIS_BROCHURE, ordre=2)
+        if poste == 'cabine':
+            O(reference=f'{ref}-CABINE', groupe='poste', nom_fr='Cabine (de série)', prix_ht='0,00', tracteurs=ref, par_defaut=ref, visuel='cabine', source=SOLIS_BROCHURE, ordre=1)
+    snl = SOLIS_NL.get(ref.replace('SOLIS-SOLIS-', ''), {})
+    extra.update(nom_nl=re.sub(r'^Solis[\s-]+', '', snl.get('name', '')), description_nl='\n'.join(snl.get('paragraphs', [])[:6]))
+    cat = 'compact-18-30' if hp and hp <= 30 else 'compact-30-50' if hp and hp <= 50 else 'plus-50' if hp else 'compact-18-30'
+    P(reference=ref, type='tracteur', marque='Solis', categorie=cat, nom_fr=re.sub(r'^Solis\s+', '', o['name']),
       description_fr='\n'.join(paras[:6]), prix_ht='', disponibilite='sur_commande', puissance_ch=fmt_num(hp),
       photos=' | '.join(o['images'][:8]), video=o['videos'][0].replace('/embed/', '/watch?v=') if o['videos'] else '',
-      brochure=o['pdfs'][0] if o['pdfs'] else '', source=o['url'],
-      notes=f"Texte et photos relevés sur solisbelgium.be le {DATE}. Fiche technique détaillée dans la brochure PDF : à compléter (relevage, pneus, poids).", ordre=ord_)
+      source=o['url'], notes=note, ordre=ord_, **extra)
+
 
 # ───────────────────────── Machines (Herco) ─────────────────────────
 mach = json.load(open(W + '/herco-m/machines.json'))
@@ -285,6 +373,7 @@ SKIP = {'encore|zero-turn'}
 mo = 0
 for item in mach:
     if item['category'] in SKIP: continue
+    if re.search(r'\bTEG\b', item['name'], re.I): continue  # plateaux pour tondeuses frontales Kubota / John Deere, pas pour tracteurs
     brand = item['category'].split('|')[0].capitalize()
     if item['category'].startswith('garmech'):
         n = slug(item['name'])
@@ -293,11 +382,33 @@ for item in mach:
         typ = TYPE[item['category']]
     variants = [v for v in item['variants'] if not v['name'].strip().endswith('km')]
     tables = item.get('spec_tables') or []
-    if len(tables) != len(variants): tables = []
+    by_width = {}
+    width_power = {}
+    for tb in tables:  # puissance requise connue pour une largeur donnée (identique avec ou sans roues avant)
+        w_, cv_ = num(spec(tb, 'Largeur de travail (cm)')), spec(tb, 'CV tracteur', 'CV min', 'CV')
+        if w_ and cv_ and w_ not in width_power: width_power[w_] = cv_
+    if tables and len(tables) != len(variants):
+        # Herco publie parfois un tableau par largeur : on associe chaque variante au tableau de sa largeur.
+        for tb in tables:
+            w_ = num(spec(tb, 'Largeur de travail (cm)'))
+            if w_ and w_ not in by_width: by_width[w_] = tb
+        tables = []
+    def width_of_name(nm):
+        m = re.search(r'(\d+(?:[.,]\d+)?)\s*(cm|m)\b', nm, re.I)
+        if m: return num(m.group(1)) * (100 if m.group(2).lower() == 'm' else 1)
+        m = re.search(r'(?<![\d])(\d{3,4})(?![\d])', nm)
+        if m and int(m.group(1)) >= 800: return int(m.group(1)) / 10
+        return None
     fam = slug(brand + ' ' + item['name'])[:60]
+    fam_imgs = next((v.get('images') for v in variants if v.get('images')), [])
+    fam_spin = next((v.get('spin') for v in variants if v.get('spin')), None)
     for i, v in enumerate(variants):
+        v_imgs = v.get('images') or fam_imgs  # même machine, autre largeur
+        if fam.startswith(('peruzzo-peruzzo-fox-cross', 'peruzzo-peruzzo-fox-s-')) and len(v_imgs) > 1:
+            v_imgs = v_imgs[1:] + v_imgs[:1]  # 1re image = tableau de cotes / plan : passée en fin de galerie
+        v_spin = v.get('spin') or fam_spin
         mo += 1
-        t = tables[i] if tables else []
+        t = tables[i] if tables else by_width.get(width_of_name(v['name']), [])
         ww = num(spec(t, 'Largeur de travail (cm)'))
         nm = v['name']
         if ww is None:
@@ -316,6 +427,9 @@ for item in mach:
             parts = re.findall(r'\d+', cv)
             if parts:
                 cmin = float(parts[0]); cmax = cmax or (float(parts[1]) if len(parts) > 1 else None)
+        if cmin is None and ww in width_power and not re.search(r'honda|b&s|essence', nm, re.I):
+            parts = re.findall(r'\d+', width_power[ww])
+            if parts: cmin = float(parts[0]); cmax = cmax or (float(parts[1]) if len(parts) > 1 else None)
         if cmin is None:
             m = re.search(r'tracteurs? (?:à|a) partir de (\d+)\s*cv', ' '.join(item['usps']) + ' ' + item['description'], re.I)
             if m: cmin = float(m.group(1))
@@ -334,12 +448,14 @@ for item in mach:
         if montage and montage.strip() != 'devant' and montage.startswith('dev'): note += ' Montage avant ou arrière : réglé ici sur « arrière ».'
         if hydro: note += ' Entraînement hydraulique : vérifier le débit du tracteur.'
         P(reference='HERCO-' + v['id'], type='machine', marque=brand, categorie=typ, famille=fam, nom_famille=fr(item['name']), nom_fr=fr(nm),
+          nom_nl=NL_VAR.get(v['id'], ''), description_nl=nl_page(item['url']).get('description', ''), points_forts_nl='\n'.join(nl_page(item['url']).get('usps', [])),
           description_fr=item['description'], points_forts_fr='\n'.join(item['usps']),
           prix_ht=price(v['prices_ht'][0]) if v.get('prices_ht') else '', disponibilite='sur_commande',
           poids_kg=fmt_num(num(spec(t, 'Poids (kg)', 'Le poids à vide (kg)'))), attelage=spec(t, 'Attelage') or '',
           prise_de_force=pto or '', largeur_travail_cm=fmt_num(ww), puissance_min_ch=fmt_num(cmin), puissance_max_ch=fmt_num(cmax),
           montage=mount, necessite_pdf=needs_pto, caracteristiques=specs_str(t),
-          photos=' | '.join(big(u) for u in v.get('images', [])[:6]) or '', brochure=next(iter(item['pdfs']), ''),
+          photos=' | '.join(big(u) for u in v_imgs[:6]) or '', brochure=next(iter(item['pdfs']), ''),
+          vue360_url=(v_spin['folder'] + v_spin['pattern'].replace('{index}', '{frame}')) if v_spin else '', vue360_images=v_spin['frames'] if v_spin else '',
           video=next(iter(item['videos']), ''), source=item['url'], notes=note, ordre=mo)
 
 def write(path, cols, rows):
@@ -347,6 +463,27 @@ def write(path, cols, rows):
         w = csv.DictWriter(f, fieldnames=cols, delimiter=';', quoting=csv.QUOTE_MINIMAL)
         w.writeheader()
         for r in rows: w.writerow(r)
+# Options sans photo : photo de la variante correspondante, sinon première photo de la page Herco.
+opt_photos = {}
+for it in opt_items.values():
+    vs = [v for v in it['variants'] if not v['name'].strip().endswith('km')]
+    opt_photos[it['url']] = [big(v['images'][0]) if v.get('images') else None for v in vs]
+for row in options:
+    if row['photo'] or row['source'] not in opt_photos: continue
+    imgs = opt_photos[row['source']]
+    m = re.search(r'(\d+)$', row['reference'])
+    first = next((x for x in imgs if x), '')
+    row['photo'] = first
+# Arceau / cabine de série : la photo du tracteur les montre.
+first_photo = {p['reference']: p['photos'].split(' | ')[0] for p in products if p['photos']}
+for row in options:
+    if not row['photo'] and row['groupe'] == 'poste' and row['par_defaut'] in first_photo:
+        row['photo'] = first_photo[row['par_defaut']]
+DESC_NL = {'Option : prix à confirmer.': 'Optie: prijs te bevestigen.', 'Version cabine : prix à confirmer.': 'Cabineversie: prijs te bevestigen.',
+           'Prix à compléter (non publié).': 'Prijs aan te vullen (niet gepubliceerd).', 'Monte de base indiquée en premier sur la fiche.': 'Standaardmontage, als eerste vermeld op de fiche.'}
+for row in options:
+    if not row['nom_nl']: row['nom_nl'] = opt_nl(row['nom_fr'])
+    if not row['description_nl'] and row['description_fr'] in DESC_NL: row['description_nl'] = DESC_NL[row['description_fr']]
 write(OUT + '/produits.csv', P_COLS, products)
 write(OUT + '/options.csv', O_COLS, options)
 print(len(products), 'produits', sum(1 for p in products if p['type'] == 'tracteur'), 'tracteurs,', len(options), 'options')

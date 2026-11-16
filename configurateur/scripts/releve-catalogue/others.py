@@ -9,6 +9,7 @@ def clean(s):
 out = []
 # Solis
 for fn in sorted(glob.glob(W + '/solis/*-*.html')):
+    if os.path.basename(fn).startswith('nl-'): continue  # pages néerlandaises : lues par solis_nl.py
     t = open(fn, encoding='utf-8', errors='replace').read()
     m = re.search(r'<h2 itemprop="headline">(.*?)</h2>', t, re.S)
     body = re.search(r'<div itemprop="articleBody">(.*?)<div class="os-gallery', t, re.S)
@@ -39,7 +40,12 @@ for series in sorted(glob.glob(W + '/iseki/tracteurs-de-*.html')):
         d = re.search(r'id="description".*?</h\d>(.*?)</div>', t, re.S)
         desc = clean(d.group(1)) if d else ''
         if not desc:
-            x = clean(t); i = x.find(' description Con'); desc = x[i+13:i+900] if i > 0 else ''
+            x = clean(t)
+            i = x.find(' description ', x.find('trouver un revendeur'))
+            if i > 0:
+                rest = x[i + 13:]
+                ends = [rest.find(k) for k in (' trouver un revendeur', ' caractéristiques techniques', ' avis ') if rest.find(k) > 0]
+                desc = rest[:min(ends)] if ends else rest[:900]
         imgs = list(dict.fromkeys(re.sub(r'-\d+x\d+(\.\w+)$', r'\1', u) for u in re.findall(r'src="(https://www\.iseki\.fr/wp-content/uploads/[^"]+-555x400\.(?:png|jpg))"', t)))
         pdfs = list(dict.fromkeys(re.findall(r'href="(https://www\.iseki\.fr/wp-content/uploads/[^"]+\.pdf)"', t)))
         vids = list(dict.fromkeys(re.findall(r'youtube(?:-nocookie)?\.com/embed/([\w-]+)', t)))

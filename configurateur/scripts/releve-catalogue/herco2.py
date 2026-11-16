@@ -45,7 +45,7 @@ for cat, path in cats.items():
             g = re.search(r'id="images-' + vid + r'"(.*?)(?:id="images-\d+"|<div class="col-md-6">)', p, re.S)
             if g:
                 gg = g.group(1)
-                v['images'] = list(dict.fromkeys(re.findall(r'href="(/cache/upload/files/[^"]+)"', gg)))
+                v['images'] = list(dict.fromkeys(re.findall(r'href="(/cache/upload/(?:files|images)/[^"]+)"', gg)))
                 s = re.search(r'data-folder="([^"]+)"\s*data-filename-x="([^"]+)"\s*data-amount-x="(\d+)"', gg)
                 if s: v['spin'] = {'folder': B + s.group(1), 'pattern': s.group(2), 'frames': int(s.group(3))}
             item['variants'].append(v)

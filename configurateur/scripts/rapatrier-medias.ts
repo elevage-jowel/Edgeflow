@@ -6,6 +6,7 @@
  *   npm run medias:rapatrier                → photos + 360°
  *   npm run medias:rapatrier -- --sans-360  → photos uniquement
  *   npm run medias:rapatrier -- --brochures → copie aussi les brochures PDF
+ *   npm run medias:rapatrier -- --360-machines → copie aussi les vues 360° des machines (volumineux)
  *
  * À lancer après chaque import de catalogue contenant des liens externes.
  * Vérifiez que vous avez le droit d'utiliser ces visuels (accord de l'importateur).
@@ -71,7 +72,9 @@ async function main() {
     const folder = `medias/produits/${slugify(p.ref)}`;
     const images = await Promise.all(p.images.map((u, i) => (isRemote(u) ? copy(u, `${folder}/photo-${i + 1}`) : u)));
     let spinUrl = p.spinUrl;
-    if (!args.has('--sans-360') && isRemote(p.spinUrl) && !p.spinUrl.includes('{variant}')) {
+    // 360° : tracteurs par défaut ; machines seulement avec --360-machines (≈ 1 Go de photos).
+    const spinWanted = p.kind === 'tractor' || args.has('--360-machines');
+    if (!args.has('--sans-360') && spinWanted && isRemote(p.spinUrl) && !p.spinUrl.includes('{variant}')) {
       const n = p.spinFrames ?? 36;
       const frames: string[] = [];
       for (let f = 1; f <= n; f++) frames.push(await copy(p.spinUrl.replace(/\{frame\}/g, String(f)), `medias/360/${slugify(p.ref)}/${f}`));

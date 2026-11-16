@@ -80,16 +80,25 @@ Pour que la vue suive les choix du client, faites une séquence par combinaison 
 
 **Modèle 3D** : envoyez un fichier `.glb` (moins de 40 Mo, idéalement moins de 10 Mo, textures compressées) dans « Envoyer un fichier GLB ». Avec plusieurs fichiers par combinaison, utilisez le même principe : `/uploads/3d/ft26/{variant}.glb`. Si une variante manque, le modèle de base est affiché.
 
-## Catalogue initial : ce qu'il faut vérifier
+## Catalogue initial : état et points à vérifier
 
-Le catalogue a été relevé le 13/11/2026 sur herco-machinery.com, iseki.fr et solisbelgium.be. Chaque produit indique sa source et une note.
+Relevé le 13/11/2026 et complété le 16/11/2026 à partir de herco-machinery.com (FR et NL), iseki.fr, solisbelgium.be (FR et NL) et des brochures PDF Solis et Farmtrac. Chaque produit indique sa source dans « Notes ».
 
-- **Farmtrac et machines Herco** : prix publics HT de Herco. Certains sont des prix promotionnels « valables pour les produits en stock » (voir la note du produit) : remplacez-les par **vos** prix de vente.
-- **Iseki** : prix français non repris (marché différent) → à saisir.
-- **Solis** : la fiche technique détaillée n'est que dans la brochure PDF → puissance indiquée, relevage, pneus et poids à compléter.
-- **Catégorie d'attelage** des Farmtrac et **largeur d'outil conseillée** : non publiées, à compléter pour activer ces contrôles.
-- **Usages** (prairie, pelouse, cour, maraîchage) : déduits des pneus disponibles, à ajuster.
-- **Photos** : visuels des importateurs. Vérifiez avec Herco, Iseki et Solis que vous pouvez les utiliser sur votre site (c'est en général le cas pour un concessionnaire agréé).
+**Ce qui est complet**
+- Photos : tous les tracteurs, toutes les machines et les options Herco ont une photo (galeries officielles ; la 1re vue 360° pour les Farmtrac).
+- Vues 360° : 8 Farmtrac et 88 machines Herco.
+- Néerlandais : noms et descriptions officiels Herco et Solis ; descriptions Iseki traduites (Iseki ne publie qu’en français).
+- Solis : puissance, relevage, attelage, prise de force, poids, largeur, pneus de série et en option, versions arceau / cabine (brochure Solis 12/2025).
+- Attelage Farmtrac (FT26, FT26 PRO, 6050, 6075) d’après les brochures.
+
+**À vérifier ou compléter**
+- **Prix** : Farmtrac et machines = prix publics HT Herco (parfois promotionnels, voir la note). Iseki et Solis : non publiés pour la Belgique, à saisir. Options Solis (pneus, cabine) : « prix à confirmer ».
+- **Attelage** des FT20, FT22 et FT25G électrique : non trouvé dans les documents lisibles.
+- **Largeur d’outil conseillée** des tracteurs : non publiée par les constructeurs ; à renseigner pour activer l’alerte « machine trop large ».
+- **Machines** : 42 sans puissance minimale (entraînement hydraulique, moteur propre ou machines traînées : normal), 28 sans poids publié.
+- **Usages** (prairie, pelouse, cour, maraîchage) : déduits des pneus disponibles.
+- **Photos** : visuels des importateurs ; confirmez avec Herco, Iseki et Solis que vous pouvez les utiliser.
+- Les broyeurs Peruzzo « TEG Special » (pour tondeuses frontales Kubota / John Deere) ont été retirés.
 
 ## Textes du site
 
