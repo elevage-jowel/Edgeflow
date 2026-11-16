@@ -9,7 +9,18 @@ import { join } from 'node:path';
 import { importRows, readRows } from '../src/lib/import';
 
 async function main() {
-  const dir = process.argv[2] || 'data/catalogue-initial';
+  const args = process.argv.slice(2);
+  // --si-vide : n'importe que si la base ne contient encore aucun produit (premier déploiement).
+  if (args.includes('--si-vide')) {
+    const { db } = await import('../src/db');
+    const { products } = await import('../src/db/schema');
+    const [one] = await db.select({ id: products.id }).from(products).limit(1);
+    if (one) {
+      console.log('– Catalogue déjà présent : import ignoré');
+      process.exit(0);
+    }
+  }
+  const dir = args.find((a) => !a.startsWith('--')) || 'data/catalogue-initial';
   for (const kind of ['produits', 'options'] as const) {
     const file = ['csv', 'xlsx'].map((e) => join(dir, `${kind}.${e}`)).find(existsSync);
     if (!file) {

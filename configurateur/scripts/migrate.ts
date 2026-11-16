@@ -5,7 +5,11 @@ import { migrate } from 'drizzle-orm/postgres-js/migrator';
 import postgres from 'postgres';
 
 async function main() {
-  const sql = postgres(process.env.DATABASE_URL!, { max: 1 });
+  if (!process.env.DATABASE_URL) {
+    console.error('✗ DATABASE_URL manquant : reliez une base Postgres (Neon) au projet ou renseignez .env');
+    process.exit(1);
+  }
+  const sql = postgres(process.env.DATABASE_URL, { max: 1 });
   await migrate(drizzle(sql), { migrationsFolder: 'src/db/migrations' });
   await sql.end();
   console.log('✓ Base de données à jour');

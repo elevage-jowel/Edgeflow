@@ -9,6 +9,9 @@ export const company = {
   brandColor: process.env.BRAND_COLOR || '#e9b500',
   quotePrefix: process.env.QUOTE_PREFIX || 'FS',
   quoteValidityDays: Number(process.env.QUOTE_VALIDITY_DAYS || 30),
-  siteUrl: (process.env.SITE_URL || 'http://localhost:3000').replace(/\/$/, ''),
+  siteUrl: (
+    process.env.SITE_URL ||
+    (process.env.VERCEL_PROJECT_PRODUCTION_URL ? `https://${process.env.VERCEL_PROJECT_PRODUCTION_URL}` : 'http://localhost:3000')
+  ).replace(/\/$/, ''),
 };
 export type Company = typeof company;

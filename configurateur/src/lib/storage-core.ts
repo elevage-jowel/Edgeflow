@@ -1,5 +1,5 @@
 /**
- * Écriture de fichiers dans le stockage (Supabase Storage ou dossier local).
+ * Écriture de fichiers dans le stockage : Vercel Blob, Supabase Storage ou dossier local.
  * Sans dépendance à Next.js : utilisable aussi par les scripts en ligne de commande.
  */
 import { mkdir, writeFile } from 'node:fs/promises';
@@ -11,6 +11,12 @@ export function uploadDir() {
 
 /** Enregistre des octets sous `name` (chemin relatif) et renvoie l'URL publique. */
 export async function saveBuffer(name: string, bytes: Buffer, contentType: string) {
+  // Vercel Blob : variable ajoutée automatiquement quand un store Blob est relié au projet.
+  if (process.env.BLOB_READ_WRITE_TOKEN) {
+    const { put } = await import('@vercel/blob');
+    const blob = await put(name, bytes, { access: 'public', contentType, addRandomSuffix: false, allowOverwrite: true });
+    return blob.url;
+  }
   const url = process.env.SUPABASE_URL;
   const key = process.env.SUPABASE_SERVICE_ROLE_KEY;
   if (url && key) {

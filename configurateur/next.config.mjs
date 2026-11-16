@@ -9,6 +9,7 @@ const nextConfig = {
     minimumCacheTTL: 60 * 60 * 24 * 30,
     remotePatterns: [
       ...(supabaseHost ? [{ protocol: 'https', hostname: supabaseHost }] : []),
+      { protocol: 'https', hostname: '**.public.blob.vercel-storage.com' },
       { protocol: 'https', hostname: 'www.herco-machinery.com' },
       { protocol: 'https', hostname: 'www.solisbelgium.be' },
       { protocol: 'https', hostname: 'www.iseki.fr' },
