@@ -70,6 +70,14 @@ export function Configurator({ locale, catalog, initial, initialStep, parentToke
     }
     goto(1);
   };
+  /** Remise à zéro complète : tracteur, options, machines et adresse de la page. */
+  const reset = () => {
+    setTractorRef(null);
+    setOpts([]);
+    setMachines([]);
+    setStep(0);
+    window.history.replaceState(null, '', window.location.pathname);
+  };
   const toggle = (ref: string) => tractor && setOpts((cur) => toggleOption(catalog.options, tractor.ref, cur, ref));
   const toggleMachine = (ref: string, family: string) =>
     setMachines((cur) => {
@@ -96,6 +104,11 @@ export function Configurator({ locale, catalog, initial, initialStep, parentToke
         <div className="tag">
           <small>{tractor ? `${tractor.brand} · ${m.cfg.yourConfig}` : m.cfg.yourConfig}</small>
           <b>{tractor ? tractor.name : m.cfg.stepTitles[0]}</b>
+          {tractor && (
+            <button type="button" className="reset" onClick={reset}>
+              ↺ {m.cfg.restart}
+            </button>
+          )}
         </div>
         <div className="stage">
           {tractor ? (

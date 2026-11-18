@@ -201,7 +201,9 @@ p { margin: 0; }
 .cfg { display: grid; grid-template-columns: minmax(0, 1fr) clamp(460px, 44vw, 700px); min-height: calc(100svh - var(--header-h)); }
 .cfg-visual { position: sticky; top: var(--header-h); height: calc(100svh - var(--header-h)); display: grid; grid-template-rows: auto 1fr auto; padding: 26px 32px; overflow: hidden; }
 .cfg-visual .stage img { mix-blend-mode: multiply; }
-.cfg-visual .tag { display: grid; gap: 2px; }
+.cfg-visual .tag { display: grid; gap: 2px; position: relative; z-index: 4; }
+.cfg-visual .reset { margin-top: 10px; justify-self: start; display: inline-flex; align-items: center; gap: 6px; border: 1px solid rgba(24, 33, 27, 0.25); background: rgba(255, 255, 255, 0.55); color: var(--studio-ink); border-radius: 999px; padding: 6px 14px; font-size: 13px; font-weight: 600; }
+.cfg-visual .reset:hover { background: #fff; }
 .cfg-visual .tag small { font-size: 12px; color: #5f6a62; letter-spacing: 0.08em; }
 .cfg-visual .tag b { font-family: var(--font-display), sans-serif; font-stretch: 120%; font-size: clamp(22px, 2.6vw, 34px); text-transform: uppercase; line-height: 1.05; }
 .cfg-visual .stage { position: relative; min-height: 0; margin-block: 8px; }

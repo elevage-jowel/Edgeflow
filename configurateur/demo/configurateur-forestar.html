@@ -85,6 +85,9 @@ body.full .panel .body{overflow-y:auto;min-height:0}
 #home-link{display:inline-flex}
 .cfg{display:grid;grid-template-columns:minmax(0,1fr) clamp(460px,44vw,700px);border-top:1px solid var(--line)}
 .vis{position:sticky;top:60px;height:calc(100vh - 60px);display:grid;grid-template-rows:auto 1fr auto;padding:22px 28px;overflow:hidden}
+.reset{margin-top:10px;justify-self:start;display:inline-flex;align-items:center;gap:6px;border:1px solid rgba(24,33,27,.25);background:rgba(255,255,255,.55);color:var(--ink);border-radius:999px;padding:6px 14px;font-size:13px;font-weight:600}
+.reset:hover{background:#fff}
+.vis .tag{display:grid;position:relative;z-index:4}
 .vis .tag small{font-size:12px;color:#5f6a62;letter-spacing:.08em}
 .vis .tag b{display:block;font-family:var(--display);font-stretch:120%;font-weight:800;font-size:clamp(22px,2.6vw,34px);text-transform:uppercase;line-height:1.05}
 .stage{position:relative;min-height:0;margin-block:6px}
@@ -262,7 +265,7 @@ footer.foot .inner{display:flex;justify-content:space-between;gap:12px;flex-wrap
 
   <section id="app" class="cfg" aria-label="Configurateur" hidden>
     <div class="vis studio">
-      <div class="tag"><small id="visSub">Votre configuration</small><b id="visName">Choisissez votre tracteur</b></div>
+      <div class="tag"><small id="visSub">Votre configuration</small><b id="visName">Choisissez votre tracteur</b><button type="button" class="reset" id="reset" hidden>↺ Recommencer</button></div>
       <div class="stage" id="stage"></div>
       <div class="chips" id="chips"></div>
       <div class="mcard" id="mcard" hidden></div>
@@ -415,8 +418,14 @@ footer.foot .inner{display:flex;justify-content:space-between;gap:12px;flex-wrap
 
   // ───── État ─────
   var S = { t: null, o: [], m: [], step: 0, f: { band: null, usage: null, brand: null, budget: null, mbrand: null, mtype: null, all: false } };
-  try { var saved = JSON.parse(localStorage.getItem('forestar-cfg') || 'null'); if (saved && byRef(T, saved.t)) { S.t = saved.t; S.o = saved.o; S.m = saved.m; S.step = saved.step || 1; } } catch (e) {}
-  function save() { try { localStorage.setItem('forestar-cfg', JSON.stringify({ t: S.t, o: S.o, m: S.m, step: S.step })); } catch (e) {} }
+  // Chaque visite repart de zéro (aucune configuration gardée d'une ouverture à l'autre).
+  try { localStorage.removeItem('forestar-cfg'); } catch (e) {}
+  function save() {}
+  function resetAll() {
+    S.t = null; S.o = []; S.m = []; S.step = 0; lastVisual = null; photos = [];
+    S.f = { band: null, usage: null, brand: null, budget: null, mbrand: null, mtype: null, all: false };
+    render();
+  }
 
   function lines() {
     var tr = byRef(T, S.t);
@@ -480,6 +489,7 @@ footer.foot .inner{display:flex;justify-content:space-between;gap:12px;flex-wrap
     var tr = byRef(T, S.t), stage = document.getElementById('stage');
     document.getElementById('visSub').textContent = tr ? tr.b + ' · Votre configuration' : 'Votre configuration';
     document.getElementById('visName').textContent = tr ? tr.n : 'Choisissez votre tracteur';
+    document.getElementById('reset').hidden = !tr;
     document.getElementById('chips').innerHTML = lines().slice(1).map(function (l) { return '<span class="chip">' + esc(l.n.length > 40 ? l.n.slice(0, 38) + '…' : l.n) + '</span>'; }).join('');
     // Machine attelée : photo en vignette sur la scène, à côté du tracteur
     var mc = document.getElementById('mcard'), ms = S.m.map(function (r) { return byRef(M, r); }).filter(Boolean);
@@ -518,9 +528,10 @@ footer.foot .inner{display:flex;justify-content:space-between;gap:12px;flex-wrap
   // ───── Prix animé ─────
   var shown = 0, raf = 0;
   function renderTotal() {
+    cancelAnimationFrame(raf);  // une animation en cours ne doit pas écraser le nouveau total
     var tt = totals(lines()), el = document.getElementById('tHt'), tr = byRef(T, S.t);
     document.getElementById('tPor').hidden = !(tt.por && tt.ht > 0);
-    if (!tr) { el.textContent = '—'; document.getElementById('tTtc').textContent = 'TVA 21 % en sus'; return; }
+    if (!tr) { shown = 0; el.textContent = '—'; document.getElementById('tTtc').textContent = 'TVA 21 % en sus'; return; }
     if (tt.ht === 0) { el.textContent = 'Prix sur demande'; el.style.fontSize = '19px'; document.getElementById('tTtc').textContent = 'Chiffré par notre équipe'; shown = 0; return; }
     el.style.fontSize = '';
     document.getElementById('tTtc').textContent = eur(tt.ttc) + ' TVAC';
@@ -677,6 +688,7 @@ footer.foot .inner{display:flex;justify-content:space-between;gap:12px;flex-wrap
   var photos = [];
   document.getElementById('steps').addEventListener('click', function (e) { var b = e.target.closest('[data-step]'); if (b && !b.disabled) go(+b.dataset.step); });
   document.getElementById('prev').addEventListener('click', function () { go(S.step - 1); });
+  document.getElementById('reset').addEventListener('click', resetAll);
   document.getElementById('next').addEventListener('click', function () { go(S.step + 1); });
   function go(s) {
     S.step = Math.max(0, Math.min(6, s));
@@ -777,7 +789,7 @@ footer.foot .inner{display:flex;justify-content:space-between;gap:12px;flex-wrap
       } catch (err) { fallback(); }
     });
     document.getElementById('edit').addEventListener('click', function () { S.step = 6; goApp(); });
-    document.getElementById('restart').addEventListener('click', function () { S.t = null; S.o = []; S.m = []; lastVisual = null; photos = []; S.step = 0; goApp(); });
+    document.getElementById('restart').addEventListener('click', function () { resetAll(); goApp(); });
   }
 
   render();
