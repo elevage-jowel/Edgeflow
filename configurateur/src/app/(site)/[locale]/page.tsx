@@ -2,7 +2,8 @@ import Link from 'next/link';
 import { getCatalog } from '@/lib/catalog';
 import { company } from '@/lib/config';
 import { href, t, type Locale } from '@/lib/i18n';
-import { ProductCard, hp } from '@/components/ProductCard';
+import { hp } from '@/components/ProductCard';
+import { MachineShowcase, TractorCarousel, type ShowFamily, type ShowTractor } from '@/components/HomeShowcase';
 import { optimized } from '@/lib/image';
 
 export const revalidate = 300;
@@ -16,10 +17,22 @@ export default async function Home({ params }: { params: { locale: Locale } }) {
   const bands = ['electrique', 'compact-18-30', 'compact-30-50', 'plus-50']
     .map((b) => ({ b, items: catalog.tractors.filter((x) => x.category === b) }))
     .filter((x) => x.items.length);
-  const featured = [...catalog.tractors].filter((x) => x.image && x.priceHt != null).slice(0, 4).concat(
-    catalog.tractors.filter((x) => x.image && x.priceHt == null && x.brand !== 'Farmtrac').filter((_, i) => i % 5 === 0).slice(0, 4),
-  );
   const brands = [...new Set([...catalog.tractors.map((x) => x.brand), ...catalog.machines.map((x) => x.brand)])];
+  const carousel: ShowTractor[] = catalog.tractors
+    .filter((x) => x.image)
+    .map((x) => ({ ref: x.ref, slug: x.slug, brand: x.brand, name: x.name, image: x.image!, priceHt: x.priceHt, specs: [hp(x.powerHp, locale), x.transmission].filter(Boolean).join(' · ') }));
+  const byFamily = new Map<string, typeof catalog.machines>();
+  for (const x of catalog.machines) byFamily.set(x.family, [...(byFamily.get(x.family) ?? []), x]);
+  const families: ShowFamily[] = [...byFamily.entries()].map(([key, items]) => {
+    const ws = items.map((i) => i.workingWidthCm).filter((v): v is number => v != null);
+    const ps = items.map((i) => i.priceHt).filter((v): v is number => v != null);
+    const mins = items.map((i) => i.minPowerHp).filter((v): v is number => v != null);
+    return {
+      key, slug: items[0].slug, brand: items[0].brand, name: items[0].familyName ?? items[0].name, category: items[0].category,
+      image: items.find((i) => i.image)?.image ?? null, widths: ws.length ? [Math.min(...ws), Math.max(...ws)] : null,
+      minPrice: ps.length ? Math.min(...ps) : null, minPower: mins.length ? Math.min(...mins) : null, count: items.length,
+    };
+  });
 
   return (
     <>
@@ -70,22 +83,8 @@ export default async function Home({ params }: { params: { locale: Locale } }) {
         </div>
       </section>
 
-      <section className="section container" style={{ paddingTop: 0 }}>
-        <div className="section-head">
-          <h2 className="wide" style={{ textTransform: 'uppercase' }}>{m.home.rangeTitle}</h2>
-          <Link className="link" href={href(locale, 'tractors')}>{m.home.secondary} →</Link>
-        </div>
-        <div className="grid-cards">
-          {featured.map((x, i) => (
-            <ProductCard
-              key={x.ref}
-              locale={locale}
-              priority={i < 2}
-              item={{ href: href(locale, 'tractors', x.slug), brand: x.brand, name: x.name, image: x.image, priceHt: x.priceHt, chips: [hp(x.powerHp, locale), x.transmission].filter(Boolean) as string[] }}
-            />
-          ))}
-        </div>
-      </section>
+      <TractorCarousel locale={locale} items={carousel} />
+      <MachineShowcase locale={locale} families={families} />
 
       <section className="section container" style={{ paddingTop: 0 }}>
         <div className="steps-row" style={{ gridTemplateColumns: 'minmax(0,1.3fr) minmax(0,1fr)' }}>

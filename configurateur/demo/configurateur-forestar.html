@@ -70,6 +70,27 @@ header.top nav{display:flex;gap:8px;align-items:center}
 .ranges .n{color:var(--accent);font-size:11px;letter-spacing:.12em;text-transform:uppercase}
 @media (max-width:760px){.ranges{grid-template-columns:repeat(2,minmax(0,1fr))}.ranges button:nth-child(2){border-right:0}.ranges button:nth-child(-n+2){border-bottom:1px solid var(--line)}}
 
+/* Accueil : défilé des tracteurs et vitrine des machines */
+.home-sec{padding-block:56px 8px}
+.sec-head{display:flex;justify-content:space-between;align-items:end;gap:16px;flex-wrap:wrap;margin-bottom:20px}
+.sec-head h2{font-size:clamp(24px,3vw,38px);margin-top:6px}
+.car-nav{display:flex;gap:8px}
+.carousel{display:grid;grid-auto-flow:column;grid-auto-columns:clamp(240px,24%,320px);gap:16px;overflow-x:auto;scroll-snap-type:x mandatory;padding-bottom:10px;scrollbar-width:thin}
+.tcard,.mcard2{scroll-snap-align:start;display:grid;gap:4px;align-content:start;text-align:left;background:var(--bg2);border:1px solid var(--line);border-radius:16px;padding:0 0 14px;overflow:hidden;color:var(--fg);transition:border-color .25s,transform .35s var(--ease)}
+.tcard:hover,.mcard2:hover{border-color:var(--accent);transform:translateY(-3px)}
+.tc-ph,.m2-ph{position:relative;aspect-ratio:4/3;max-width:100%;margin-bottom:8px}
+.tc-ph img,.m2-ph img{position:absolute;inset:6%;width:88%;height:88%;object-fit:contain}
+.tc-b{font-size:11px;letter-spacing:.16em;text-transform:uppercase;color:var(--muted);padding:0 14px}
+.tc-n,.m2-n{font-family:var(--display);font-stretch:112%;font-weight:700;text-transform:uppercase;font-size:17px;line-height:1.15;padding:0 14px}
+.m2-n{font-size:15px}
+.tc-s{font-size:13px;color:var(--muted);padding:0 14px}
+.tc-p{font-size:13px;color:var(--muted);padding:6px 14px 0}
+.tc-p b{color:var(--fg);font-size:15px}
+.mtabs{margin-bottom:18px}
+.mtabs .cnt{font-size:12px;opacity:.65;margin-left:4px}
+.mgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:16px}
+@media (max-width:620px){.carousel{grid-auto-columns:78%}.mgrid{grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}.m2-n{font-size:13px}.tc-s,.tc-p{font-size:12px}}
+
 /* Configurateur */
 #app,#panel,#devis{scroll-margin-top:60px}
 /* Page configurateur : tout l'écran sous l'en-tête, panneau défilant à droite */
@@ -262,6 +283,26 @@ footer.foot .inner{display:flex;justify-content:space-between;gap:12px;flex-wrap
     </div>
   </section>
   <nav class="ranges" id="ranges" aria-label="Gammes de puissance"></nav>
+
+  <section class="wrap home-sec" id="gamme" aria-labelledby="gamme-t">
+    <div class="inner">
+      <div class="sec-head">
+        <div><span class="eyebrow">La gamme</span><h2 class="wide" id="gamme-t">Farmtrac, Iseki et Solis</h2></div>
+        <div class="car-nav"><button type="button" class="btn btn-g btn-s" id="carPrev" aria-label="Tracteurs précédents">←</button><button type="button" class="btn btn-g btn-s" id="carNext" aria-label="Tracteurs suivants">→</button></div>
+      </div>
+      <div class="carousel" id="carousel" tabindex="0" aria-label="Défilé des tracteurs"></div>
+    </div>
+  </section>
+
+  <section class="wrap home-sec" id="machinesHome" aria-labelledby="mach-t">
+    <div class="inner">
+      <div class="sec-head">
+        <div><span class="eyebrow">Les machines</span><h2 class="wide" id="mach-t">Tout pour atteler à votre tracteur</h2></div>
+      </div>
+      <div class="seg mtabs" id="mtabs" role="group" aria-label="Catégories de machines"></div>
+      <div class="mgrid" id="mgrid"></div>
+    </div>
+  </section>
 
   <section id="app" class="cfg" aria-label="Configurateur" hidden>
     <div class="vis studio">
@@ -468,7 +509,7 @@ footer.foot .inner{display:flex;justify-content:space-between;gap:12px;flex-wrap
   var quoteReady = false;
   function view(name) {
     var home = name === 'home';
-    ['accueil', 'ranges', 'foot'].forEach(function (id) { document.getElementById(id).hidden = !home; });
+    ['accueil', 'ranges', 'gamme', 'machinesHome', 'foot'].forEach(function (id) { document.getElementById(id).hidden = !home; });
     document.getElementById('app').hidden = name !== 'app';
     document.getElementById('devis').hidden = name !== 'devis';
     document.getElementById('back-home').hidden = home;
@@ -480,6 +521,72 @@ footer.foot .inner{display:flex;justify-content:space-between;gap:12px;flex-wrap
     var h = location.hash.slice(1);
     view(h === 'configurateur' ? 'app' : h === 'devis' && quoteReady ? 'devis' : 'home');
   }
+  // ───── Accueil : défilé des tracteurs ─────
+  (function carousel() {
+    var box = document.getElementById('carousel');
+    var list = T.filter(function (t) { return img(t.img); });
+    box.innerHTML = list.map(function (t) {
+      return '<button type="button" class="tcard" data-pick="' + esc(t.r) + '"><span class="tc-ph studio"><img alt="" loading="lazy" src="' + img(t.img) + '"></span>' +
+        '<span class="tc-b">' + esc(t.b) + '</span><span class="tc-n">' + esc(t.n) + '</span>' +
+        '<span class="tc-s">' + esc([hp(t.hp), t.tr].filter(Boolean).join(' · ')) + '</span>' +
+        '<span class="tc-p">' + (t.p != null ? 'À partir de <b>' + eur(t.p) + '</b> HT' : 'Prix sur demande') + '</span></button>';
+    }).join('');
+    var step = function (dir) {
+      var card = box.querySelector('.tcard'); if (!card) return;
+      var w = card.getBoundingClientRect().width + 16;
+      if (dir > 0 && box.scrollLeft + box.clientWidth >= box.scrollWidth - 8) box.scrollTo({ left: 0, behavior: 'smooth' });
+      else box.scrollBy({ left: dir * w, behavior: 'smooth' });
+    };
+    document.getElementById('carPrev').addEventListener('click', function () { step(-1); });
+    document.getElementById('carNext').addEventListener('click', function () { step(1); });
+    var paused = false;
+    ['pointerenter', 'focusin', 'touchstart'].forEach(function (ev) { box.addEventListener(ev, function () { paused = true; }, { passive: true }); });
+    ['pointerleave', 'focusout'].forEach(function (ev) { box.addEventListener(ev, function () { paused = false; }); });
+    if (!matchMedia('(prefers-reduced-motion: reduce)').matches) setInterval(function () { if (!paused && !document.getElementById('gamme').hidden) step(1); }, 3500);
+    box.addEventListener('click', function (e) {
+      var c = e.target.closest('[data-pick]'); if (!c) return;
+      S.t = c.dataset.pick; S.o = defaults(S.t); S.m = []; S.step = 1; lastVisual = null; goApp();
+    });
+  })();
+
+  // ───── Accueil : vitrine des machines par catégories ─────
+  var MCATS = [
+    ['fauchage', 'Fauchage et broyage', ['broyeur-fleaux', 'broyeur-fleaux-ramassage', 'broyeur-accotement', 'gyrobroyeur', 'epareuse', 'tondeuse', 'tondeuse-poteaux', 'taille-haies']],
+    ['sol', 'Travail du sol', ['fraise', 'herse-rotative', 'enfouisseuse', 'semoir']],
+    ['entretien', 'Entretien et épandage', ['aspirateur', 'balayeuse', 'epandeur']],
+    ['bois', 'Bois', ['broyeur-branches', 'fendeuse']],
+    ['transport', 'Transport', ['benne', 'remorque']]
+  ];
+  (function machinesHome() {
+    var fams = {}, order = [];
+    M.forEach(function (m) { if (!fams[m.f]) { fams[m.f] = []; order.push(m.f); } fams[m.f].push(m); });
+    var current = MCATS[0][0];
+    function draw() {
+      var cat = MCATS.filter(function (c) { return c[0] === current; })[0];
+      document.getElementById('mtabs').innerHTML = MCATS.map(function (c) {
+        var n = order.filter(function (f) { return c[2].indexOf(fams[f][0].c) >= 0; }).length;
+        return n ? '<button type="button" data-cat="' + c[0] + '" aria-pressed="' + (c[0] === current) + '">' + c[1] + ' <span class="cnt">' + n + '</span></button>' : '';
+      }).join('');
+      var fs = order.filter(function (f) { return cat[2].indexOf(fams[f][0].c) >= 0; });
+      document.getElementById('mgrid').innerHTML = fs.map(function (f) {
+        var items = fams[f], m0 = items[0], src = img(m0.big) || img(m0.img);
+        var ws = items.map(function (x) { return x.ww; }).filter(Boolean), ps = items.map(function (x) { return x.p; }).filter(function (x) { return x != null; });
+        var mins = items.map(function (x) { return x.mn; }).filter(function (x) { return x != null; });
+        var specs = [TYPES[m0.c] || m0.c, ws.length ? (Math.min.apply(null, ws) === Math.max.apply(null, ws) ? ws[0] + ' cm' : Math.min.apply(null, ws) + '–' + Math.max.apply(null, ws) + ' cm') : '', mins.length ? 'dès ' + Math.min.apply(null, mins) + ' ch' : ''].filter(Boolean);
+        return '<button type="button" class="mcard2" data-mtype="' + esc(m0.c) + '"><span class="m2-ph studio">' + (src ? '<img alt="" loading="lazy" src="' + src + '">' : '') + '</span>' +
+          '<span class="tc-b">' + esc(m0.b) + '</span><span class="m2-n">' + esc(m0.fn || m0.n) + '</span><span class="tc-s">' + esc(specs.join(' · ')) + '</span>' +
+          '<span class="tc-p">' + (ps.length ? 'À partir de <b>' + eur(Math.min.apply(null, ps)) + '</b> HT' : 'Prix sur demande') + (items.length > 1 ? ' · ' + items.length + ' versions' : '') + '</span></button>';
+      }).join('');
+    }
+    document.getElementById('mtabs').addEventListener('click', function (e) { var b = e.target.closest('[data-cat]'); if (b) { current = b.dataset.cat; draw(); } });
+    document.getElementById('mgrid').addEventListener('click', function (e) {
+      var c = e.target.closest('[data-mtype]'); if (!c) return;
+      // Ouvre le configurateur avec ce type de machine déjà filtré pour l'étape Machines.
+      S.f.mtype = c.dataset.mtype; S.f.mbrand = null; if (S.t) S.step = 5; goApp();
+    });
+    draw();
+  })();
+
   function goApp() { if (location.hash === '#configurateur') view('app'); else location.hash = 'configurateur'; }
   window.addEventListener('hashchange', route);
 

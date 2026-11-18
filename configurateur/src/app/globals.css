@@ -127,6 +127,25 @@ p { margin: 0; }
 .steps-row h3 { font-size: 20px; }
 @media (max-width: 760px) { .steps-row { grid-template-columns: 1fr; } }
 
+/* ───────── Accueil : défilé des tracteurs et vitrine des machines ───────── */
+.section.home-sec { padding-block: 48px 8px; }
+.car-nav { display: flex; gap: 8px; }
+.carousel { display: grid; grid-auto-flow: column; grid-auto-columns: clamp(240px, 24%, 320px); gap: 16px; overflow-x: auto; scroll-snap-type: x mandatory; padding-bottom: 10px; scrollbar-width: thin; }
+.tcard, .mcard2 { scroll-snap-align: start; display: grid; gap: 4px; align-content: start; text-decoration: none; background: var(--bg-2); border: 1px solid var(--line); border-radius: 16px; padding: 0 0 14px; overflow: hidden; color: var(--fg); transition: border-color 0.25s, transform 0.35s var(--ease); }
+.tcard:hover, .mcard2:hover { border-color: var(--accent); transform: translateY(-3px); }
+.tc-ph, .m2-ph { position: relative; aspect-ratio: 4 / 3; max-width: 100%; margin-bottom: 8px; }
+.tc-ph img, .m2-ph img { position: absolute; inset: 6%; width: 88%; height: 88%; object-fit: contain; }
+.tc-b { font-size: 11px; letter-spacing: 0.16em; text-transform: uppercase; color: var(--muted); padding: 0 14px; }
+.tc-n, .m2-n { font-family: var(--font-display), sans-serif; font-stretch: 112%; font-weight: 700; text-transform: uppercase; font-size: 17px; line-height: 1.15; padding: 0 14px; }
+.m2-n { font-size: 15px; }
+.tc-s { font-size: 13px; color: var(--muted); padding: 0 14px; }
+.tc-p { font-size: 13px; color: var(--muted); padding: 6px 14px 0; }
+.tc-p b { color: var(--fg); font-size: 15px; }
+.mtabs { margin-bottom: 18px; }
+.mtabs .cnt { font-size: 12px; opacity: 0.65; margin-left: 4px; }
+.mgrid { display: grid; grid-template-columns: repeat(auto-fill, minmax(230px, 1fr)); gap: 16px; }
+@media (max-width: 620px) { .carousel { grid-auto-columns: 78%; } .mgrid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; } .m2-n { font-size: 13px; } .tc-s, .tc-p { font-size: 12px; } }
+
 /* ───────── Cartes produits ───────── */
 .grid-cards { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 16px; }
 .card { position: relative; background: var(--bg-2); border: 1px solid var(--line); border-radius: var(--radius); overflow: hidden; text-decoration: none; display: flex; flex-direction: column; transition: border-color 0.25s, transform 0.35s var(--ease); }
