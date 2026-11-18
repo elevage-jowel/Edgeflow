@@ -404,8 +404,13 @@ for item in mach:
     fam_spin = next((v.get('spin') for v in variants if v.get('spin')), None)
     for i, v in enumerate(variants):
         v_imgs = v.get('images') or fam_imgs  # même machine, autre largeur
-        if fam.startswith(('peruzzo-peruzzo-fox-cross', 'peruzzo-peruzzo-fox-s-')) and len(v_imgs) > 1:
-            v_imgs = v_imgs[1:] + v_imgs[:1]  # 1re image = tableau de cotes / plan : passée en fin de galerie
+        if fam.startswith(('peruzzo-peruzzo-fox-cross', 'peruzzo-peruzzo-fox-s-')):
+            # 1re image = tableau de cotes / plan : passée en fin de galerie ;
+            # si c'est la seule image, la photo d'une autre largeur passe devant.
+            if len(v_imgs) > 1: v_imgs = v_imgs[1:] + v_imgs[:1]
+            else:
+                other = next((x.get('images') for x in variants if len(x.get('images') or []) > 1), None)
+                if other: v_imgs = other[1:] + other[:1] + v_imgs
         v_spin = v.get('spin') or fam_spin
         mo += 1
         t = tables[i] if tables else by_width.get(width_of_name(v['name']), [])

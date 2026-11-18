@@ -120,6 +120,7 @@ export function Configurator({ locale, catalog, initial, initialStep, parentToke
             <span className="chip" key={l.ref}>{l.label.length > 38 ? l.label.slice(0, 36) + '…' : l.label}</span>
           ))}
         </div>
+        <MachineCard locale={locale} catalog={catalog} selected={machines} />
       </section>
 
       <section className="cfg-panel" ref={panelRef} aria-label={stepTitle}>
@@ -525,5 +526,29 @@ function Recap({ locale, lines, totals, onEdit, selection, parentToken, onSent }
       )}
       <QuoteForm locale={locale} selection={selection} parentToken={parentToken} onSent={onSent} />
     </>
+  );
+}
+
+/** Photo de la dernière machine choisie, en vignette sur la scène du tracteur. */
+function MachineCard({ locale, catalog, selected }: { locale: Locale; catalog: Catalog; selected: string[] }) {
+  const m = t(locale);
+  const chosen = selected.map((r) => catalog.machines.find((x) => x.ref === r)).filter((x): x is CMachine => !!x);
+  const last = chosen[chosen.length - 1];
+  if (!last) return null;
+  const photo = last.image ?? catalog.machines.find((x) => x.family === last.family && x.image)?.image ?? null;
+  return (
+    <div className="machine-card step-anim" key={last.ref}>
+      <span className="mc-k">{m.cfg.machineChosen}{chosen.length > 1 ? ` · ${chosen.length}` : ''}</span>
+      {photo && (
+        <div className="mc-ph">
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img src={optimized(photo, 640)} alt={last.familyName ?? last.name} />
+        </div>
+      )}
+      <b>{last.familyName ?? last.name}</b>
+      <span className="mc-d">
+        {[last.workingWidthCm ? `${last.workingWidthCm} cm` : null, last.priceHt != null ? `${formatEur(last.priceHt, locale)} ${m.product.excl}` : m.product.priceOnRequest].filter(Boolean).join(' · ')}
+      </span>
+    </div>
   );
 }

@@ -198,7 +198,7 @@ p { margin: 0; }
 .prose { color: var(--muted); max-width: 70ch; display: grid; gap: 12px; white-space: pre-line; }
 
 /* ───────── Configurateur ───────── */
-.cfg { display: grid; grid-template-columns: minmax(0, 1fr) clamp(420px, 38vw, 580px); min-height: calc(100svh - var(--header-h)); }
+.cfg { display: grid; grid-template-columns: minmax(0, 1fr) clamp(460px, 44vw, 700px); min-height: calc(100svh - var(--header-h)); }
 .cfg-visual { position: sticky; top: var(--header-h); height: calc(100svh - var(--header-h)); display: grid; grid-template-rows: auto 1fr auto; padding: 26px 32px; overflow: hidden; }
 .cfg-visual .stage img { mix-blend-mode: multiply; }
 .cfg-visual .tag { display: grid; gap: 2px; }
@@ -243,6 +243,23 @@ p { margin: 0; }
 .machine-group { border: 1px solid var(--line); border-radius: 12px; padding: 12px 14px; display: grid; gap: 10px; }
 .machine-group header { display: grid; grid-template-columns: 56px minmax(0, 1fr); gap: 12px; align-items: center; }
 .machine-group .widths { display: flex; flex-wrap: wrap; gap: 6px; }
+.machine-group header { grid-template-columns: 112px minmax(0, 1fr); gap: 14px; }
+.machine-group header .ic { width: 112px; height: 84px; }
+/* Photo de la machine choisie, sur la scène du tracteur */
+.machine-card { position: absolute; right: 28px; bottom: 84px; z-index: 3; width: min(34%, 290px); display: grid; gap: 4px; padding: 12px; border-radius: 16px; background: rgba(247, 248, 245, 0.84); backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); box-shadow: 0 18px 40px -18px rgba(0, 0, 0, 0.45); color: var(--studio-ink); }
+.machine-card .mc-k { font-size: 11px; letter-spacing: 0.14em; text-transform: uppercase; color: #5f6a62; }
+.machine-card .mc-ph { aspect-ratio: 4 / 3; max-width: 100%; border-radius: 10px; overflow: hidden; background: #fff; }
+.machine-card .mc-ph img { width: 100%; height: 100%; object-fit: contain; mix-blend-mode: normal; filter: none; }
+.machine-card b { font-size: 15px; line-height: 1.3; }
+.machine-card .mc-d { font-size: 13px; color: #4a544d; }
+@media (max-width: 860px) {
+  .machine-card { left: 12px; right: 12px; bottom: 10px; width: auto; padding: 8px; grid-template-columns: 72px minmax(0, 1fr); column-gap: 10px; align-items: center; }
+  .machine-card .mc-k { display: none; }
+  .machine-card .mc-ph { grid-row: span 2; width: 72px; }
+  .machine-card b { font-size: 13px; }
+  .machine-group header { grid-template-columns: 84px minmax(0, 1fr); }
+  .machine-group header .ic { width: 84px; height: 63px; }
+}
 .width-btn { border: 1px solid var(--line-2); border-radius: 10px; background: transparent; padding: 9px 12px; font-size: 15px; display: grid; text-align: left; gap: 2px; min-width: 104px; transition: all 0.2s; }
 .width-btn small { color: var(--muted); font-size: 11.5px; }
 .width-btn[aria-pressed='true'] { border-color: var(--accent); box-shadow: inset 0 0 0 1px var(--accent); }
@@ -257,7 +274,9 @@ p { margin: 0; }
 @keyframes pulse { 40% { transform: scale(1.05); color: var(--accent); } }
 .cfg-nav { display: flex; gap: 8px; }
 .cfg-nav .btn { min-height: 52px; padding: 0 26px; font-size: 16px; }
-@media (max-width: 1080px) { .cfg { grid-template-columns: minmax(0, 1fr) 420px; } }
+@media (max-width: 1080px) { .cfg { grid-template-columns: minmax(0, 1fr) 440px; } }
+/* Page configurateur : plein écran, sans pied de page */
+body:has(.cfg) .site-footer { display: none; }
 @media (max-width: 860px) {
   .cfg { grid-template-columns: 1fr; }
   .cfg-visual { position: relative; top: 0; height: auto; padding: 16px 20px 6px; grid-template-rows: auto auto auto; }
