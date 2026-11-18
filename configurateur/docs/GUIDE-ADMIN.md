@@ -59,6 +59,13 @@ Prix : vide = sur demande, `0` = inclus, sinon le supplément HT.
 
 Exemples à ajouter quand vous aurez les tarifs : gyrophare, phares de travail, homologation route, PDF avant, distributeurs supplémentaires.
 
+## Règles de puissance
+
+Une machine est masquée dans le configurateur (avec l’explication si le client affiche les machines non compatibles) quand :
+- le tracteur est **moins puissant** que la puissance minimale de la machine ;
+- le tracteur est **plus puissant** que la puissance maximale de la machine ;
+- la puissance maximale n’est pas renseignée et le tracteur dépasse **3 fois** la puissance minimale (petite machine sur gros tracteur). Ce facteur se règle avec la variable `POWER_MAX_RATIO` (0 = désactivé). Pour une machine précise, renseignez plutôt sa puissance max. dans sa fiche.
+
 ## Import CSV / Excel
 
 - Séparateur `;`, encodage UTF-8, première ligne = noms de colonnes (exactement ceux des modèles).

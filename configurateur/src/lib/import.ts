@@ -12,7 +12,7 @@ import { parseEur } from './money';
 import { slugify } from './slug';
 
 export const PRODUCT_COLUMNS = [
-  'reference', 'type', 'marque', 'categorie', 'famille', 'nom_famille', 'nom_fr', 'nom_nl', 'description_fr', 'description_nl',
+  'reference', 'type', 'marque', 'categorie', 'famille', 'nom_famille', 'nom_famille_nl', 'nom_fr', 'nom_nl', 'description_fr', 'description_nl',
   'points_forts_fr', 'points_forts_nl', 'prix_ht', 'disponibilite', 'delai', 'puissance_ch', 'transmission',
   'poids_kg', 'attelage', 'prise_de_force', 'capacite_relevage_kg', 'largeur_outil_max_cm', 'largeur_cm',
   'usages', 'largeur_travail_cm', 'puissance_min_ch', 'puissance_max_ch', 'montage', 'necessite_pdf',
@@ -140,6 +140,7 @@ export function rowToProduct(r: Row): NewProduct {
     category: s(r.categorie) ?? (kind === 'tractor' ? 'compact-18-30' : 'divers'),
     family: s(r.famille),
     familyName: s(r.nom_famille),
+    familyNameNl: s(r.nom_famille_nl),
     nameFr,
     nameNl: s(r.nom_nl),
     descriptionFr: s(r.description_fr),
@@ -285,7 +286,7 @@ const n = (v: number | null | undefined) => (v == null ? '' : String(v).replace(
 
 export function productToRow(p: Product): Row {
   return {
-    reference: p.ref, type: p.kind === 'tractor' ? 'tracteur' : 'machine', marque: p.brand, categorie: p.category, famille: p.family ?? '', nom_famille: p.familyName ?? '',
+    reference: p.ref, type: p.kind === 'tractor' ? 'tracteur' : 'machine', marque: p.brand, categorie: p.category, famille: p.family ?? '', nom_famille: p.familyName ?? '', nom_famille_nl: p.familyNameNl ?? '',
     nom_fr: p.nameFr, nom_nl: p.nameNl ?? '', description_fr: p.descriptionFr ?? '', description_nl: p.descriptionNl ?? '',
     points_forts_fr: p.highlightsFr ?? '', points_forts_nl: p.highlightsNl ?? '', prix_ht: cents(p.priceHt),
     disponibilite: p.availability, delai: p.leadTime ?? '', puissance_ch: n(p.powerHp), transmission: p.transmission ?? '',

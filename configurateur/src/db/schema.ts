@@ -43,6 +43,7 @@ export const products = pgTable(
     family: text('family'),
     /** Nom commercial de la famille (ex. « Peruzzo Fox tondeuse à fléaux ») */
     familyName: text('family_name'),
+    familyNameNl: text('family_name_nl'),
     nameFr: text('name_fr').notNull(),
     nameNl: text('name_nl'),
     descriptionFr: text('description_fr'),

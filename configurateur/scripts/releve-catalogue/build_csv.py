@@ -7,7 +7,7 @@ W, OUT = sys.argv[1], sys.argv[2]
 DATE = '13/11/2026'
 os.makedirs(OUT, exist_ok=True)
 
-P_COLS = ['reference', 'type', 'marque', 'categorie', 'famille', 'nom_famille', 'nom_fr', 'nom_nl', 'description_fr', 'description_nl',
+P_COLS = ['reference', 'type', 'marque', 'categorie', 'famille', 'nom_famille', 'nom_famille_nl', 'nom_fr', 'nom_nl', 'description_fr', 'description_nl',
           'points_forts_fr', 'points_forts_nl', 'prix_ht', 'disponibilite', 'delai', 'puissance_ch', 'transmission',
           'poids_kg', 'attelage', 'prise_de_force', 'capacite_relevage_kg', 'largeur_outil_max_cm', 'largeur_cm',
           'usages', 'largeur_travail_cm', 'puissance_min_ch', 'puissance_max_ch', 'montage', 'necessite_pdf',
@@ -448,7 +448,7 @@ for item in mach:
         if montage and montage.strip() != 'devant' and montage.startswith('dev'): note += ' Montage avant ou arrière : réglé ici sur « arrière ».'
         if hydro: note += ' Entraînement hydraulique : vérifier le débit du tracteur.'
         P(reference='HERCO-' + v['id'], type='machine', marque=brand, categorie=typ, famille=fam, nom_famille=fr(item['name']), nom_fr=fr(nm),
-          nom_nl=NL_VAR.get(v['id'], ''), description_nl=nl_page(item['url']).get('description', ''), points_forts_nl='\n'.join(nl_page(item['url']).get('usps', [])),
+          nom_nl=NL_VAR.get(v['id'], ''), nom_famille_nl=nl_page(item['url']).get('name', ''), description_nl=nl_page(item['url']).get('description', ''), points_forts_nl='\n'.join(nl_page(item['url']).get('usps', [])),
           description_fr=item['description'], points_forts_fr='\n'.join(item['usps']),
           prix_ht=price(v['prices_ht'][0]) if v.get('prices_ht') else '', disponibilite='sur_commande',
           poids_kg=fmt_num(num(spec(t, 'Poids (kg)', 'Le poids à vide (kg)'))), attelage=spec(t, 'Attelage') or '',

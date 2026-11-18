@@ -41,6 +41,8 @@ npm run dev
 
 ## Documentation
 
+- **[Mise en ligne sur Vercel, pas à pas](docs/MISE-EN-LIGNE.md)** : 15 minutes, depuis le navigateur
+
 - [Architecture, arborescence et modèle de données](docs/ARCHITECTURE.md)
 - [Guide d'installation et de mise en ligne](docs/INSTALLATION.md)
 - [Guide de l'administration](docs/GUIDE-ADMIN.md) : ajouter un produit, modifier un prix, traiter un devis

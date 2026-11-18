@@ -15,7 +15,7 @@
     "catalogue:import": "tsx scripts/import-catalogue.ts",
     "medias:rapatrier": "tsx scripts/rapatrier-medias.ts",
     "local": "tsx scripts/local.ts",
-    "vercel-build": "tsx scripts/migrate.ts && tsx scripts/import-catalogue.ts --si-vide && next build"
+    "vercel-build": "tsx scripts/vercel-setup.ts && next build"
   },
   "dependencies": {
     "@fontsource-variable/archivo": "^5.2.8",
@@ -33,6 +33,7 @@
     "react": "18.3.1",
     "react-dom": "18.3.1",
     "server-only": "^0.0.1",
+    "sharp": "^0.34.3",
     "undici": "^6.21.3",
     "zod": "3.25.76"
   },

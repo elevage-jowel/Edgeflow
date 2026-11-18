@@ -27,11 +27,19 @@ export function toTractor(p: Product, l: Locale): CTractor {
   };
 }
 
+/**
+ * Puissance maximale non publiée : on bloque au-delà de « puissance minimale × POWER_MAX_RATIO »
+ * (3 par défaut), pour éviter d'atteler une petite machine à un gros tracteur.
+ */
+const POWER_MAX_RATIO = Number(process.env.POWER_MAX_RATIO || 3);
+
 export function toMachine(p: Product, l: Locale): CMachine {
+  const estimated = p.maxPowerHp == null && p.minPowerHp != null && POWER_MAX_RATIO > 0;
   return {
-    ref: p.ref, slug: p.slug, brand: p.brand, category: p.category, family: p.family || p.ref, familyName: p.familyName, name: nameOf(p, l),
+    maxPowerEstimated: estimated,
+    ref: p.ref, slug: p.slug, brand: p.brand, category: p.category, family: p.family || p.ref, familyName: (l === 'nl' && p.familyNameNl) || p.familyName, name: nameOf(p, l),
     description: descOf(p, l), priceHt: p.priceHt, availability: p.availability, leadTime: p.leadTime,
-    workingWidthCm: p.workingWidthCm, minPowerHp: p.minPowerHp, maxPowerHp: p.maxPowerHp, hitchCategory: p.hitchCategory,
+    workingWidthCm: p.workingWidthCm, minPowerHp: p.minPowerHp, maxPowerHp: estimated ? Math.round(p.minPowerHp! * POWER_MAX_RATIO) : p.maxPowerHp, hitchCategory: p.hitchCategory,
     weightKg: p.weightKg, mount: p.mount, needsPto: p.needsPto, ptoType: p.ptoType, image: p.images[0] ?? null,
   };
 }

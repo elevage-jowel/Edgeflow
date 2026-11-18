@@ -55,7 +55,12 @@ function Photo({ src, alt, tags, priority }: { src: string; alt: string; tags?: 
 function Spin({ spinUrl, spinFrames = 36, variant = 'base', name, hint, tags, autoRotate = true }: Props & { spinUrl: string }) {
   const frames = useMemo(() => {
     const pattern = fillVariant(spinUrl, variant);
-    return Array.from({ length: spinFrames }, (_, i) => optimized(pattern.replace(/\{frame\}/g, String(i + 1)), 1080, 70));
+    // Vues déjà redimensionnées dans votre stockage : chargées telles quelles (pas de quota d'optimisation).
+    const own = pattern.startsWith('/uploads/') || /\.blob\.vercel-storage\.com\//.test(pattern);
+    return Array.from({ length: spinFrames }, (_, i) => {
+      const url = pattern.replace(/\{frame\}/g, String(i + 1));
+      return own ? url : optimized(url, 1080, 70);
+    });
   }, [spinUrl, spinFrames, variant]);
   const [frame, setFrame] = useState(0);
   const [loaded, setLoaded] = useState(0);

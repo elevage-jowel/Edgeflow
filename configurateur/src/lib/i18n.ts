@@ -172,7 +172,8 @@ const fr = {
     illustration: 'Illustration : la photo du modèle choisi s’affichera ici',
     reasons: {
       powerTooLow: 'Puissance insuffisante : {min} ch requis, votre tracteur en a {hp}.',
-      powerTooHigh: 'Tracteur plus puissant que le maximum conseillé ({max} ch) : risque de casse.',
+      powerTooHigh: 'Tracteur trop puissant : {max} ch maximum pour cette machine, votre tracteur en a {hp}. Risque de casse.',
+      powerFarAbove: 'Tracteur trop puissant pour cette machine, prévue à partir de {min} ch (votre tracteur : {hp} ch). Choisissez une machine plus large ou plus robuste.',
       hitchMismatch: 'Attelage incompatible : machine {machine}, tracteur {tractor}.',
       tooHeavy: 'Machine lourde ({weight} kg) pour le relevage du tracteur ({capacity} kg).',
       tooWide: 'Machine large ({width} cm) : largeur conseillée max. {max} cm pour ce tracteur.',
@@ -420,7 +421,8 @@ const nl: Dict = {
     illustration: 'Illustratie: de foto van het gekozen model verschijnt hier',
     reasons: {
       powerTooLow: 'Onvoldoende vermogen: {min} pk vereist, uw tractor heeft {hp} pk.',
-      powerTooHigh: 'Tractor sterker dan het aanbevolen maximum ({max} pk): risico op schade.',
+      powerTooHigh: 'Tractor te krachtig: maximaal {max} pk voor dit werktuig, uw tractor heeft {hp} pk. Risico op breuk.',
+      powerFarAbove: 'Tractor te krachtig voor dit werktuig, bedoeld vanaf {min} pk (uw tractor: {hp} pk). Kies een breder of zwaarder werktuig.',
       hitchMismatch: 'Aankoppeling past niet: werktuig {machine}, tractor {tractor}.',
       tooHeavy: 'Zwaar werktuig ({weight} kg) voor de hefinrichting van de tractor ({capacity} kg).',
       tooWide: 'Breed werktuig ({width} cm): aanbevolen max. {max} cm voor deze tractor.',

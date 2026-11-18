@@ -65,6 +65,8 @@ export type CMachine = {
   workingWidthCm: number | null;
   minPowerHp: number | null;
   maxPowerHp: number | null;
+  /** true si le maximum n'est pas publié et vient de la règle min × POWER_MAX_RATIO */
+  maxPowerEstimated?: boolean;
   hitchCategory: string | null;
   weightKg: number | null;
   mount: Mount | null;

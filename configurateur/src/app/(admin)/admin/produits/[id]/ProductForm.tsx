@@ -43,7 +43,8 @@ export function ProductForm({ id, row }: { id: number; row: Row }) {
           <F row={r} name="marque" label="Marque *" />
           <F row={r} name="categorie" label="Catégorie *" hint={`Tracteurs : ${TRACTOR_CATS.map((c) => c[0]).join(', ')}. Machines : broyeur-fleaux, fraise, tondeuse…`} />
           <F row={r} name="famille" label="Famille (machines)" hint="Même valeur pour les largeurs d’un même modèle." />
-          <F row={r} name="nom_famille" label="Nom de la famille" hint="Affiché dans le configurateur, ex. « Peruzzo Fox »." />
+          <F row={r} name="nom_famille" label="Nom de la famille (FR)" hint="Affiché dans le configurateur, ex. « Peruzzo Fox »." />
+          <F row={r} name="nom_famille_nl" label="Nom de la famille (NL)" />
           <F row={r} name="nom_fr" label="Nom (FR) *" />
           <F row={r} name="nom_nl" label="Nom (NL)" />
           <F row={r} name="description_fr" label="Description (FR)" area full />

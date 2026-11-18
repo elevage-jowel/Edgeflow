@@ -138,7 +138,7 @@ Pour chaque machine, face au tracteur configuré :
 | Poids machine > capacité de relevage | Masquée |
 | Poids machine > 80 % de la capacité de relevage | **Déconseillée** (« trop lourde ») |
 | Largeur > largeur d'outil conseillée du tracteur | Déconseillée (« trop large ») |
-| Puissance du tracteur > puissance max. de la machine | Déconseillée (risque de casse) |
+| Puissance du tracteur > puissance max. de la machine | Masquée (risque de casse) |
 | Montage avant sans relevage avant choisi | Masquée, avec « ajoutez le relevage avant » |
 | Machine à PDF sur un tracteur sans PDF | Masquée |
 

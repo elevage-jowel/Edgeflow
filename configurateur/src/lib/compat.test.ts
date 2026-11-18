@@ -41,6 +41,10 @@ test('compatibilité machines', () => {
   assert.equal(checkMachine(tractor, mach({}), f).verdict, 'ok');
   assert.equal(checkMachine(tractor, mach({ minPowerHp: 30 }), f).verdict, 'block');
   assert.equal(checkMachine(tractor, mach({ hitchCategory: 'II' }), f).verdict, 'block');
+  assert.equal(checkMachine(tractor, mach({ minPowerHp: 10, maxPowerHp: 20 }), f).verdict, 'block', 'tracteur trop puissant');
+  assert.equal(checkMachine(tractor, mach({ minPowerHp: 20, maxPowerHp: 30 }), f).verdict, 'ok', 'dans la plage');
+  const est = checkMachine(tractor, mach({ minPowerHp: 6, maxPowerHp: 18, maxPowerEstimated: true }), f);
+  assert.equal(est.verdict, 'block'); assert.equal(est.reasons[0].code, 'powerFarAbove');
   assert.equal(checkMachine(tractor, mach({ workingWidthCm: 180 }), f).verdict, 'warn');
   assert.equal(checkMachine(tractor, mach({ weightKg: 700 }), f).verdict, 'warn');
   assert.equal(checkMachine(tractor, mach({ weightKg: 900 }), f).verdict, 'block');

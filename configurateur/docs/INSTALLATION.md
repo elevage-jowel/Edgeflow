@@ -60,7 +60,11 @@ Le site est sur http://localhost:3000 et l'admin sur http://localhost:3000/admin
 
 ## 3. Mise en ligne
 
-### Option A : Vercel + Supabase (le plus simple, sans serveur à gérer)
+### Option A : Vercel (le plus simple, sans serveur à gérer)
+
+Suivez **[MISE-EN-LIGNE.md](MISE-EN-LIGNE.md)** : base Neon et stockage Blob en quelques clics, tables, catalogue et photos installés automatiquement au premier déploiement.
+
+### Option A bis : Vercel + Supabase
 
 1. Créez un projet sur **supabase.com** (région Europe, Francfort). Dans *Project Settings → Database*, copiez l'URI de connexion (mode *Transaction pooler*, port 6543) : c'est votre `DATABASE_URL`.
 2. Dans *Storage*, créez un bucket **public** nommé `medias`. Copiez l'URL du projet (`SUPABASE_URL`) et la clé *service_role* (`SUPABASE_SERVICE_ROLE_KEY`).

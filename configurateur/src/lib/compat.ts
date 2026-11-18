@@ -73,8 +73,9 @@ export function checkMachine(tractor: CTractor, machine: CMachine, features: Set
     }
   }
 
+  // Plage de puissance du constructeur : en dessous la machine ne tourne pas, au-dessus elle casse.
   if (hp != null && machine.maxPowerHp != null && hp > machine.maxPowerHp) {
-    reasons.push({ level: 'warn', code: 'powerTooHigh', params: { max: machine.maxPowerHp, hp } });
+    reasons.push({ level: 'block', code: machine.maxPowerEstimated ? 'powerFarAbove' : 'powerTooHigh', params: { max: machine.maxPowerHp, min: machine.minPowerHp ?? '', hp } });
   }
   if (tractor.maxImplementWidthCm && machine.workingWidthCm && machine.workingWidthCm > tractor.maxImplementWidthCm) {
     reasons.push({

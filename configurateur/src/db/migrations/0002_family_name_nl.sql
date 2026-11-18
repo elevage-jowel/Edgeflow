@@ -1,0 +1,1 @@
+ALTER TABLE "products" ADD COLUMN "family_name_nl" text;
